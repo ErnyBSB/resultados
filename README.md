@@ -4,7 +4,7 @@ Aplicativo web para o registro diário de processos de trabalho e atividades da
 COBIB. Cada servidor lança o que fez, com a complexidade correspondente, e a
 chefia aprova os lançamentos da sua unidade.
 
-**Versão 1.4** (ago/26). Até a 1.0 o programa se chamou *Registro de Atividades*
+**Versão 1.5** (ago/26). Até a 1.0 o programa se chamou *Registro de Atividades*
 e circulou como versão beta, numerada de 1 a 14, no repositório
 [actividades](https://github.com/ErnyBSB/actividades).
 
@@ -46,7 +46,7 @@ code/                    o aplicativo
   ajuda/                 capturas usadas na tela de Ajuda
   LEIA-ME.txt            a documentação de verdade: o que faz, e por quê
 Projeto_Design.md             relatório técnico do projeto (acompanha a versão atual)
-Projeto_Design_until_v8.pdf   o mesmo relatório para as versões beta 1 a 8
+.gitignore                    barra config.json, pastas de teste e *.local.js
 ```
 
 `LEIA-ME.txt` é a leitura principal para quem for mexer no programa. Ele não é
@@ -55,8 +55,17 @@ uma lista de mudanças: explica o motivo de cada decisão e admite as limitaçõ
 `Projeto_Design.md` é o relatório técnico do projeto — arquitetura, modelo de
 dados, perfis, decisões e limitações —, escrito para quem chega sem conhecer o
 código. Ele descreve sempre a versão em uso, sem número no nome: versão é tag, não
-nome de arquivo. Substitui o `Projeto_Design_until_v8.pdf`, que continua aqui como
-registro de como o sistema era na beta 8.
+nome de arquivo. Substitui o relatório das versões beta, cujo PDF saiu da árvore na
+v1.5 por trazer nomes reais dentro do binário — recupere-o com
+`git show v1.4:Projeto_Design_until_v8.pdf > relatorio-v8.pdf`.
+
+## Dados internos
+
+Este repositório é público, então **nome de pessoa, senha (mesmo em hash) e
+lançamento não são versionados**. O `catalogo.js` daqui traz só a semente, com as
+unidades vazias; as pessoas de verdade são cadastradas pelo administrador, no painel
+do aplicativo, e ficam no `config.json` da pasta da rede — que nunca entra no Git.
+Ver "O que nunca vai para o repositório", no `code/LEIA-ME.txt`.
 
 ## Versões
 
