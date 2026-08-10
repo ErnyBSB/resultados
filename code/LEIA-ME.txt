@@ -1,4 +1,4 @@
-PROGRAMA DE RESULTADOS — COBIB (versão 1.0, ago/26 — PWA em rede)
+PROGRAMA DE RESULTADOS — COBIB (versão 1.1, ago/26 — PWA em rede)
 =================================================================
 
 O aplicativo passou a se chamar PROGRAMA DE RESULTADOS na v12 (antes,
@@ -7,9 +7,43 @@ a aba do navegador e para o manifest — ou seja, também para o ícone de
 quem instalar o PWA. A pasta da rede, os arquivos e o formato dos dados
 não mudaram com a troca de nome.
 
-A versão aparece ao lado do título, como etiqueta: "versão 1.0
-(ago/26)". Ao publicar uma versão nova, altere os DOIS lugares: o
-<span class="versao"> no cabeçalho do index.html e a VERSAO do sw.js.
+A versão aparece ao lado do título, como etiqueta: "versão 1.1
+(ago/26)". Ela é escrita em UM lugar só, o versao.js (ver a seção
+seguinte); publicar uma versão nova é mexer nesse arquivo e marcar a
+tag correspondente no repositório.
+
+Sobre o programa: a janela e o lugar único da versão (novidade da v1.1)
+-----------------------------------------------------------------------
+No rail, abaixo do último item, há agora "Sobre o programa". Ele abre
+uma janela com o que o aplicativo é: nome, versão, para que serve, a
+licença (Creative Commons CC0 1.0, a mesma do arquivo LICENSE), onde foi
+elaborado, a data da última atualização e o endereço do repositório. A
+janela fecha pelo botão "Fechar" ou pela tecla Esc, e devolve o foco ao
+botão que a abriu.
+
+O botão fica FORA da lista de telas, de propósito, por dois motivos. A
+lista some enquanto ninguém se identificou — e é justamente antes de
+entrar que alguém pode querer saber o que é este programa e de onde ele
+veio. Além disso, dentro da lista ele seria lido como o último item do
+grupo "Gestão", ao qual não pertence. Ficando abaixo, com uma linha de
+separação, ele está "abaixo do último item" seja qual for o papel de
+quem olha.
+
+A versão passou a ter UM LUGAR SÓ: o arquivo versao.js. Antes, o número
+era digitado à mão no <span class="versao"> do index.html e outra vez na
+VERSAO do sw.js. Como o service worker serve primeiro o que está em
+cache, esquecer o segundo tinha um efeito ruim e silencioso: a tela
+anunciava a versão nova enquanto o navegador continuava servindo os
+arquivos da anterior. Agora o index.html preenche a etiqueta e a janela
+a partir do versao.js, e o sw.js monta a chave do cache com
+importScripts do mesmo arquivo ("1.1" vira "ra-1.1").
+
+A data de "Última atualização" é preenchida à mão, ali do lado. Ela
+poderia vir do GitHub, mas isso exigiria uma consulta pela internet — e
+este aplicativo existe para funcionar sem ela, numa máquina que só
+enxerga a pasta da rede. A data seria justamente a informação que
+faltaria quando mais se precisa dela. Sendo manual, fica na linha
+seguinte à da versão: quem troca uma vê a outra.
 
 Saída do beta: esta é a versão 1.0 (novidade)
 ---------------------------------------------
@@ -37,10 +71,12 @@ tag desejada. Em compensação, a pergunta que a pasta nunca respondia
 ("o que mudou da v12 para a v13, e por quê?") agora está escrita no
 próprio histórico.
 
-Publicar uma versão passou a ser, então, TRÊS coisas que precisam
-concordar entre si: a etiqueta no cabeçalho do index.html, a VERSAO do
-sw.js e a tag do repositório. A VERSAO do sw.js acompanha a tag —
-a tag v1.0 corresponde a "ra-1.0".
+Publicar uma versão passou a ser, então, DUAS coisas que precisam
+concordar entre si: o versao.js e a tag do repositório. Até a v1.0 eram
+três — a etiqueta do index.html contava separadamente —, e a v1.1
+juntou as duas primeiras num arquivo só (ver "Sobre o programa", acima).
+A versão do versao.js acompanha a tag: a tag v1.1 corresponde a "1.1" e
+à chave de cache "ra-1.1".
 
 A tela foi redesenhada na v14 (novidade)
 ----------------------------------------
@@ -233,8 +269,9 @@ rede não precisa fazer nada, e lançamentos, ausências, aprovações e
 config.json continuam sendo lidos exatamente como antes.
 
 Como o sw.js serve primeiro o que está em cache, cada versão troca a
-chave VERSAO (esta usa "ra-1.0"). Sem essa troca, quem já abriu a
-versão anterior continuaria recebendo a tela antiga.
+chave do cache (esta usa "ra-1.1", montada a partir do versao.js). Sem
+essa troca, quem já abriu a versão anterior continuaria recebendo a
+tela antiga.
 
 1) Blocos marcados como ocultos que apareciam assim mesmo
 
@@ -715,7 +752,8 @@ aplicativo usa: barra, mapa de calor, eixo, dica, legenda e escala de
 cor — o pacote completo do ECharts tem 1 MB. Ele fica NA PASTA do
 aplicativo e é registrado no sw.js; nunca use CDN, porque o service
 worker é cache-first e a máquina pode estar sem internet. Ao trocar a
-biblioteca por uma versão nova, incremente VERSAO no sw.js.
+biblioteca por uma versão nova, publique uma versão do aplicativo
+(altere o versao.js), senão o navegador continuará servindo a antiga.
 
 Sem internet, sem build, sem npm: é um <script> comum, como o
 catalogo.js e o rede.js.
@@ -902,9 +940,9 @@ Manutenção
 - catalogo.js: unidades, servidores por unidade, processos,
   atividades e complexidades permitidas (mesmos processos para todas
   as unidades).
-- Ao atualizar arquivos do aplicativo, incremente VERSAO em sw.js,
-  corrija a etiqueta no cabeçalho do index.html e marque a versão
-  publicada com uma tag no repositório. Os três têm de concordar.
+- versao.js: número da versão, etiqueta exibida e data da última
+  atualização. Ao publicar, altere este arquivo e marque a versão com
+  uma tag no repositório. Os dois têm de concordar.
 - CSV exportado (com carga horária, situação e "aprovado por") abre
   direto no Excel.
 - Os gráficos ficam nas seções "Indicadores do mês" e "Gráficos" do

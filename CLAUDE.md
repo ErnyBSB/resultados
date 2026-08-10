@@ -42,12 +42,14 @@ from a cache-first service worker.
 
 ```
 code/                    the app — one copy, always the current version
-  index.html             UI + all app logic + inline CSS (~2.2k lines)
+  index.html             UI + all app logic + inline CSS (~2.9k lines)
+  versao.js              the ONE place the app version is written: number,
+                         displayed label, last-update date, repository URL
   catalogo.js            editable catalog: units, staff, processes, activities,
                          complexity points, absence types, daily targets
   rede.js                network folder access: IndexedDB handle, permissions,
                          JSON read/write helpers
-  sw.js                  service worker; const VERSAO gates the offline cache
+  sw.js                  service worker; derives the cache key from versao.js
   manifest.webmanifest   PWA metadata (name shows on the installed icon)
   gerar-senha.html       standalone tool: sha256("nome|senha") for CFG.senhas
   echarts.min.js         vendored charting lib
@@ -73,11 +75,15 @@ version is a **tag** (`v1.0`, `v1.1`, …). Never create `code/v2/`, `versionBet
 or a dated copy of a file; make the change in place and let the history hold the
 past.
 
-**Publishing a version requires three edits, and they must agree:**
-1. `code/sw.js` → `const VERSAO = "ra-1.1"` (otherwise browsers keep serving the
-   old cache); the VERSAO string tracks the tag
-2. `code/index.html` → the `<span class="versao">` label in the header
-3. the repository tag (`git tag -a v1.1`)
+**Publishing a version requires two edits, and they must agree:**
+1. `code/versao.js` → `versao` and `rotulo` (and `atualizado`, the publication
+   date shown in the About window). The header label, the About window and the
+   service worker cache key (`"ra-" + versao`) all derive from this file — do not
+   write the number anywhere else.
+2. the repository tag (`git tag -a v1.1`)
+
+Until v1.0 this took three edits, because the header label and `sw.js` each held
+their own copy of the number; v1.1 collapsed them into `versao.js`.
 
 **Branches.** One branch per version in progress, merged to `main` by PR, then
 tagged on `main`. Commit subjects are pt-BR and describe the user-visible change,
@@ -121,14 +127,14 @@ There are no tests and no runner. To check a change, open `code/index.html` in
 Chrome and exercise it; the shared folder can be simulated with any local directory
 holding the expected `<UNIDADE>/lancamentos/` structure. Syntax-check standalone JS
 with `node --check`. When touching `sw.js` or cached assets, verify with a hard
-reload — a stale `VERSAO` will happily serve the previous version and hide your
-change.
+reload — a stale version in `versao.js` will happily serve the previous cache and
+hide your change.
 
 ## Do not
 
 - Add build tooling, package managers, frameworks, or remote assets.
 - Create per-version folders or dated copies of files — versions are tags.
 - Rename persisted keys, role names, or absence `k` values.
-- Bump `VERSAO` in `sw.js` without also updating the header label and the tag.
+- Write the version number anywhere but `versao.js`, or bump it without tagging.
 - Rewrite or migrate JSON files that users already have in the network folder.
 - Write English into the UI, comments, or LEIA-ME.
