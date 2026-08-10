@@ -1,0 +1,920 @@
+PROGRAMA DE RESULTADOS — COBIB (versão 1.0, ago/26 — PWA em rede)
+=================================================================
+
+O aplicativo passou a se chamar PROGRAMA DE RESULTADOS na v12 (antes,
+"Registro de Atividades"). O nome novo vale para o título da tela, para
+a aba do navegador e para o manifest — ou seja, também para o ícone de
+quem instalar o PWA. A pasta da rede, os arquivos e o formato dos dados
+não mudaram com a troca de nome.
+
+A versão aparece ao lado do título, como etiqueta: "versão 1.0
+(ago/26)". Ao publicar uma versão nova, altere os DOIS lugares: o
+<span class="versao"> no cabeçalho do index.html e a VERSAO do sw.js.
+
+Saída do beta: esta é a versão 1.0 (novidade)
+---------------------------------------------
+O que era "versão beta 14" passa a ser a VERSÃO 1.0. O código é o
+mesmo — nenhuma tela, nenhuma regra e nenhum arquivo da pasta da rede
+mudaram na virada. O que mudou foi o estado do programa: ele deixou de
+ser experimento e passou a ser o que a COBIB usa.
+
+Com isso mudou também a forma de guardar as versões. Até aqui, cada
+versão nova era uma CÓPIA INTEIRA da pasta anterior (versionBeta/v1,
+v2, … v14), e as antigas ficavam congeladas ao lado da atual. Isso fazia
+sentido enquanto tudo era tentativa: dava para abrir a v11 e a v12 lado
+a lado e comparar na tela, sem ferramenta nenhuma. Mas o custo cresceu —
+catorze cópias do mesmo aplicativo, incluindo catorze vezes o
+echarts.min.js, e nenhuma delas dizendo o que a diferenciava da vizinha.
+
+Agora existe UMA pasta só, "code", com o aplicativo em uso. O histórico
+passou para o repositório: cada mudança é um commit, e cada versão
+publicada é uma TAG (esta é a tag v1.0). Quem precisar da versão
+anterior pede ao Git, em vez de procurar a pasta certa.
+
+A troca tem uma perda que vale admitir: não dá mais para abrir duas
+versões ao mesmo tempo copiando pastas — é preciso um "git checkout" da
+tag desejada. Em compensação, a pergunta que a pasta nunca respondia
+("o que mudou da v12 para a v13, e por quê?") agora está escrita no
+próprio histórico.
+
+Publicar uma versão passou a ser, então, TRÊS coisas que precisam
+concordar entre si: a etiqueta no cabeçalho do index.html, a VERSAO do
+sw.js e a tag do repositório. A VERSAO do sw.js acompanha a tag —
+a tag v1.0 corresponde a "ra-1.0".
+
+A tela foi redesenhada na v14 (novidade)
+----------------------------------------
+Até a v13 o aplicativo era UMA página que ia crescendo para baixo:
+conectar a pasta, dizer quem se é, lançar, ausências, totais e o painel
+inteiro, tudo na mesma rolagem. Funcionava enquanto havia pouca coisa.
+Com a v12 já não havia: para a chefia, o painel de aprovação — que é o
+motivo pelo qual ela abre o aplicativo — ficava três telas abaixo do
+formulário de lançamento, que ela quase nunca usa.
+
+A v14 troca a rolagem única por TELAS, com um rail de navegação fixo à
+esquerda:
+
+  MEU TRABALHO          GESTÃO
+   Lançar atividade      Painel da unidade  (3)
+   Meu mês      86%      Administração
+   Ausências
+
+Os dois grupos separam o que a pessoa FAZ do que ela FISCALIZA. Quem
+não fiscaliza nada não vê o segundo grupo — o servidor tem três telas,
+e pronto.
+
+O número ao lado de "Painel da unidade" é a quantidade de lançamentos
+esperando a aprovação de quem está olhando. É a informação que fazia
+falta: antes era preciso entrar no painel para descobrir se havia algo
+a fazer nele. O mesmo vale para o percentual ao lado de "Meu mês".
+
+Esconder um botão não é controle de acesso. A regra de quem alcança
+qual tela está escrita também no código (podeVer), não só no rail: o
+papel continua mandando, como sempre mandou.
+
+O que NÃO mudou: os arquivos da pasta da rede, o formato dos dados, a
+regra de quem aprova quem, o cálculo da meta e as colunas do CSV. Um
+arquivo gravado pela v11 abre na v14 sem conversão nenhuma.
+
+De onde veio o desenho
+----------------------
+De uma maquete (pasta versionBeta/design13 do repositório do beta, que
+não veio para cá), feita em React com fontes e bibliotecas baixadas da
+internet. Ela serviu de ESPECIFICAÇÃO, não de código: nada dali foi
+aproveitado como está.
+
+O motivo é o objetivo nº 1 do projeto. A maquete baixava React, ReactDOM
+e o Babel de um CDN a cada carregamento, e as fontes do Google. Aberta
+de \\COBIB\AmbienteTrabalho\unidadeCentral numa máquina sem internet —
+que é exatamente o cenário para o qual este aplicativo existe — a tela
+ficaria em branco. O service worker é "primeiro o cache" justamente para
+que isso nunca aconteça.
+
+Nada no desenho exigia framework: rail à esquerda e troca de telas são
+<nav> e mostrar/esconder, que o aplicativo já fazia. A v14 é HTML, CSS e
+JavaScript puros, como todas as anteriores. As cores da maquete estavam
+em oklch() e foram convertidas para hexadecimal, para a folha de estilo
+continuar legível para quem nunca viu essa notação.
+
+Duas coisas foram acrescentadas ao desenho, que ele não previa:
+
+- TELA ESTREITA. A maquete não tinha nenhuma media query: o rail era
+  fixo em 244px e não havia tratamento de celular. Na v14 o rail vira
+  uma barra no topo, que rola na horizontal, e as duas colunas viram
+  uma só.
+- FOCO VISÍVEL. A maquete zerava o estilo dos botões (all:unset), o que
+  apaga o anel de foco e cega quem navega por teclado. Aqui o anel
+  existe em toda parte, em verde-vivo sobre o rail escuro.
+
+O que cada tela mostra
+----------------------
+LANÇAR ATIVIDADE — o formulário em três passos numerados (atividade,
+complexidade, observações) e, à direita, o efeito imediato: quanto já
+foi lançado na data, quanto falta para a meta do dia e a lista do que
+entrou. Antes esse retorno só existia no recibo, que some ao ser
+fechado. O recibo continua lá; a coluna da direita é o que fica.
+
+Abaixo do botão aparece o arquivo em que aquilo vai ser gravado
+(SEORE/lancamentos/fulano.json). Num aplicativo sem servidor, saber
+onde o dado cai é parte de entender o sistema.
+
+Nos botões de "Suas mais registradas", o macroprocesso passou para CIMA
+da atividade. Antes ele vinha no rodapé do botão, junto da contagem de
+registros: quem lia já tinha terminado a frase da atividade quando
+descobria a que macroprocesso ela pertencia. É o macroprocesso que situa
+a tarefa — "Desenvolver acervo bibliográfico e digital" antes de
+"catalogação de material bibliográfico" —, então ele vem primeiro, em
+letra pequena e maiúscula, como as demais etiquetas do aplicativo. A
+contagem de registros continua embaixo, que é onde ela pertence: é
+detalhe, não é identificação.
+
+Esses botões passaram de cinco para TRÊS (a seção "Busca de atividades",
+mais abaixo, descreve os cinco de antes). Cinco atalhos ocupavam mais
+tela que o próprio campo de busca, que é o caminho de quem NÃO está
+repetindo tarefa; e a quinta atividade mais registrada, na prática, já
+não se repete o bastante para merecer um botão fixo. Quem precisa dela
+continua achando pela busca, que não mudou.
+
+Junto disso, a lista passou a descartar as atividades saídas do catálogo
+ANTES de cortar em três, e não depois. Cortando primeiro, uma atividade
+que tivesse saído do catalogo.js levava embora uma das vagas e o atalho
+aparecia com dois botões — ou nenhum — sem motivo visível na tela.
+
+A lista do campo "Digite parte da atividade" saiu da ordem do catálogo e
+passou a ser ALFABÉTICA. A ordem antiga era a ordem em que as atividades
+foram digitadas no catalogo.js, agrupadas por processo: ela fazia sentido
+para quem edita o arquivo e nenhum para quem lê a lista na tela. Quem
+digita uma palavra continua vendo o resultado da busca; a ordem importa
+para quem abre o campo sem saber ainda o que procura e percorre as 72
+atividades com o olho.
+
+A comparação é feita em português (localeCompare em pt-BR), não pelo
+código do caractere: assim "ação" fica junto de "acao" e o "ç" cai no
+lugar do "c". Ordenando por código, tudo que tem acento iria parar no
+fim da lista, depois do "z".
+
+O filtro opcional por processo não mudou: cada atividade continua sabendo
+de que processo veio. O que ficou de fora é a ordem do próprio seletor de
+processos, que segue a do catálogo — a issue pedia a lista de atividades.
+
+O nome no alto do rail
+----------------------
+Estava escrito só "Resultados". O programa se chama PROGRAMA DE
+RESULTADOS, e é assim que ele aparece na portaria, no e-mail que a pessoa
+recebeu e no título da janela do navegador — só na tela é que estava
+abreviado. Quem abrisse o aplicativo pela primeira vez não tinha como
+ligar uma coisa à outra.
+
+O nome por extenso não cabe em uma linha nos 244px do rail, então ocupa
+duas. A quebra é forçada a cair antes de "Resultados": o espaço entre
+"Programa" e "de" é inseparável (&nbsp;), senão em certas larguras a
+primeira linha terminava com um "de" solto. O tamanho da letra baixou de
+26px para 23px para as duas linhas caberem sem apertar a etiqueta da
+versão, logo abaixo.
+
+O nome curto do ícone instalado (manifest.webmanifest, "Programa
+Resultados") não mudou: ali o sistema operacional corta o que passa de
+uns doze caracteres, e "Programa de Resultados" apareceria cortado no
+meio de qualquer jeito.
+
+MEU MÊS — a meta em tamanho grande, com a explicação do que ela mede
+LOGO ABAIXO do número, e não escondida numa dica: "média dos dias em que
+você lançou; dias sem lançamento e de ausência ficam fora do cálculo —
+o número mede intensidade, não assiduidade". Essa limitação sempre
+existiu e estava documentada aqui no LEIA-ME; agora está na tela, onde
+o número é lido.
+
+AUSÊNCIAS — o formulário de período à esquerda e a lista à direita.
+
+PAINEL — as três leituras viraram ABAS: Aprovações, Visão do mês e
+Ausências. O acordeão da v12/v13 permitia abrir tudo ao mesmo tempo, o
+que na prática ninguém fazia; e, fechado, ele não dizia quais eram as
+partes. A aba escolhida fica guardada neste navegador (chave
+ra.aba.v1), como antes ficava o estado das seções.
+
+Aprovar virou BOTÃO
+-------------------
+Na v13, aprovar era marcar uma caixa de seleção de 13 por 13 pixels —
+alvo pequeno demais para a ação mais repetida de quem usa o painel, e
+ainda por cima dentro de uma tabela que rolava na horizontal no
+celular. Agora é um botão "Aprovar" na própria linha.
+
+Já aprovado, o botão dá lugar à etiqueta e a um "desfazer" — e, quando
+a aprovação foi gravada pelo outro papel, nem isso: aparece só quem
+aprovou e quando, porque desfazer ali não funcionaria (ver "Desfazer
+aprovação: só quem gravou", mais abaixo).
+
+O total do dia virou cabeçalho
+------------------------------
+Na v13 o total de cada dia era uma linha somada DEPOIS das atividades
+daquele dia. Agora ele abre o grupo:
+
+  SEGUNDA, 03/08/2026 · 40 pontos em 3 lançamento(s)
+
+Além de ler melhor — o total antes do detalhe, e não depois —, isso
+elimina de vez o colspan que a v13 precisou consertar: a faixa do dia
+ocupa a largura inteira de propósito, então não há colunas a acertar
+quando a tela estreita esconde alguma.
+
+Tabela em tela estreita
+-----------------------
+As tabelas ganharam uma largura mínima. Sem ela, a coluna ATIVIDADE era
+espremida até sobrar uma palavra por linha no celular, e a linha ficava
+altíssima. Agora a tabela rola na horizontal DENTRO do próprio quadro —
+a página em si nunca rola para o lado — e o texto quebra num
+comprimento que se lê.
+
+Correções de interface (feitas na v13, valem aqui)
+--------------------------------------------------
+A v13 não trouxe função nova: foi a v12 com três defeitos de interface
+corrigidos, encontrados numa revisão feita depois de ela ficar pronta.
+Nenhum deles mexe em dado gravado — quem já tem arquivos na pasta da
+rede não precisa fazer nada, e lançamentos, ausências, aprovações e
+config.json continuam sendo lidos exatamente como antes.
+
+Como o sw.js serve primeiro o que está em cache, cada versão troca a
+chave VERSAO (esta usa "ra-1.0"). Sem essa troca, quem já abriu a
+versão anterior continuaria recebendo a tela antiga.
+
+1) Blocos marcados como ocultos que apareciam assim mesmo
+
+   Os três quadros escuros (MEU TOTAL NO DIA, MEU TOTAL NO MÊS, META
+   ALCANÇADA NO MÊS) surgiam logo na primeira tela, zerados, antes de
+   qualquer pessoa conectar a pasta ou se identificar — e logo abaixo da
+   frase "Ninguém identificado". O código mandava escondê-los desde
+   sempre; o navegador é que não obedecia.
+
+   O motivo é uma regra de precedência do CSS: o atributo "hidden" vale
+   como display:none, mas isso é estilo do NAVEGADOR, e qualquer regra
+   nossa que declare display passa por cima dele. ".totais" declara
+   display:grid e ".resumo" declara display:flex — então esses dois
+   blocos ignoravam o "hidden" enquanto todos os demais obedeciam. Daí
+   ter passado tanto tempo despercebido: só atinge quem tem display
+   próprio. Vinha da v10.
+
+   A correção é uma linha, no alto da folha de estilo:
+
+     [hidden]{display:none !important}
+
+   O !important aqui não é atalho preguiçoso — é exatamente a intenção:
+   "oculto" tem de ganhar de qualquer regra de display, inclusive das
+   que forem escritas depois.
+
+2) Texto digitado por uma pessoa virava marcação na tela de outra
+
+   O painel montava as linhas da tabela emendando texto direto no HTML.
+   Como observação de lançamento é campo livre, uma observação escrita
+   com sinais de marcação era lida COMO marcação, e não como texto, na
+   hora em que a CHEFIA abria o painel para aprovar.
+
+   No dia a dia isso apareceria como uma linha embaralhada. No limite,
+   porém, é mais sério que estético: a sessão de quem abre o painel é
+   justamente a que tem permissão de escrita na pasta central inteira,
+   e um trecho de código executado ali poderia reescrever lançamentos,
+   aprovações ou o próprio config.json.
+
+   A função escapar() já existia no arquivo e já era usada corretamente
+   na tabela de AUSÊNCIAS — faltava aplicá-la na de LANÇAMENTOS, nos
+   nomes vindos do config.json, nas listas de seleção, na tela de
+   administração e nas dicas dos gráficos. A regra agora é uma só, e
+   está escrita como comentário ao lado da função: todo texto que venha
+   de fora do código-fonte passa por escapar() antes de entrar em
+   innerHTML, inclusive dentro de atributos.
+
+   O que isto NÃO é: autenticação nem controle de acesso. Quem consegue
+   editar os arquivos JSON direto na pasta continua podendo — a proteção
+   contra isso segue sendo a permissão NTFS descrita mais adiante.
+
+3) Total do dia desalinhado em tela estreita
+
+   A linha verde "Total do dia" juntava as quatro primeiras colunas numa
+   só (colspan). Abaixo de 760px de largura, porém, a tela esconde a
+   coluna COMPL. e — para o servidor — também PESSOA, e a conta deixava
+   de fechar: a linha do subtotal seguia ocupando sete colunas enquanto
+   as linhas de dados passavam a ocupar cinco. O total do dia aparecia
+   então uma coluna à direita da coluna PONTOS que ele soma. No
+   computador estava certo; errava só no telefone.
+
+   Agora a linha do subtotal repete a MESMA estrutura de células da
+   linha de dados, com as mesmas classes de ocultação, em vez de juntar
+   colunas. O alinhamento passa a valer em qualquer largura e sobrevive
+   a mudanças futuras de coluna, sem depender de alguém lembrar de
+   recontar o colspan.
+
+   Consequência assumida: o rótulo "Total do dia 03/08/2026" deixou a
+   ponta esquerda da faixa e passou para a coluna ATIVIDADE, encostado
+   no número que ele soma. A faixa verde continua atravessando a linha
+   inteira, e ler o total junto do próprio valor acabou ficando mais
+   direto do que lê-lo a meia tela de distância.
+
+Faixa de configuração recolhível (novidade da v12)
+--------------------------------------------------
+Conectar a pasta e dizer quem se é são atos de UMA vez, mas as duas
+etapas ocupavam o topo da tela para sempre, com o mesmo destaque do
+trabalho do dia. Agora elas vivem numa faixa fina que se RECOLHE
+sozinha assim que as duas estão resolvidas:
+
+  ● Conectado a "unidadeCentral" · Christiane Rocha · SEORE · 6h/dia
+                              [Atualizar dados da rede]     AJUSTES ▾
+
+A faixa reabre sozinha quando volta a haver o que fazer nela — ao
+trocar de identidade, por exemplo. Se a pessoa abrir por conta própria
+com tudo pronto, fica aberta: o recolhimento automático só age quando o
+estado MUDA, nunca por cima de uma escolha manual.
+
+"Atualizar dados da rede" fica NA faixa, não dentro dela. É o único
+botão daqui usado o tempo todo (é o que traz lançamentos e aprovações
+feitos por outras pessoas), e escondê-lo atrás de um clique seria
+trocar um estorvo por outro. Clicar nesse botão não abre nem fecha a
+faixa.
+
+Painel em seções recolhíveis (novidade da v12)
+----------------------------------------------
+A parte final do painel deixou de aparecer inteira de uma vez. Antes,
+a chefia geral recebia na mesma tela quatro indicadores, dois gráficos,
+o resumo por pessoa e a tabela completa — muita informação disputando o
+mesmo espaço. Agora são cinco seções que abrem e fecham:
+
+  > Indicadores do mês        (chefias e adm)
+  > Gráficos                  (chefias e adm)
+  > Resumo por pessoa (N)
+  > Lançamentos (N)
+  > Ausências (N)
+
+As abas ATIVIDADES/AUSÊNCIAS da v11 saíram: ausências viraram mais uma
+seção. Acordeão em vez de abas porque abas obrigam a escolher uma coisa
+só — aqui é possível abrir gráfico e tabela juntos para conferir se os
+números batem, que é justamente o uso previsto.
+
+O número entre parênteses no cabeçalho é o que permite decidir se vale
+abrir sem abrir: quantos lançamentos, quantas pessoas, quantas
+ausências, sempre já filtrados pelo mês e pela unidade selecionados.
+
+Por padrão só LANÇAMENTOS abre; as demais ficam a um clique. Depois
+disso vale o que cada pessoa deixou aberto: o estado é guardado neste
+navegador (chave ra.secoes.v1) e restaurado a cada entrada.
+
+O SERVIDOR não tem acordeão. Ele enxerga só a própria tabela, que já
+era uma coisa só — dividir uma seção em uma seção não ajuda ninguém.
+
+Detalhe de implementação: <details>/<summary> nativo, sem biblioteca
+nem JavaScript de abrir e fechar. O navegador cuida de teclado, foco e
+semântica.
+
+Gráfico dentro de seção fechada
+-------------------------------
+O ECharts não consegue medir um contêiner que o navegador não está
+exibindo: desenhar ali produziria um gráfico de altura zero. Por isso o
+desenho é ADIADO — renderVis() calcula tudo, e se a seção "Gráficos"
+estiver fechada guarda os dados em visPendente e para. Ao abrir a
+seção, o desenho pendente é executado.
+
+Com a seção já aberta, trocar de mês ou de unidade redesenha na hora,
+como antes. Quem nunca abre os gráficos nunca paga o custo de desenhá-
+los, o que também deixa o painel mais leve em máquina fraca.
+
+Indicadores e gráficos para a chefia de unidade (novidade da v12)
+-----------------------------------------------------------------
+Até a v11, os quatro indicadores e os gráficos eram exclusivos da
+chefia geral (e do adm). Agora a CHEFIA DE UNIDADE vê os mesmos, com
+uma diferença: só com os dados da unidade dela.
+
+Não foi preciso filtrar nada para isso. O recarregar() já carregava
+apenas a unidade da chefia, então o recorte "exceto os dados de outras
+unidades" sai do escopo dos dados, não de uma regra de exibição. A
+chefia também continua sem o filtro de unidade nos filtros do topo —
+ela só tem uma.
+
+O que ela vê a menos: o mapa de calor ATIVIDADES POR UNIDADE E
+COMPLEXIDADE some sozinho, porque com uma unidade só ele vira uma linha
+de três células e não diz nada que a barra por pessoa já não tenha
+dito. Isso não é novo — a regra existe desde a v10.
+
+O SERVIDOR continua sem indicadores e sem gráficos: dois blocos
+gerenciais para descrever a produção de uma pessoa só, que ela já vê
+nos totais pessoais e no percentual da meta.
+
+A chefia geral aprova tudo (novidade da v12)
+--------------------------------------------
+Até a v11 a chefia geral só aprovava lançamentos das CHEFIAS de unidade
+e os seus próprios; os dos servidores apareciam para ela apenas como
+leitura. Agora ela aprova QUALQUER lançamento, inclusive os dos
+servidores de qualquer unidade.
+
+A via ordinária não mudou: o normal continua sendo a chefia da unidade
+aprovar os servidores dela. A chefia geral passa a poder fazê-lo
+também — útil quando a chefia da unidade está afastada, o cargo está
+vago ou há acúmulo de pendências.
+
+Onde a aprovação é gravada
+--------------------------
+Cada papel grava SÓ no seu próprio arquivo:
+
+  chefia da unidade -> <UNIDADE>/aprovacoes.json
+  chefia geral      -> GERAL/aprovacoes.json
+
+Quando a chefia geral aprova o lançamento de um servidor, a aprovação
+vai para GERAL/aprovacoes.json — NÃO para o arquivo da unidade. Isso
+mantém o padrão "um arquivo, um único escritor" intacto: se as duas
+chefias gravassem no mesmo arquivo, duas aprovações simultâneas em
+máquinas diferentes poderiam se sobrescrever, e as permissões NTFS
+recomendadas mais abaixo (chefia geral com escrita apenas na pasta
+GERAL) impediriam a gravação.
+
+Por isso a leitura passou a olhar os dois lugares: um lançamento de
+servidor está aprovado se constar no arquivo da unidade OU no da chefia
+geral. Constando nos dois, prevalece o da unidade na exibição, por ser
+a via ordinária.
+
+Desfazer aprovação: só quem gravou
+----------------------------------
+Como cada papel escreve apenas no seu arquivo, ninguém desfaz a
+aprovação do outro:
+
+- a chefia da unidade não consegue desmarcar o que a chefia geral
+  aprovou;
+- a chefia geral não consegue desmarcar o que a chefia da unidade
+  aprovou.
+
+Ao tentar, a tela explica em vez de fingir que funcionou — sem isso a
+marca voltaria sozinha na renderização seguinte e pareceria defeito.
+Quem precisa desfazer procura quem aprovou. O administrador continua
+podendo excluir o lançamento inteiro (a aprovação órfã vai junto).
+
+Percentual da meta alcançada (novidade da v11)
+----------------------------------------------
+A meta é medida por DIA TRABALHADO, conforme a carga horária:
+
+  8 horas  ->  15 pontos por dia
+  6 horas  ->  11 pontos por dia
+
+Os valores ficam em META_DIARIA, no catalogo.js, e são editáveis.
+
+Como o percentual é calculado
+-----------------------------
+  percentual = pontos dos dias que contam / meta somada desses dias
+
+O denominador NÃO é o mês inteiro. Contam apenas os dias em que a
+pessoa efetivamente lançou atividade. Ficam de fora:
+
+- dias sem lançamento nenhum — o sistema não sabe se houve trabalho
+  sem registro, folga ou esquecimento, e chutar qualquer um dos três
+  produziria número errado;
+- dias cobertos por uma ausência registrada. Nesse caso os pontos
+  daquele dia saem TAMBÉM do numerador: tirar o dia da conta e manter
+  os pontos dele inflaria o percentual.
+
+Quando a carga do dia varia (alguém que passou de 8h para 6h no meio
+do mês), cada dia entra com a meta que valia nele — daí a soma das
+metas, e não uma multiplicação por um número fixo.
+
+Onde aparece
+------------
+- No painel pessoal, ao lado dos totais: "Meta alcançada no mês", com
+  a média de pontos e o número de dias logo abaixo.
+- No resumo por pessoa do painel da chefia, como etiqueta ao lado dos
+  pontos. Verde quando alcançou 100%, dourada quando está abaixo.
+
+O número NUNCA é exibido sozinho: vem sempre acompanhado de "em N
+dia(s)". A razão está no limite abaixo.
+
+Limite importante de leitura
+----------------------------
+Quem lançou em 2 dias e bateu a meta nos 2 aparece com 100%, igual a
+quem lançou em 20 dias. O percentual mede a INTENSIDADE dos dias
+trabalhados e registrados, não a assiduidade nem o volume total. Para
+julgar volume, olhe os pontos e o número de dias — que estão do lado.
+
+Isso é consequência direta da regra pedida (média só sobre dias com
+lançamento efetivo) e não um defeito: dias sem lançamento não são
+prova de que não houve trabalho.
+
+O percentual usa TODOS os lançamentos do mês, aprovados ou pendentes:
+a meta mede o trabalho feito, não a velocidade da chefia em aprovar.
+Ele obedece aos filtros do painel, como todo o resto.
+
+Quando aparece "—" ou "meta não calculável"
+-------------------------------------------
+Lançamentos anteriores à v11 não têm carga horária gravada, e sem ela
+não há meta para o dia. Esses dias ficam fora do percentual e são
+contados à parte ("N dia(s) fora da conta"). Se NENHUM dia do mês tiver
+carga, o percentual não é exibido — melhor um traço do que um número
+inventado.
+
+Ausências por período (novidade da v11 — substitui o abono)
+-----------------------------------------------------------
+O checkbox "Lançamento referente a abono" SAIU. No lugar dele há um
+card próprio, "Ausências", onde se registra um PERÍODO de afastamento:
+tipo, primeiro dia, último dia e observação opcional. Os tipos vêm do
+catalogo.js (TIPOS_AUSENCIA): férias, licença médica, outras licenças,
+banco de horas, abono e outro afastamento.
+
+Por que virou período e não mais um checkbox: abono marcado num
+lançamento só dizia que AQUELE dia teve abono, e só existia se a pessoa
+tivesse lançado alguma atividade naquele dia — férias de quinze dias,
+em que ninguém lança nada, eram invisíveis para o sistema. O cálculo de
+meta alcançada precisa justamente do contrário: saber os dias em que a
+pessoa NÃO tinha como trabalhar.
+
+Ausência não é lançamento:
+- não vale pontos e não aparece na tabela de atividades;
+- não passa por aprovação (decisão de projeto) — quem registra é a
+  própria pessoa, e o dado é informativo;
+- fica na lista "Minhas ausências", que a própria pessoa pode excluir a
+  qualquer momento (não há estado "aprovado" para travar).
+
+Períodos sobrepostos são recusados, com a ausência conflitante citada
+na mensagem: sobreposição é quase sempre digitação repetida, e contaria
+o mesmo dia duas vezes na meta.
+
+DIAS CORRIDOS, não úteis: a contagem de dias exibida na tabela e no CSV
+inclui as duas pontas e não desconta fins de semana nem feriados — o
+aplicativo não tem tabela de feriados.
+
+Esse número serve para leitura humana; o percentual da meta NÃO o usa.
+Lá o que importa é outra coisa: se o dia de um lançamento cai dentro de
+algum período de ausência, aquele dia sai da conta. Sábados e feriados
+nunca chegam a ser um problema porque, sem lançamento, o dia já não
+entrava no cálculo.
+
+Seção "Ausências" no painel
+---------------------------
+Chefia de unidade, chefia geral e administrador têm uma seção própria
+de AUSÊNCIAS no painel (na v11 era uma aba; virou seção na v12). Mostra
+as ausências das pessoas sob a alçada de quem olha, obedecendo aos
+mesmos filtros de mês, unidade e pessoa, com exportação em CSV própria.
+
+As duas tabelas são separadas de propósito: uma tem pontos e aprovação,
+a outra não tem nem uma coisa nem outra. Misturá-las na mesma tabela
+somaria maçã com laranja. O servidor não tem essa seção — as ausências
+dele já estão no card "Minhas ausências".
+
+Uma ausência entra no mês filtrado se ENCOSTA nele em qualquer dia, não
+apenas se começa nele: férias de 28/08 a 10/09 aparecem em agosto e em
+setembro. O botão de excluir na aba só aparece para a própria pessoa e
+para o administrador — a chefia enxerga, mas não apaga.
+
+As ausências entram no cálculo do percentual da meta (acima): os dias
+cobertos por elas saem da conta. Já os GRÁFICOS da v10 continuam
+contando atividade bruta, sem descontar nada — quem tirou férias no
+mês aparece na barra ao lado de quem trabalhou o mês inteiro.
+
+Lançamentos antigos com abono
+-----------------------------
+Os que já existem continuam sendo exibidos com a etiqueta "abono" na
+tabela e exportados na coluna "Abono" do CSV. Não houve migração
+automática para ausências: um lançamento de abono não guarda período,
+e inventar um a partir da data isolada produziria dado falso. Nos
+lançamentos novos a coluna "Abono" sai vazia.
+
+Recibo do lançamento (novidade da v11)
+--------------------------------------
+Ao registrar uma atividade, abre-se uma janela com o recibo do que foi
+gravado: data, atividade, processo, complexidade e pontos, observações
+(quando houver), a situação ("Pendente de aprovação pela chefia da
+unidade", ou pela chefia geral, conforme o papel de quem lançou) e o
+total de pontos no mês já atualizado. A janela precisa ser fechada à
+mão — não some sozinha.
+
+A mesma janela confirma o registro de uma AUSÊNCIA, com tipo, período,
+dias corridos e o lembrete de que ausências não passam por aprovação.
+
+Antes disso, a única resposta era o aviso verde abaixo do botão, que
+desaparecia em 6 segundos: quem desviava o olhar não sabia dizer se o
+lançamento tinha ido para a rede ou não, e relançava por via das
+dúvidas. Ao fechar, o foco volta para o campo de busca de atividade,
+que é o caso comum — lançar a próxima em seguida.
+
+Detalhe de implementação: o recibo é exibido FORA do try/catch da
+gravação. O lançamento já está na rede quando ele aparece; se algo
+falhasse ao montar a janela dentro do try, a pessoa veria "não foi
+possível gravar na rede" e lançaria tudo de novo, duplicando o
+registro.
+
+Carga horária diária (novidade da v11)
+--------------------------------------
+Na etapa 2, logo abaixo do nome, a pessoa marca a sua jornada diária:
+8 HORAS ou 6 HORAS. É desse dado que sai a meta diária (15 ou 11 pontos)
+usada no percentual descrito no início deste arquivo — sem ele, comparar
+quem cumpre 6h com quem cumpre 8h pelo total bruto de pontos seria
+injusto com a primeira.
+
+Onde o dado fica gravado
+------------------------
+No CABEÇALHO do arquivo de lançamentos da PRÓPRIA pessoa:
+
+  SEORE/lancamentos/christiane-rocha.json
+  { "versao": 3, "unidade": "SEORE", "servidor": "Christiane Rocha",
+    "cargaHoraria": 6, "atualizadoEm": "...",
+    "registros": [ ... ], "ausencias": [ ... ] }
+
+O arquivo passou a guardar TRÊS coisas: carga horária, lançamentos e
+ausências. Gravar só uma delas apagaria as outras duas, então no código
+toda escrita passa por atualizarArquivoPessoa(), que lê o estado atual,
+aplica a mudança e regrava o conjunto. Não chame gravarMeuArquivo()
+direto ao acrescentar uma quarta coisa no futuro.
+
+Recusa de gravar por cima de arquivo ilegível
+---------------------------------------------
+Antes de gravar, atualizarArquivoPessoa() lê com lerArquivoParaGravar(),
+que separa dois casos que lerMeuArquivo() confunde num null só:
+
+  arquivo não existe, ou está vazio -> pode criar
+  existe mas não decifra            -> RECUSA, nada é gravado
+
+Sem essa separação, um arquivo corrompido (uma gravação interrompida,
+por exemplo) seria tratado como "pessoa nova" e sobrescrito com uma
+lista de lançamentos VAZIA — o histórico inteiro dela perdido, e no
+primeiro acesso, porque a gravação da carga horária acontece já na
+identificação. A tela mostra o nome do arquivo e manda procurar o
+administrador; a identidade não é travada.
+
+Arquivo com JSON válido mas sem a lista "registros" também é recusado:
+estrutura inesperada é motivo para parar, não para presumir vazio.
+
+A escolha do lugar não é arbitrária. A carga NÃO foi para o config.json
+porque aquele arquivo é gravado somente pelo administrador: se cada
+servidor precisasse escrever nele para marcar a própria jornada, duas
+pessoas salvando ao mesmo tempo poderiam sobrescrever uma à outra, e as
+permissões NTFS recomendadas mais abaixo (servidor sem escrita no
+config.json) impediriam a gravação. No arquivo da própria pessoa não há
+esse problema: ela já é a única escritora dele. O padrão "um arquivo,
+um único escritor" continua valendo sem exceção.
+
+Consequência assumida: a carga é AUTODECLARADA. O aplicativo não a
+confere contra o RH; quem marcar errado registra errado, do mesmo modo
+que já acontece com a complexidade de cada atividade.
+
+Por que é obrigatório marcar
+----------------------------
+Sem carga marcada, o botão "Confirmar identidade" não passa. Presumir
+8h para quem não marcou seria pior do que perguntar: contaminaria em
+silêncio a média de todo mundo que cumpre 6h. A cobrança acontece uma
+única vez por pessoa — nas vezes seguintes o valor já vem marcado,
+lido do arquivo da rede (e não do navegador, para que a troca de
+jornada feita em outra máquina valha em todas).
+
+Também carimbada em cada lançamento
+-----------------------------------
+Além do cabeçalho, cada lançamento leva o campo "cargaHoraria" com o
+valor vigente no momento em que foi criado. Assim, quem passar de 8h
+para 6h no meio do ano não vê as médias dos meses anteriores mudarem
+retroativamente — o passado é calculado com a jornada que valia então.
+Lançamentos feitos até a v10 não têm o campo; no CSV eles saem com a
+coluna "Carga horária" vazia, nunca com zero.
+
+O administrador não tem carga horária: ele não registra atividades, e
+para o perfil adm o campo nem chega a aparecer.
+
+Visão gerencial em gráficos (novidade da v10)
+---------------------------------------------
+No painel das CHEFIAS e do administrador (na v10 era só a chefia geral;
+a chefia de unidade entrou na v12) aparecem, nas seções "Indicadores do
+mês" e "Gráficos", quatro indicadores e dois gráficos:
+
+- Indicadores do mês: lançamentos, pontos, % aprovado e pendentes.
+- ATIVIDADES POR PESSOA E COMPLEXIDADE — barra horizontal empilhada.
+  O comprimento da barra é o NÚMERO de atividades; a divisão em três
+  tons de azul mostra a composição por complexidade (mais escuro =
+  mais complexo). Passe o mouse para ver os números exatos.
+- ATIVIDADES POR UNIDADE E COMPLEXIDADE — mapa de calor. Quanto mais
+  escura a célula, mais atividades; o número aparece dentro dela.
+  Some quando há uma única unidade em tela (a barra acima já responde).
+
+Tudo obedece aos filtros logo acima (mês, unidade, pessoa, situação)
+e sai dos MESMOS dados da tabela — se os números divergirem da tabela,
+é defeito. Os gráficos não substituem a tabela nem o CSV: quem precisa
+do número exato lê a tabela; os gráficos servem para achar onde olhar.
+
+Por que a ordem é alfabética por padrão
+---------------------------------------
+O botão "ordenar por volume" existe, mas NÃO é o padrão, de propósito.
+Ordenar pessoas por quantidade transforma o painel num ranking de
+produtividade, e o dado não sustenta essa leitura: lançamentos de
+abono contam como atividade e o GRÁFICO não desconta ausências nem
+normaliza por jornada — quem tirou férias no mês aparece na barra ao
+lado de quem trabalhou o mês inteiro. Para essa leitura existe o
+percentual da meta, no resumo por pessoa logo abaixo do gráfico. A
+complexidade de cada atividade é fixada no catalogo.js,
+não pelo esforço real da pessoa. Duas unidades podem ter perfis
+opostos só porque o catálogo classificou assim. Use o gráfico para
+enxergar distribuição e carga, não para comparar desempenho.
+
+Sobre pontos e complexidade
+---------------------------
+PONTOS = { baixa 5, média 10, alta 15 } é função direta da
+complexidade — pontuação e complexidade são a MESMA informação. Por
+isso os pontos aparecem só como indicador numérico, nunca como um
+segundo gráfico ao lado do de complexidade (seria o mesmo dado duas
+vezes) e nunca como segundo eixo do mesmo gráfico.
+
+Biblioteca de gráficos (ECharts)
+--------------------------------
+O arquivo echarts.min.js (521 KB) é um build PRÓPRIO, só com o que o
+aplicativo usa: barra, mapa de calor, eixo, dica, legenda e escala de
+cor — o pacote completo do ECharts tem 1 MB. Ele fica NA PASTA do
+aplicativo e é registrado no sw.js; nunca use CDN, porque o service
+worker é cache-first e a máquina pode estar sem internet. Ao trocar a
+biblioteca por uma versão nova, incremente VERSAO no sw.js.
+
+Sem internet, sem build, sem npm: é um <script> comum, como o
+catalogo.js e o rede.js.
+
+O que mudou em relação à v1
+---------------------------
+Os dados deixaram de morar no navegador de cada pessoa e passaram a
+morar na pasta central da rede, acessada pelo navegador (Chrome/Edge)
+via File System Access API:
+
+  \\COBIB\AmbienteTrabalho\unidadeCentral\
+  ├── SEORE\
+  │   ├── lancamentos\
+  │   │   ├── christiane-rocha.json   <- só a Christiane grava
+  │   │   ├── silvia-regina.json      <- só a Silvia grava
+  │   │   └── <chefia-da-seore>.json  <- lançamentos da própria chefia
+  │   └── aprovacoes.json             <- só a chefia da SEORE grava
+  │                                      (aprova os SERVIDORES da unidade)
+  ├── SEACE\ ... (idem para SEARI, SECAQ, SEDIN, SENOV, SEPERI, SEREN)
+  └── GERAL\
+      ├── lancamentos\
+      │   └── <chefia-geral>.json     <- lançamentos da chefia geral
+      └── aprovacoes.json             <- só a chefia geral grava
+                                         (aprova as CHEFIAS de unidade,
+                                          os próprios lançamentos e,
+                                          desde a v12, os de qualquer
+                                          servidor)
+
+Padrão "um arquivo, um único escritor": cada servidor grava apenas o
+seu arquivo de lançamentos e cada chefia grava apenas o arquivo de
+aprovações da sua unidade. Não há escrita concorrente no mesmo
+arquivo, então várias pessoas podem usar o sistema ao mesmo tempo em
+máquinas diferentes. As subpastas são criadas automaticamente pelo
+aplicativo no primeiro uso de cada unidade.
+
+Escolha da atividade (novidade da v9)
+-------------------------------------
+Até a v8 a atividade era escolhida em duas listas suspensas: primeiro
+o processo de trabalho, depois a atividade. Isso obrigava a pessoa a
+adivinhar sob qual processo a sua tarefa estava classificada, e os
+textos das atividades (até 205 caracteres) apareciam cortados dentro
+da lista. Agora:
+
+- Campo de BUSCA único sobre todas as atividades do catálogo. Digite
+  qualquer parte do texto ("higienizar", "acervo raro", "evento") e a
+  lista filtra enquanto você digita, mostrando o processo de cada
+  atividade como legenda. Vários termos podem ser digitados em
+  qualquer ordem.
+- A busca ignora acentos e entende flexões: quem digita "catalogar"
+  encontra "catalogação"; "indexar" encontra "indexação". Se nada for
+  encontrado, tente outra palavra.
+- Ao escolher, o texto INTEGRAL da atividade fica visível na tela
+  antes de registrar — não há mais texto cortado.
+- Teclado: setas para percorrer, Enter para escolher, Esc para fechar.
+- O filtro por processo continua disponível, agora opcional, no link
+  "filtrar por processo" abaixo do campo.
+- ATIVIDADES FREQUENTES: acima da busca aparecem as cinco atividades
+  que a própria pessoa mais registrou, como botões de um clique. A
+  lista é calculada a partir do histórico da própria pessoa — não há
+  nada a configurar, e ela aparece assim que houver lançamentos.
+
+O catalogo.js não mudou: processos, atividades e complexidades
+continuam sendo editados exatamente como antes.
+
+Configuração central (config.json)
+----------------------------------
+A partir da v6, unidades, chefias, servidores, senhas e a exigência
+de senha vivem no arquivo config.json NA RAIZ da pasta unidadeCentral
+— por isso a conexão da pasta passou a ser a etapa 1 e a
+identificação a etapa 2. Na primeira conexão, o config.json é criado
+automaticamente a partir da semente do catalogo.js do aplicativo.
+Depois disso, o catalogo.js só continua valendo para PROCESSOS e
+ATIVIDADES; pessoas e senhas são administradas pelo perfil adm.
+
+Pasta oficial (selo de instalação)
+----------------------------------
+Somente o Administrador define a pasta central. Ao conectar-se a uma
+pasta virgem e confirmar sua identidade, o adm a OFICIALIZA: um selo
+(identificador único) é gravado no config.json. A partir daí:
+- Pessoas comuns só conseguem se identificar em pastas com o selo;
+  em pasta não oficializada, a lista mostra apenas "Administrador".
+- Se alguém conectar uma pasta com selo DIFERENTE do já usado naquele
+  computador, o aplicativo recusa (evita apontar para pasta errada e
+  fragmentar os dados); só o adm pode confirmar a troca.
+Limite do navegador: a seleção da pasta não pode ser automatizada —
+cada pessoa faz o gesto de escolha uma única vez por computador
+(depois basta "Reconectar"); o caminho exibido como orientação na
+etapa 1 vem da constante PASTA_REDE no catalogo.js.
+
+Perfil Administrador
+--------------------
+Na lista de identificação há a opção "Administrador" (senha inicial:
+adm — TROQUE-A no primeiro acesso, no próprio painel). O adm não
+registra atividades nem aprova; seu painel permite:
+- Senhas: definir/alterar/remover a senha de qualquer pessoa e a sua
+  própria; ativar "exigir senha de todos".
+- Lançamentos: visualizar tudo (como a chefia geral) e EXCLUIR
+  qualquer lançamento para correção de erros, inclusive aprovados
+  (a aprovação órfã é removida junto).
+- Catálogo: editar o JSON de unidades/chefias/servidores e a chefia
+  geral, com validação, direto no config.json. Renomear uma pessoa
+  desvincula a senha e o arquivo de lançamentos do nome antigo.
+
+Perfis (todos registram atividades, exceto o adm)
+-------------------------------------------------
+Cada lançamento carrega o papel de quem o criou (servidor, chefia ou
+chefia geral), e é o papel que define quem aprova:
+
+- Servidor: registra atividades; aprovado pela CHEFIA DA UNIDADE.
+- Chefia da unidade: registra as próprias atividades (gravadas na
+  pasta da unidade) e aprova os lançamentos dos servidores da
+  unidade. Os lançamentos da própria chefia aparecem como
+  "Pendente" até a CHEFIA GERAL aprovar — a chefia não consegue
+  aprovar a si mesma.
+- Chefia geral: visualiza tudo (todas as unidades ou uma por vez),
+  registra as próprias atividades (pasta GERAL) e, desde a v12, aprova
+  QUALQUER lançamento no painel geral — das chefias de unidade, dos
+  servidores e os seus próprios. O que ela aprova é gravado em
+  GERAL/aprovacoes.json, no nome dela, e só por ela pode ser desfeito
+  (ver "A chefia geral aprova tudo", no início deste arquivo).
+
+Todos veem seus totais pessoais (dia/mês) e a situação de cada
+lançamento (Pendente/Aprovado, com "aprovado por"). Lançamentos só
+podem ser excluídos pelo próprio autor e enquanto pendentes.
+
+Como usar
+---------
+1. Publique esta pasta do aplicativo em local acessível (pode ser a
+   própria rede, ex.: \\COBIB\AmbienteTrabalho\unidadeCentral\app).
+   Abrir o index.html com duplo clique no Chrome/Edge já funciona,
+   inclusive o acesso à pasta; para instalar como PWA (ícone próprio,
+   offline), sirva por HTTP(S) na intranet.
+2. Identifique-se escolhendo apenas o seu NOME na lista — o papel
+   (servidor/chefia/chefia geral) e a unidade vêm do catalogo.js e
+   não podem ser alterados na tela. A identidade fica travada na
+   sessão; para mudar, use "Trocar identidade", que fecha e
+   recarrega os painéis (evita resíduo de permissões de um papel
+   anterior). ATENÇÃO: preencha as chefias reais no catalogo.js —
+   os nomes "Exemplo Chefia ..." são apenas demonstrativos.
+3. Conecte a pasta unidadeCentral no seletor do navegador. A escolha
+   fica memorizada; nas próximas sessões basta clicar em
+   "Reconectar pasta" para confirmar a permissão.
+   Dica: mapear a rede como unidade de disco (ex.: R:) torna a
+   navegação no seletor mais simples.
+4. Use "Atualizar dados da rede" para ver lançamentos/aprovações
+   feitos por outras pessoas desde que a tela foi aberta.
+
+Senhas (opcionais, no catalogo.js)
+----------------------------------
+É possível exigir senha após a escolha do nome. O catalogo.js guarda
+apenas o hash SHA-256 de (nome + "|" + senha) — nunca a senha em si:
+1. Abra gerar-senha.html, digite o nome (idêntico ao catálogo) e a
+   senha; copie a linha gerada.
+2. Cole a linha dentro de SENHAS no catalogo.js.
+3. EXIGIR_SENHA = false: quem tem hash cadastrado precisa da senha,
+   quem não tem entra livremente (fase de transição).
+   EXIGIR_SENHA = true: só entra quem tiver hash cadastrado.
+A identidade confirmada fica memorizada no navegador da pessoa
+(como um "lembrar-me"); "Trocar identidade" volta a exigir a senha.
+Troca de senha = gerar novo hash e substituir a linha.
+
+Entenda o alcance: a senha impede o uso casual ou acidental de
+identidade alheia dentro do aplicativo. Ela NÃO impede alguém
+decidido de editar os arquivos JSON diretamente na pasta da rede —
+para isso, o controle continua sendo o abaixo.
+
+Segurança recomendada (via permissões NTFS/AD, sem código)
+----------------------------------------------------------
+O aplicativo não tem autenticação própria — quem abre como chefia é
+chefia. O controle real deve vir das permissões da pasta:
+- cada servidor com escrita apenas no próprio arquivo (ou na pasta
+  lancamentos da sua unidade);
+- grupo da chefia de cada unidade com escrita em aprovacoes.json da
+  sua unidade (e no próprio arquivo de lançamentos);
+- chefia geral com escrita apenas na pasta GERAL;
+- administrador(es) com escrita em config.json e, se a exclusão
+  administrativa de lançamentos for desejada, na árvore toda;
+- demais acessos somente leitura.
+Assim, mesmo que alguém abra o perfil errado, o Windows bloqueia a
+gravação indevida.
+
+Manutenção
+----------
+- catalogo.js: unidades, servidores por unidade, processos,
+  atividades e complexidades permitidas (mesmos processos para todas
+  as unidades).
+- Ao atualizar arquivos do aplicativo, incremente VERSAO em sw.js,
+  corrija a etiqueta no cabeçalho do index.html e marque a versão
+  publicada com uma tag no repositório. Os três têm de concordar.
+- CSV exportado (com carga horária, situação e "aprovado por") abre
+  direto no Excel.
+- Os gráficos ficam nas seções "Indicadores do mês" e "Gráficos" do
+  index.html, liberadas para chefia de unidade, chefia geral e adm
+  (condição em renderVis()). Para restringi-los de novo à chefia geral,
+  tire ehChefia() dessa condição.
+
+Limitações conhecidas
+---------------------
+- Chrome e Edge apenas (decisão de projeto).
+- Sem trilha de auditoria além de "aprovado por/em"; sem assinatura.
+- A visão de outras máquinas exige clicar em "Atualizar dados da
+  rede" (não há notificação em tempo real).

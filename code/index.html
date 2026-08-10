@@ -1,0 +1,2838 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Programa de Resultados — COBIB</title>
+<meta name="description" content="Registro diário de processos de trabalho e atividades por unidade e servidor, com aprovação em cadeia pelas chefias.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1D2720">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+/* ===================== PALETA =====================
+   Cores em hexadecimal, como nas versões anteriores. A maquete da
+   pasta design13 as escreveu em oklch(); foram convertidas aqui para
+   que a folha continue legível para quem nunca viu essa notação.
+   O significado das cores não mudou: verde é aprovado, dourado é
+   pendente. O rail escuro é superfície, não estado. */
+:root{
+  --tinta:#1B211D; --papel:#F0F2F0; --ficha:#FFFFFF;
+  --linha:#D7DCD8; --linha-suave:#E5E9E6;
+  --grafite:#646B65; --grafite-claro:#6D746E;
+  --verde:#3D5840; --verde-fundo:#2A442E; --verde-suave:#EDF6EE;
+  --verde-borda:#DBEEDD; --verde-vivo:#51BF68;
+  --dourado:#775814; --dourado-suave:#F8EDD8; --dourado-borda:#E7DDC8;
+  --dourado-vivo:#D09A21;
+  --erro:#A03F3C; --erro-suave:#FFD9D4;
+  /* rail de navegação */
+  --rail:#1D2720; --rail-linha:#2E3831; --rail-ativo:#2B3930;
+  --rail-hover:#2B362E; --rail-texto:#E6E9E5; --rail-mudo:#9DA89E;
+  --rail-mudo2:#808981; --rail-ponto:#4A564E;
+  --raio:8px; --raio-p:6px;
+  --serif: Georgia, "Times New Roman", serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+*{box-sizing:border-box}
+/* Ver LEIA-ME: sem o !important, qualquer regra nossa que declare
+   display vence o display:none que o navegador dá a [hidden]. */
+[hidden]{display:none !important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0; background:var(--papel); color:var(--tinta);
+  font-family:var(--sans); font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--verde); outline-offset:2px}
+.rail :focus-visible{outline-color:var(--verde-vivo)}
+
+/* ===================== ESTRUTURA ===================== */
+.app{display:flex; min-height:100vh; align-items:stretch}
+
+/* ---------- rail de navegação ---------- */
+.rail{flex:0 0 244px; background:var(--rail); color:var(--rail-texto);
+  display:flex; flex-direction:column; position:sticky; top:0; height:100vh}
+.rail-topo{padding:22px 20px 18px; border-bottom:1px solid var(--rail-linha)}
+/* O nome é o do programa, por extenso. Em duas linhas dentro dos 244px do
+   rail: o espaço entre "Programa" e "de" é inseparável no HTML, para a
+   quebra cair sempre antes de "Resultados" e nunca deixar o "de" sozinho. */
+.marca{display:block; font-family:var(--serif); font-size:23px; line-height:1.1;
+  color:#F9FBF9}
+.marca-sub{display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap}
+.marca-sub .org{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--rail-mudo)}
+.marca-sub .versao{font-size:10.5px; letter-spacing:.04em; color:var(--rail-mudo);
+  border:1px solid #3A463E; border-radius:999px; padding:1px 7px; white-space:nowrap}
+
+.rail-nav{padding:14px 10px; display:flex; flex-direction:column; gap:2px;
+  flex:1 1 auto; overflow-y:auto}
+.rail-grupo{font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--rail-mudo2); padding:6px 10px 8px; margin:0}
+.rail-grupo + .rail-grupo, .rail-nav > .rail-grupo:not(:first-child){padding-top:18px}
+.rail-item{display:flex; align-items:center; gap:10px; width:100%;
+  padding:9px 11px; border:0; border-radius:7px; background:none; cursor:pointer;
+  font-size:13.5px; font-weight:500; color:#CED3CC; text-align:left}
+.rail-item:hover{background:var(--rail-hover)}
+.rail-item[aria-current=page]{background:var(--rail-ativo); color:#F9FBF9}
+.rail-item .ponto{width:6px; height:6px; border-radius:50%;
+  background:var(--rail-ponto); flex:none}
+.rail-item[aria-current=page] .ponto{background:var(--verde-vivo)}
+.rail-item .rail-num{margin-left:auto; font-size:11px; color:var(--rail-mudo);
+  font-variant-numeric:tabular-nums}
+.rail-item .rail-badge{margin-left:auto; font-size:11px; font-weight:600;
+  background:var(--dourado-vivo); color:#221909; border-radius:999px;
+  min-width:20px; text-align:center; padding:1px 6px}
+
+.rail-pe{padding:14px 16px 16px; border-top:1px solid var(--rail-linha);
+  display:flex; flex-direction:column; gap:10px}
+.pessoa{display:flex; align-items:center; gap:10px}
+.avatar{flex:none; width:30px; height:30px; border-radius:50%;
+  background:var(--rail-ativo); color:var(--rail-texto); font-size:11px;
+  font-weight:600; display:flex; align-items:center; justify-content:center}
+.pessoa-txt{min-width:0}
+.pessoa-txt b{display:block; font-size:13px; color:#F9FBF9;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.pessoa-txt small{display:block; font-size:11.5px; color:var(--rail-mudo)}
+.rail-trocar{background:none; border:0; padding:0; cursor:pointer; text-align:left;
+  font-size:11.5px; color:var(--rail-mudo); text-decoration:underline}
+.rail-trocar:hover{color:var(--rail-texto)}
+.conexao{display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--rail-mudo)}
+.led{width:8px; height:8px; border-radius:50%; background:var(--erro); flex:none}
+.led.ok{background:var(--verde-vivo)}
+.rail-acao{width:100%; padding:8px 10px; border:1px solid #3A463E; border-radius:var(--raio-p);
+  background:var(--rail-ativo); color:var(--rail-texto); font-size:12.5px;
+  font-weight:600; cursor:pointer}
+.rail-acao:hover{background:#354039}
+
+/* ---------- palco ---------- */
+.palco{flex:1 1 auto; min-width:0; display:flex; flex-direction:column}
+.topo{padding:26px 32px 18px; border-bottom:1px solid var(--linha);
+  display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap;
+  background:var(--ficha)}
+.topo .titulo{flex:1 1 340px; min-width:0}
+.topo h1{font-family:var(--serif); font-weight:400; font-size:27px; margin:0; line-height:1.2}
+.topo .sub{margin:6px 0 0; color:var(--grafite); font-size:13px; max-width:78ch}
+.topo .controles{display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap}
+.corpo{padding:22px 32px 56px; flex:1 1 auto}
+.colunas{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:20px; align-items:start}
+.colunas.estreita{grid-template-columns:340px minmax(0,1fr)}
+
+/* ---------- cartões e formulário ---------- */
+.cartao{background:var(--ficha); border:1px solid var(--linha);
+  border-radius:var(--raio); padding:20px}
+.cartao + .cartao{margin-top:16px}
+.cartao h2{font-size:14.5px; font-weight:600; margin:0}
+.cartao .dica{margin:5px 0 0; color:var(--grafite); font-size:12.5px}
+.passo{display:flex; gap:10px; align-items:baseline; margin:0 0 14px}
+.passo .n{flex:none; width:21px; height:21px; border-radius:50%;
+  background:var(--verde-suave); color:var(--verde); font-size:11px; font-weight:600;
+  display:flex; align-items:center; justify-content:center; align-self:flex-start}
+.rotulo{display:block; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--grafite); font-weight:600; margin:0 0 5px}
+label.rotulo{cursor:default}
+select,input[type=date],input[type=month],input[type=text],input[type=password],textarea{
+  width:100%; padding:9px 11px; font:inherit; font-size:13.5px; color:var(--tinta);
+  background:var(--ficha); border:1px solid var(--linha); border-radius:var(--raio-p)}
+textarea{resize:vertical; min-height:64px}
+.campo{margin-bottom:14px}
+.campo:last-child{margin-bottom:0}
+.grade2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+
+.acao{background:var(--verde); color:#fff; border:0; border-radius:var(--raio-p);
+  padding:11px 20px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer}
+.acao:hover{background:var(--verde-fundo)}
+.acao.sec{background:var(--ficha); color:var(--tinta); border:1px solid var(--linha)}
+.acao.sec:hover{background:var(--papel)}
+.acao.mini{padding:7px 13px; font-size:12.5px}
+.acao:disabled{opacity:.45; cursor:not-allowed}
+.acao:disabled:hover{background:var(--verde)}
+.acao.sec:disabled:hover{background:var(--ficha)}
+.ligacao{background:none; border:0; padding:0; font:inherit; font-size:12.5px;
+  color:var(--verde); text-decoration:underline; cursor:pointer}
+
+/* chips de complexidade e de carga */
+.chips{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+.chips.duas{grid-template-columns:1fr 1fr}
+.chip{border:1px solid var(--linha); background:var(--ficha); border-radius:var(--raio-p);
+  padding:12px 14px; font:inherit; cursor:pointer; color:var(--grafite);
+  display:flex; align-items:baseline; gap:7px; justify-content:center;
+  transition:border-color .12s, background .12s}
+.chip b{font-family:var(--serif); font-size:19px; font-weight:400; color:var(--tinta)}
+.chip small{font-size:10.5px; letter-spacing:.09em; text-transform:uppercase}
+.chip[aria-pressed=true]{border-color:var(--verde); background:var(--verde-suave); color:var(--verde)}
+.chip[aria-pressed=true] b{color:var(--verde)}
+/* Desabilitado com contraste suficiente para AINDA SER LIDO: o chip
+   diz quais complexidades a atividade admite, o que é informação, não
+   apenas um controle indisponível. */
+.chip:disabled{background:var(--papel); color:#8A918B; cursor:not-allowed}
+.chip:disabled b{color:#8A918B}
+
+/* ---------- avisos ---------- */
+.aviso{background:var(--verde-suave); border:1px solid var(--verde-borda);
+  border-radius:var(--raio-p); color:var(--verde-fundo);
+  padding:9px 12px; font-size:12.5px; margin-top:12px; display:none}
+.aviso.erro{background:var(--erro-suave); border-color:#F0C4BE; color:var(--erro)}
+
+/* ---------- tabelas ---------- */
+.quadro{background:var(--ficha); border:1px solid var(--linha);
+  border-radius:var(--raio); overflow:hidden}
+.quadro-topo{display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:14px 18px; border-bottom:1px solid var(--linha)}
+.quadro-topo h2{font-size:14px; font-weight:600; margin:0}
+.quadro-topo .cont{color:var(--grafite); font-weight:400}
+.quadro-topo .direita{margin-left:auto; display:flex; gap:8px; flex-wrap:wrap}
+.rolagem{overflow-x:auto}
+/* Sem um piso de largura, a coluna Atividade é espremida até sobrar uma
+   palavra por linha em tela estreita — a linha fica altíssima e ilegível.
+   Com o piso, a tabela rola na horizontal DENTRO do quadro (a página em
+   si nunca rola) e o texto quebra num comprimento que se lê. */
+table{width:100%; min-width:600px; border-collapse:collapse; font-size:13px}
+
+.rolagem table.larga{min-width:720px}
+th{text-align:left; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--grafite); font-weight:600; padding:10px 14px;
+  border-bottom:1px solid var(--linha); white-space:nowrap}
+td{border-bottom:1px solid var(--linha-suave); padding:11px 14px; vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right; font-variant-numeric:tabular-nums}
+.atv-t{display:block}
+.atv-s{display:block; color:var(--grafite); font-size:11.5px; margin-top:2px}
+/* Cabeçalho de DIA no lugar da antiga linha de subtotal: o total do dia
+   passa a abrir o grupo em vez de fechá-lo, e some o problema de
+   colspan que desalinhava a coluna Pontos em tela estreita. */
+tr.dia td{background:var(--papel); padding:7px 14px; border-bottom:1px solid var(--linha)}
+tr.dia .d{font-size:10.5px; letter-spacing:.09em; text-transform:uppercase;
+  font-weight:600; color:var(--tinta)}
+tr.dia .p{color:var(--grafite); font-weight:400; letter-spacing:0; text-transform:none}
+tr.pendente td{background:#FEFBF6}
+.vazio{color:var(--grafite); text-align:center; padding:30px 14px; font-size:13px}
+.excluir{background:none; border:0; color:var(--erro); cursor:pointer;
+  font-size:12.5px; padding:6px 8px; margin:-6px -8px}
+.excluir:hover{text-decoration:underline}
+
+/* ---------- etiquetas de situação ---------- */
+.st{border-radius:999px; padding:2px 9px; font-size:11px; font-weight:600;
+  white-space:nowrap; display:inline-block}
+.st.ap{background:var(--verde-suave); color:var(--verde)}
+.st.pe{background:var(--dourado-suave); color:var(--dourado)}
+.tag-papel{background:var(--papel); color:var(--grafite); border:1px solid var(--linha);
+  border-radius:999px; padding:1px 8px; font-size:10.5px; font-weight:600}
+.tag-abono{background:var(--dourado-suave); color:var(--dourado);
+  border-radius:999px; padding:1px 8px; font-size:10.5px; font-weight:600}
+.tag-aus{background:var(--verde-suave); color:var(--verde); border-radius:999px;
+  padding:2px 9px; font-size:11px; font-weight:600; white-space:nowrap}
+.aprovado-em{color:var(--grafite); font-size:11.5px; white-space:nowrap}
+
+/* ---------- abas do painel ---------- */
+.abas{display:flex; gap:2px; border-bottom:1px solid var(--linha); margin-bottom:18px;
+  flex-wrap:wrap}
+.aba{background:none; border:0; border-bottom:2px solid transparent; cursor:pointer;
+  padding:10px 14px; font:inherit; font-size:13.5px; font-weight:500;
+  color:var(--grafite); margin-bottom:-1px}
+.aba:hover{color:var(--tinta)}
+.aba[aria-selected=true]{border-bottom-color:var(--verde); color:var(--tinta); font-weight:600}
+.aba .cont{color:var(--grafite); font-weight:400; margin-left:5px}
+.aba[aria-selected=true] .cont{color:var(--dourado)}
+
+/* ---------- cartões de número ---------- */
+.numeros{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px}
+.num-cartao{background:var(--ficha); border:1px solid var(--linha);
+  border-radius:var(--raio); padding:18px 20px}
+.num-cartao.destaque{background:var(--rail); border-color:var(--rail); color:var(--papel)}
+.num-cartao .rotulo{color:var(--grafite)}
+.num-cartao.destaque .rotulo{color:var(--rail-mudo)}
+.num-cartao .valor{font-family:var(--serif); font-size:34px; font-weight:400; line-height:1.05}
+.num-cartao .valor .un{font-family:var(--sans); font-size:15px; color:var(--grafite)}
+.num-cartao.destaque .valor .un{color:var(--rail-mudo)}
+.num-cartao .rodape{margin:10px 0 0; font-size:12px; color:var(--grafite)}
+.num-cartao.destaque .rodape{color:var(--rail-mudo)}
+.num-cartao .explica{margin:8px 0 0; font-size:11.5px; line-height:1.45; color:var(--rail-mudo)}
+.barra{height:5px; border-radius:999px; background:#39433B; overflow:hidden; margin-top:12px}
+.barra > i{display:block; height:100%; border-radius:999px; background:var(--verde-vivo)}
+.barra > i[data-abaixo=true]{background:var(--dourado-vivo)}
+
+/* “Hoje” e lista do dia, na coluna direita do lançamento */
+.hoje{background:var(--rail); color:var(--papel); border-radius:var(--raio); padding:16px 18px}
+.hoje .rotulo{color:var(--rail-mudo); margin-bottom:8px}
+.hoje .valor{font-family:var(--serif); font-size:32px; line-height:1}
+.hoje .de{font-size:13px; color:var(--rail-mudo); margin-left:6px}
+.hoje .pe{display:flex; justify-content:space-between; gap:10px;
+  margin-top:10px; font-size:11.5px; color:var(--rail-mudo)}
+.lista-dia{list-style:none; margin:0; padding:0}
+.lista-dia li{display:flex; gap:12px; padding:11px 0; border-bottom:1px solid var(--linha-suave)}
+.lista-dia li:last-child{border-bottom:0}
+.lista-dia .pts{flex:none; width:26px; text-align:right; font-variant-numeric:tabular-nums;
+  font-weight:600; font-size:13px}
+.lista-dia .txt{min-width:0; font-size:12.5px; line-height:1.4}
+
+/* ---------- busca de atividade ---------- */
+.busca{position:relative}
+.busca input{padding-right:34px}
+.busca .limpar{position:absolute; right:4px; top:50%; transform:translateY(-50%);
+  background:none; border:0; color:var(--grafite); cursor:pointer; font-size:17px;
+  line-height:1; padding:7px 8px; display:none}
+.busca.tem-texto .limpar{display:block}
+.lista{position:absolute; z-index:20; left:0; right:0; top:calc(100% + 4px);
+  background:var(--ficha); border:1px solid var(--linha); border-radius:var(--raio-p);
+  box-shadow:0 10px 28px rgba(27,33,29,.16); max-height:330px; overflow-y:auto; display:none}
+.lista[data-aberta=true]{display:block}
+.lista .opt{padding:9px 12px; cursor:pointer; border-bottom:1px solid var(--linha-suave)}
+.lista .opt:last-child{border-bottom:0}
+.lista .opt .t{display:block; font-size:13px; line-height:1.4}
+.lista .opt .p{display:block; font-size:11px; color:var(--grafite); margin-top:3px}
+.lista .opt mark{background:var(--dourado-suave); color:inherit; font-weight:600; padding:0 1px}
+.lista .opt[aria-selected=true]{background:var(--verde-suave)}
+.lista .nada{padding:16px 12px; color:var(--grafite); font-size:13px; text-align:center}
+.escolhida{background:var(--verde-suave); border:1px solid var(--verde-borda);
+  border-radius:var(--raio-p); padding:11px 13px; margin-top:10px; display:none}
+.escolhida[data-tem=true]{display:block}
+.escolhida .r{display:block; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--verde); font-weight:600; margin-bottom:3px}
+.escolhida .t{font-size:13px; line-height:1.4}
+.escolhida .p{display:block; font-size:11px; color:var(--grafite); margin-top:3px}
+.frequentes{display:flex; flex-direction:column; gap:8px; margin-bottom:12px}
+.freq{border:1px solid var(--linha); background:var(--ficha); border-radius:var(--raio-p);
+  padding:9px 12px; font:inherit; font-size:12.5px; text-align:left; cursor:pointer;
+  color:var(--tinta); line-height:1.4}
+.freq:hover{border-color:var(--verde); background:var(--verde-suave)}
+.freq small{display:block; color:var(--grafite); font-size:11px; margin-top:2px}
+.freq .proc{font-size:10px; letter-spacing:.08em; text-transform:uppercase;
+  font-weight:600; margin:0 0 3px}
+
+/* ---------- visão gerencial ---------- */
+.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px}
+.kpi{background:var(--ficha); border:1px solid var(--linha); border-radius:var(--raio);
+  padding:14px 16px}
+.kpi .valor{font-family:var(--serif); font-size:25px; line-height:1.1}
+.kpi .valor .un{font-family:var(--sans); font-size:13px; color:var(--grafite)}
+.gfx{margin:0 0 16px; padding:0; border:1px solid var(--linha);
+  border-radius:var(--raio); background:var(--ficha)}
+.gfx figcaption{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;
+  padding:14px 16px 0; font-weight:600; font-size:13px}
+.gfx .plot{width:100%}
+.gfx .nota{margin:0; padding:0 16px 14px; font-size:11.5px; color:var(--grafite)}
+.ordenar{margin-left:auto}
+.resumo{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px}
+.srv{background:var(--ficha); border:1px solid var(--linha); border-radius:var(--raio);
+  padding:13px 15px; font-size:12.5px}
+.srv .nome{display:block; font-weight:600; margin-bottom:5px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.srv .pts{font-family:var(--serif); font-size:19px}
+.srv .info{color:var(--grafite)}
+.meta-pct{font-size:10.5px; font-weight:600; border-radius:999px; padding:2px 8px;
+  background:var(--verde-suave); color:var(--verde); white-space:nowrap}
+.meta-pct[data-abaixo=true]{background:var(--dourado-suave); color:var(--dourado)}
+
+/* ---------- entrada (pasta + identidade) ---------- */
+.entrada{max-width:520px; margin:52px auto 0}
+.entrada h1{font-family:var(--serif); font-weight:400; font-size:27px; margin:0 0 6px}
+.entrada .sub{margin:0 0 22px; color:var(--grafite); font-size:13px}
+.etapa{display:flex; gap:12px; align-items:flex-start}
+.etapa .selo{flex:none; width:22px; height:22px; border-radius:50%; font-size:12px;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--papel); color:var(--grafite); border:1px solid var(--linha)}
+.etapa .selo.ok{background:var(--verde-suave); color:var(--verde); border-color:var(--verde-borda)}
+.caminho{font-family:ui-monospace,Consolas,monospace; font-size:11.5px; color:var(--grafite);
+  overflow-wrap:anywhere}
+
+/* ---------- recibo ---------- */
+dialog{border:0; border-radius:var(--raio); padding:24px; max-width:min(520px,92vw);
+  color:var(--tinta); font-family:var(--sans); font-size:14px; line-height:1.5;
+  box-shadow:0 16px 40px rgba(27,33,29,.3)}
+dialog::backdrop{background:rgba(27,33,29,.45)}
+dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 4px}
+.recibo{display:grid; grid-template-columns:auto 1fr; gap:7px 16px; margin:18px 0 0; font-size:13.5px}
+.recibo dt{font-weight:600; color:var(--grafite); white-space:nowrap}
+.recibo dd{margin:0; overflow-wrap:anywhere}
+.recibo-rodape{display:flex; align-items:center; justify-content:space-between;
+  gap:16px; margin-top:20px; padding-top:16px; border-top:1px solid var(--linha)}
+.recibo-rodape b{font-weight:600}
+
+/* ===================== TELAS ESTREITAS =====================
+   A maquete não tinha nenhuma media query — o rail era fixo em 244px.
+   Aqui ele vira uma barra no topo, que rola na horizontal, e as duas
+   colunas viram uma só. */
+@media(max-width:1080px){
+  .colunas{grid-template-columns:minmax(0,1fr) 280px}
+  .kpis{grid-template-columns:1fr 1fr}
+}
+@media(max-width:900px){
+  .app{flex-direction:column}
+  .rail{flex:none; width:100%; height:auto; position:static; flex-direction:column}
+  .rail-topo{padding:14px 16px 12px}
+  .marca{font-size:21px}
+  .rail-nav{flex-direction:row; overflow-x:auto; gap:6px; padding:10px 12px; flex:none}
+  .rail-grupo{display:none}
+  .rail-item{width:auto; white-space:nowrap; padding:8px 12px}
+  .rail-item .rail-num,.rail-item .rail-badge{margin-left:6px}
+  .rail-pe{flex-direction:row; align-items:center; flex-wrap:wrap; gap:12px;
+    padding:12px 16px}
+  .rail-pe .conexao{margin-left:auto}
+  .rail-acao{width:auto}
+  .topo,.corpo{padding-left:20px; padding-right:20px}
+  .colunas,.colunas.estreita{grid-template-columns:minmax(0,1fr)}
+  .numeros{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .topo{padding:18px 16px 14px}
+  .corpo{padding:16px 16px 44px}
+  .chips{grid-template-columns:1fr}
+  .grade2{grid-template-columns:1fr}
+  .kpis{grid-template-columns:1fr}
+  .topo h1,.entrada h1{font-size:23px}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<!-- ============================ RAIL ============================
+     A navegação deixou de ser rolagem única: cada assunto vira uma
+     tela, e o rail diz onde se está. Os grupos "Meu trabalho" e
+     "Gestão" separam o que a pessoa faz do que ela fiscaliza — quem
+     não fiscaliza nada não vê o segundo grupo. -->
+<nav class="rail">
+  <div class="rail-topo">
+    <span class="marca">Programa&nbsp;de Resultados</span>
+    <div class="marca-sub">
+      <span class="org">COBIB</span>
+      <span class="versao">versão 1.0 (ago/26)</span>
+    </div>
+  </div>
+
+  <div class="rail-nav" id="railNav" hidden>
+    <p class="rail-grupo" id="grupoMeu">Meu trabalho</p>
+    <button type="button" class="rail-item" data-vista="lancar" id="navLancar">
+      <span class="ponto"></span>Lançar atividade</button>
+    <button type="button" class="rail-item" data-vista="mes" id="navMes">
+      <span class="ponto"></span>Meu mês<span class="rail-num" id="navMesPct"></span></button>
+    <button type="button" class="rail-item" data-vista="aus" id="navAus">
+      <span class="ponto"></span>Ausências</button>
+
+    <p class="rail-grupo" id="grupoGestao">Gestão</p>
+    <button type="button" class="rail-item" data-vista="painel" id="navPainel">
+      <span class="ponto"></span><span id="navPainelRotulo">Painel da unidade</span>
+      <span class="rail-badge" id="navPend" hidden></span></button>
+    <button type="button" class="rail-item" data-vista="adm" id="navAdm">
+      <span class="ponto"></span>Administração</button>
+  </div>
+
+  <div class="rail-pe">
+    <div class="pessoa" id="railPessoa" hidden>
+      <span class="avatar" id="railIniciais" aria-hidden="true"></span>
+      <span class="pessoa-txt">
+        <b id="idAtual">Ninguém identificado</b>
+        <small id="txtIdentResumo"></small>
+      </span>
+    </div>
+    <button type="button" class="rail-trocar" id="btnTrocar" hidden>trocar identidade</button>
+    <div class="conexao">
+      <span class="led" id="led"></span>
+      <span id="txtConexao">Pasta não conectada</span>
+    </div>
+    <button type="button" class="rail-acao" id="btnAtualizar" hidden>Atualizar dados da rede</button>
+  </div>
+</nav>
+
+<main class="palco">
+
+<!-- ====================== ENTRADA (pasta + identidade) ====================== -->
+<section class="vista" id="vEntrada">
+  <div class="corpo">
+    <div class="entrada">
+      <h1>Quem é você?</h1>
+      <p class="sub">Duas etapas, uma vez só por computador. Depois disso a tela abre direto no lançamento.</p>
+
+      <div class="cartao" id="cardPasta">
+        <div class="etapa">
+          <span class="selo" id="seloPasta">1</span>
+          <div style="flex:1 1 auto;min-width:0">
+            <h2>Pasta da rede</h2>
+            <p class="dica">Conecte a pasta central. Somente pastas oficializadas pelo
+              administrador são aceitas; a escolha fica memorizada neste computador.</p>
+            <p class="caminho" id="txtCaminho"></p>
+            <button type="button" class="acao sec mini" id="btnPasta">Conectar pasta</button>
+            <div class="aviso" id="avisoPasta" role="alert"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cartao" id="cardIdent" hidden>
+        <div class="etapa">
+          <span class="selo" id="seloIdent">2</span>
+          <div style="flex:1 1 auto;min-width:0">
+            <h2>Identificação</h2>
+            <div id="linhaPessoa">
+              <p class="dica" style="margin-bottom:14px">O papel e a unidade vêm da
+                configuração central — quem aprova quem é determinado pelo papel, não pela tela.</p>
+              <div class="campo">
+                <label class="rotulo" for="selPessoa">Seu nome</label>
+                <select id="selPessoa"></select>
+              </div>
+              <div class="campo" id="cSenha" hidden>
+                <label class="rotulo" for="inpSenha">Senha</label>
+                <input type="password" id="inpSenha" autocomplete="current-password">
+              </div>
+              <div class="campo" id="cCarga" hidden>
+                <span class="rotulo" id="rotCarga">Carga horária diária</span>
+                <div class="chips duas" id="chipsCarga" role="group" aria-labelledby="rotCarga">
+                  <button type="button" class="chip" data-h="8" aria-pressed="false">
+                    <b>8</b><small>horas · meta 15/dia</small></button>
+                  <button type="button" class="chip" data-h="6" aria-pressed="false">
+                    <b>6</b><small>horas · meta 11/dia</small></button>
+                </div>
+                <p class="dica" id="hintCarga"></p>
+              </div>
+              <button type="button" class="acao" id="btnIniciar" style="width:100%">Confirmar identidade</button>
+            </div>
+            <div id="resumoIdent" hidden>
+              <p class="dica" style="margin:0 0 12px">Identidade confirmada e travada para esta sessão.</p>
+              <button type="button" class="acao sec mini" id="btnTrocarEntrada">Trocar identidade</button>
+            </div>
+            <div class="aviso" id="avisoIdent" role="alert"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== LANÇAR ATIVIDADE ====================== -->
+<section class="vista" id="vLancar" hidden>
+  <div class="topo">
+    <div class="titulo">
+      <h1>Lançar atividade</h1>
+      <p class="sub" id="hintForm"></p>
+    </div>
+    <div class="controles">
+      <div>
+        <label class="rotulo" for="inpData">Data do lançamento</label>
+        <input type="date" id="inpData" style="width:auto">
+      </div>
+    </div>
+  </div>
+
+  <div class="corpo">
+    <div class="colunas">
+      <div>
+        <div class="cartao">
+          <div class="passo">
+            <span class="n">1</span>
+            <div style="flex:1 1 auto;min-width:0">
+              <h2>Qual atividade?</h2>
+              <p class="dica">Busque por qualquer parte do texto — acentos e flexões são ignorados.</p>
+            </div>
+          </div>
+
+          <div id="campoFrequentes" hidden>
+            <span class="rotulo">Suas mais registradas</span>
+            <div class="frequentes" id="frequentes"></div>
+          </div>
+
+          <div class="busca" id="busca">
+            <label class="rotulo" for="inpAtividade" style="position:absolute;left:-9999px">Atividade</label>
+            <input type="text" id="inpAtividade" autocomplete="off" role="combobox"
+                   aria-expanded="false" aria-controls="listaAtividades" aria-autocomplete="list"
+                   placeholder="Digite parte da atividade — ex.: catalogar, acervo, evento">
+            <button type="button" class="limpar" id="btnLimparBusca" aria-label="Limpar busca">&times;</button>
+            <div class="lista" id="listaAtividades" role="listbox" data-aberta="false"></div>
+          </div>
+          <div class="escolhida" id="atvEscolhida" data-tem="false" aria-live="polite"></div>
+
+          <p class="dica" style="margin-top:10px">
+            Deixe o campo vazio e clique para ver todas as <span id="qtdAtividades">…</span> atividades, ou
+            <button type="button" class="ligacao" id="btnFiltrarProc">filtrar por processo de trabalho</button>
+          </p>
+          <div id="campoProcesso" hidden>
+            <label class="rotulo" for="selProcesso">Processo de trabalho</label>
+            <select id="selProcesso"></select>
+          </div>
+        </div>
+
+        <div class="cartao">
+          <div class="passo">
+            <span class="n">2</span>
+            <div style="flex:1 1 auto;min-width:0">
+              <h2 id="rotCompl">Complexidade</h2>
+              <p class="dica">A pontuação é consequência da complexidade, não uma escolha separada.</p>
+            </div>
+          </div>
+          <div class="chips" id="chips" role="group" aria-labelledby="rotCompl">
+            <button type="button" class="chip" data-c="b" aria-pressed="false"><b>5</b><small>Baixa</small></button>
+            <button type="button" class="chip" data-c="m" aria-pressed="false"><b>10</b><small>Média</small></button>
+            <button type="button" class="chip" data-c="a" aria-pressed="false"><b>15</b><small>Alta</small></button>
+          </div>
+        </div>
+
+        <div class="cartao">
+          <div class="passo">
+            <span class="n">3</span>
+            <div style="flex:1 1 auto;min-width:0">
+              <h2>Observações <span style="font-weight:400;color:var(--grafite)">(opcional)</span></h2>
+            </div>
+          </div>
+          <label class="rotulo" for="inpObs" style="position:absolute;left:-9999px">Observações</label>
+          <textarea id="inpObs" placeholder="Detalhes do trabalho realizado"></textarea>
+        </div>
+
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:16px">
+          <button type="button" class="acao" id="btnRegistrar">Registrar atividade</button>
+          <span class="caminho" id="txtDestino"></span>
+        </div>
+        <div class="aviso" id="aviso" role="status"></div>
+      </div>
+
+      <!-- coluna direita: o efeito do que se acabou de lançar, sem sair da tela -->
+      <div>
+        <div class="hoje">
+          <span class="rotulo" id="hojeRotulo">Hoje</span>
+          <div><span class="valor" id="totDia">0</span><span class="de" id="hojeMeta"></span></div>
+          <div class="barra"><i id="hojeBarra" style="width:0"></i></div>
+          <div class="pe"><span id="hojeQtd">0 lançamentos</span><span id="hojeSituacao"></span></div>
+        </div>
+
+        <div class="cartao" style="margin-top:16px">
+          <h2>Lançado no dia <span class="cont" id="lancadoQtd" style="font-weight:400;color:var(--grafite)"></span></h2>
+          <ul class="lista-dia" id="lancadoHoje"></ul>
+          <p class="dica" id="lancadoVazio">Nada lançado nesta data ainda.</p>
+        </div>
+
+        <div class="cartao" style="margin-top:16px">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
+            <span style="font-size:12.5px;color:var(--grafite)">Total do mês</span>
+            <b style="font-family:var(--serif);font-size:19px;font-weight:400" id="totMes">0</b>
+          </div>
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-top:8px">
+            <span style="font-size:12.5px;color:var(--grafite)">Meta alcançada</span>
+            <span class="meta-pct" id="totMeta">—</span>
+          </div>
+          <p class="dica" id="totMetaBase" style="margin-top:8px"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== MEU MÊS ====================== -->
+<section class="vista" id="vMes" hidden>
+  <div class="topo">
+    <div class="titulo">
+      <h1>Meu mês</h1>
+      <p class="sub" id="subMes"></p>
+    </div>
+    <div class="controles">
+      <div>
+        <label class="rotulo" for="inpMesMeu">Mês de referência</label>
+        <input type="month" id="inpMesMeu" style="width:auto">
+      </div>
+    </div>
+  </div>
+
+  <div class="corpo">
+    <div class="numeros">
+      <div class="num-cartao destaque">
+        <span class="rotulo">Meta alcançada no mês</span>
+        <div class="valor"><span id="mesPct">—</span></div>
+        <div class="barra"><i id="mesBarra" style="width:0"></i></div>
+        <p class="explica" id="mesPctBase"></p>
+        <p class="explica">Média dos dias em que você lançou. Dias sem lançamento e dias de
+          ausência ficam fora do cálculo — o número mede intensidade, não assiduidade.</p>
+      </div>
+      <div class="num-cartao">
+        <span class="rotulo">Pontos no mês</span>
+        <div class="valor" id="mesPontos">0</div>
+        <p class="rodape" id="mesPontosPe"></p>
+      </div>
+      <div class="num-cartao">
+        <span class="rotulo">Aguardando chefia</span>
+        <div class="valor" id="mesPend">0</div>
+        <p class="rodape" id="mesPendPe"></p>
+      </div>
+    </div>
+
+    <div class="quadro">
+      <div class="quadro-topo">
+        <h2>Meus lançamentos <span class="cont" id="contMeus"></span></h2>
+        <div class="direita">
+          <button type="button" class="acao sec mini" id="btnCSVMeus">Exportar CSV</button>
+        </div>
+      </div>
+      <div class="rolagem">
+        <table>
+          <thead>
+            <tr><th>Data</th><th>Atividade</th>
+                <th class="num">Pontos</th><th>Situação</th>
+                <th><span class="rotulo" style="margin:0">Ações</span></th></tr>
+          </thead>
+          <tbody id="tbodyMeus"></tbody>
+        </table>
+      </div>
+      <p class="vazio" id="vazioMeus">Nenhum lançamento no mês selecionado.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== AUSÊNCIAS ====================== -->
+<section class="vista" id="vAus" hidden>
+  <div class="topo">
+    <div class="titulo">
+      <h1>Ausências</h1>
+      <p class="sub">Períodos de afastamento. Não valem pontos e não passam por aprovação —
+        servem para tirar da conta da meta os dias em que não havia como trabalhar.</p>
+    </div>
+  </div>
+
+  <div class="corpo">
+    <div class="colunas estreita">
+      <div class="cartao">
+        <h2>Registrar período</h2>
+        <div class="campo" style="margin-top:14px">
+          <label class="rotulo" for="selTipoAus">Tipo</label>
+          <select id="selTipoAus"></select>
+        </div>
+        <div class="grade2">
+          <div class="campo">
+            <label class="rotulo" for="inpAusDe">Primeiro dia</label>
+            <input type="date" id="inpAusDe">
+          </div>
+          <div class="campo">
+            <label class="rotulo" for="inpAusAte">Último dia</label>
+            <input type="date" id="inpAusAte">
+          </div>
+        </div>
+        <div class="campo">
+          <label class="rotulo" for="inpAusObs">Observações (opcional)</label>
+          <textarea id="inpAusObs" placeholder="Ex.: número do processo, portaria, atestado"></textarea>
+        </div>
+        <button type="button" class="acao" id="btnRegistrarAus" style="width:100%">Registrar ausência</button>
+        <p class="dica" style="margin-top:10px">Períodos sobrepostos são recusados: contariam o
+          mesmo dia duas vezes. A contagem é em dias corridos, incluindo as duas pontas.</p>
+        <div class="aviso" id="avisoAus" role="status"></div>
+      </div>
+
+      <div class="quadro">
+        <div class="quadro-topo">
+          <h2>Minhas ausências <span class="cont" id="contMinhasAus"></span></h2>
+        </div>
+        <div class="rolagem">
+          <table>
+            <thead>
+              <tr><th>Tipo</th><th>Período</th><th class="num">Dias</th>
+                  <th>Observações</th><th><span class="rotulo" style="margin:0">Ações</span></th></tr>
+            </thead>
+            <tbody id="tbodyMinhasAus"></tbody>
+          </table>
+        </div>
+        <p class="vazio" id="vazioMinhasAus">Nenhuma ausência registrada.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== PAINEL ====================== -->
+<section class="vista" id="vPainel" hidden>
+  <div class="topo">
+    <div class="titulo">
+      <h1 id="tituloPainel">Painel</h1>
+      <p class="sub" id="hintPainel"></p>
+    </div>
+    <div class="controles">
+      <div id="fUnidadeGeral" hidden>
+        <label class="rotulo" for="selUnidadeVer">Unidade</label>
+        <select id="selUnidadeVer" style="width:auto"></select>
+      </div>
+      <div>
+        <label class="rotulo" for="inpMes">Mês</label>
+        <input type="month" id="inpMes" style="width:auto">
+      </div>
+      <div id="fServidor" hidden>
+        <label class="rotulo" for="selServidorVer">Pessoa</label>
+        <select id="selServidorVer" style="width:auto"></select>
+      </div>
+      <div id="fSituacao" hidden>
+        <label class="rotulo" for="selSituacao">Situação</label>
+        <select id="selSituacao" style="width:auto">
+          <option value="">Todas</option>
+          <option value="pe">Pendentes</option>
+          <option value="ap">Aprovados</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="corpo">
+    <!-- Abas em vez do acordeão da v12/v13: as três leituras do painel
+         são excludentes na prática (aprovar, analisar, conferir
+         ausências), e abas deixam a escolha visível de uma vez. -->
+    <div class="abas" role="tablist" aria-label="Seções do painel">
+      <button type="button" class="aba" role="tab" id="abaAprov" data-aba="aprov"
+              aria-selected="true" aria-controls="painelAprov">Aprovações<span class="cont" id="contLanc"></span></button>
+      <button type="button" class="aba" role="tab" id="abaVisao" data-aba="visao"
+              aria-selected="false" aria-controls="painelVisao">Visão do mês<span class="cont" id="contResumo"></span></button>
+      <button type="button" class="aba" role="tab" id="abaAus" data-aba="aus"
+              aria-selected="false" aria-controls="painelAus">Ausências<span class="cont" id="contAus"></span></button>
+    </div>
+
+    <!-- aba: aprovações -->
+    <div id="painelAprov" role="tabpanel" aria-labelledby="abaAprov">
+      <div class="quadro">
+        <div class="quadro-topo">
+          <h2 id="resumoPendentes"></h2>
+          <div class="direita">
+            <button type="button" class="acao sec mini" id="btnCSV">Exportar CSV</button>
+            <button type="button" class="acao mini" id="btnAprovarTodos" hidden>Aprovar pendentes</button>
+          </div>
+        </div>
+        <div class="rolagem">
+          <table class="larga">
+            <thead>
+              <tr><th>Data</th><th id="thServidor">Pessoa</th><th>Atividade</th>
+                  <th class="num">Pontos</th><th>Situação</th></tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <p class="vazio" id="vazio">Nenhum lançamento com os filtros atuais.</p>
+      </div>
+      <div class="aviso" id="avisoPainel" role="status"></div>
+    </div>
+
+    <!-- aba: visão do mês -->
+    <div id="painelVisao" role="tabpanel" aria-labelledby="abaVisao" hidden>
+      <div id="secIndicadores">
+        <div class="kpis">
+          <div class="kpi"><span class="rotulo">Lançamentos no mês</span><div class="valor" id="kpiLanc">0</div></div>
+          <div class="kpi"><span class="rotulo">Pontos no mês</span><div class="valor" id="kpiPontos">0</div></div>
+          <div class="kpi"><span class="rotulo">Aprovados</span><div class="valor" id="kpiAprov">0<span class="un">%</span></div></div>
+          <div class="kpi"><span class="rotulo">Pendentes</span><div class="valor" id="kpiPend">0</div></div>
+        </div>
+      </div>
+
+      <div id="secGraficos" class="vis">
+        <figure class="gfx">
+          <figcaption>
+            <span>Atividades por pessoa e complexidade</span>
+            <button type="button" class="ligacao ordenar" id="btnOrdem">ordenar por volume</button>
+          </figcaption>
+          <div class="plot" id="chartPessoas" role="img"
+               aria-label="Gráfico de barras empilhadas: número de atividades por pessoa, dividido por complexidade. Os mesmos números estão na tabela de aprovações."></div>
+          <p class="nota" id="notaPessoas"></p>
+        </figure>
+        <figure class="gfx" id="figUnidades">
+          <figcaption><span>Atividades por unidade e complexidade</span></figcaption>
+          <div class="plot" id="chartUnidades" role="img"
+               aria-label="Mapa de calor: número de atividades por unidade e nível de complexidade."></div>
+          <p class="nota">Quanto mais escura a célula, maior o número de atividades. O número aparece dentro de cada célula.</p>
+        </figure>
+      </div>
+
+      <h2 style="font-size:14px;margin:22px 0 12px">Resumo por pessoa</h2>
+      <div class="resumo" id="resumo"></div>
+    </div>
+
+    <!-- aba: ausências da alçada -->
+    <div id="painelAus" role="tabpanel" aria-labelledby="abaAus" hidden>
+      <div class="quadro">
+        <div class="quadro-topo">
+          <h2>Ausências no mês</h2>
+          <div class="direita">
+            <button type="button" class="acao sec mini" id="btnCSVAus">Exportar CSV</button>
+          </div>
+        </div>
+        <div class="rolagem">
+          <table>
+            <thead>
+              <tr><th>Pessoa</th><th>Unidade</th><th>Tipo</th><th>Período</th>
+                  <th class="num">Dias</th><th>Observações</th>
+                  <th><span class="rotulo" style="margin:0">Ações</span></th></tr>
+            </thead>
+            <tbody id="tbodyAus"></tbody>
+          </table>
+        </div>
+        <p class="vazio" id="vazioAus">Nenhuma ausência com os filtros atuais.</p>
+      </div>
+      <div id="resumoAus" style="margin-top:14px;font-size:12.5px;color:var(--grafite)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== ADMINISTRAÇÃO ====================== -->
+<section class="vista" id="vAdm" hidden>
+  <div class="topo">
+    <div class="titulo">
+      <h1>Administração</h1>
+      <p class="sub">Alterações aqui são gravadas no <code>config.json</code> da pasta central e
+        valem para todos ao recarregarem os dados. Processos e atividades continuam
+        no <code>catalogo.js</code> do aplicativo.</p>
+    </div>
+  </div>
+
+  <div class="corpo">
+    <div class="cartao">
+      <h2>Pasta oficial</h2>
+      <p class="dica" id="infoInstalacao">—</p>
+    </div>
+
+    <div class="cartao">
+      <h2>Senhas</h2>
+      <label style="display:flex;gap:8px;align-items:center;margin:12px 0;font-size:13px">
+        <input type="checkbox" id="chkExigirSenha" style="width:auto">
+        Exigir senha de todas as pessoas (bloqueia quem não tiver senha definida)
+      </label>
+      <div class="rolagem">
+        <table>
+          <thead><tr><th>Pessoa</th><th>Papel · Unidade</th><th>Senha</th>
+            <th><span class="rotulo" style="margin:0">Ações</span></th></tr></thead>
+          <tbody id="tbodySenhas"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="cartao">
+      <h2>Catálogo de unidades e pessoas</h2>
+      <p class="dica">Edite o JSON abaixo e salve. Atenção: renomear uma pessoa desvincula a
+        senha e o arquivo de lançamentos do nome antigo.</p>
+      <div class="campo" style="margin-top:14px">
+        <label class="rotulo" for="txtCatalogo">JSON do catálogo</label>
+        <textarea id="txtCatalogo" spellcheck="false"
+          style="font-family:ui-monospace,Consolas,monospace;font-size:12.5px;min-height:220px"></textarea>
+      </div>
+      <button type="button" class="acao" id="btnSalvarCatalogo">Salvar catálogo</button>
+      <div class="aviso" id="avisoAdm" role="status"></div>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<!-- Recibo do lançamento: confirmação que precisa ser fechada à mão. -->
+<dialog id="dlgRecibo" aria-labelledby="reciboTitulo">
+  <h2 id="reciboTitulo">Lançamento registrado</h2>
+  <p class="dica" id="reciboSub" style="margin:0"></p>
+  <dl class="recibo" id="reciboCorpo"></dl>
+  <div class="recibo-rodape">
+    <b id="reciboTotal"></b>
+    <button type="button" class="acao" id="btnReciboOK" autofocus>Fechar</button>
+  </div>
+</dialog>
+
+<script src="catalogo.js"></script>
+<script src="rede.js"></script>
+<!-- Build próprio do ECharts (só barra, mapa de calor, eixo, dica e legenda):
+     521 KB contra 1 MB do pacote completo. Fica NA PASTA do aplicativo, nunca
+     em CDN — o service worker é cache-first e a máquina pode estar sem
+     internet. Ao trocar por uma versão nova, altere VERSAO no sw.js. -->
+<script src="echarts.min.js"></script>
+
+<script>
+"use strict";
+/* =============================== ESTADO =============================== */
+/* v5: a identidade memorizada passou a carregar a carga horária —
+   as chaves v4 são descartadas para não restaurar identidade sem ela. */
+const CHAVE_ID = "ra.identificacao.v5";
+const GERAL = "GERAL";
+const ADM_NOME = "Administrador";
+const ADM_SENHA_INICIAL = "adm";
+let ident = null;
+let dirRaiz = null;
+let complexidade = null;
+let cargaSel = null;   // 8 ou 6, marcada na etapa 2
+let dados = { registros: [], aprovU: {}, aprovG: {} };
+const CHAVE_INST = "ra.instalacao.v1";
+let situacaoPasta = null;  // "oficial" | "nao-oficializada" | "divergente"
+/* Configuração em vigor: começa pela semente do catalogo.js e é
+   substituída pelo config.json da pasta central ao conectar. */
+let CFG = {
+  unidades: UNIDADES,
+  chefiaGeral: (typeof CHEFIA_GERAL !== "undefined" ? CHEFIA_GERAL : null),
+  senhas: (typeof SENHAS !== "undefined" ? SENHAS : {}),
+  exigirSenha: (typeof EXIGIR_SENHA !== "undefined" ? EXIGIR_SENHA : false)
+};
+
+const $ = (id) => document.getElementById(id);
+const chips = [...document.querySelectorAll("#chips .chip")];
+const fmtData = (iso) => iso.split("-").reverse().join("/");
+const hoje = () => new Date().toLocaleDateString("sv");
+const ehServidor = () => ident?.perfil === "servidor";
+const ehChefia   = () => ident?.perfil === "chefia";
+const ehGeral    = () => ident?.perfil === "geral";
+const ehAdm      = () => ident?.perfil === "adm";
+const servidoresDe = (u) => (CFG.unidades[u]?.servidores) || [];
+const papelDe = (r) => r.papel || "servidor";
+/* Um lançamento de servidor pode estar aprovado em DOIS lugares desde a
+   v12: no arquivo da unidade (chefia da unidade aprovou) ou no arquivo
+   GERAL (chefia geral aprovou). Vale a que existir; se as duas
+   existirem, a da unidade é a que aparece, por ser a via ordinária. */
+const aprovacaoDe = (r) =>
+  papelDe(r) === "servidor"
+    ? (dados.aprovU[r.id] || dados.aprovG[r.id])
+    : dados.aprovG[r.id];
+/* A chefia geral aprova TUDO (v12), inclusive lançamentos de servidor —
+   antes só alcançava chefias. A chefia de unidade segue limitada aos
+   servidores da sua própria unidade. */
+const podeAprovar = (r) =>
+  (ehChefia() && papelDe(r) === "servidor" && r.unidade === ident.unidade) ||
+  ehGeral();
+const ehMeu = (r) => ident && r.servidor === ident.nome && papelDe(r) === ident.perfil;
+
+function avisar(el, msg, erro = false) {
+  el.textContent = msg;
+  el.className = "aviso" + (erro ? " erro" : "");
+  el.style.display = "block";
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.display = "none"; }, 6000);
+}
+async function sha256hex(txt) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+/* ============================ PASTA DA REDE ============================ */
+function estadoConexao(ok, txt) {
+  $("led").className = "led" + (ok ? " ok" : "");
+  $("txtConexao").textContent = txt;
+  $("btnAtualizar").hidden = !ok;
+  $("btnPasta").textContent = ok ? "Trocar pasta" : "Conectar pasta";
+  ajustarConfig();
+}
+
+/* ========================= NAVEGAÇÃO POR TELAS =========================
+   A v14 trocou a rolagem única por telas: o rail à esquerda diz onde se
+   está e o palco mostra uma de cada vez. Isso resolve o que a rolagem
+   não resolvia — para a chefia, o painel de aprovação ficava três telas
+   abaixo do formulário de lançamento, que ela quase nunca usa.
+
+   Quem pode ver o quê continua vindo do PAPEL, nunca da tela: o rail
+   apenas esconde o que não é da alçada da pessoa. */
+const VISTAS = {
+  lancar: "vLancar", mes: "vMes", aus: "vAus",
+  painel: "vPainel", adm: "vAdm", entrada: "vEntrada"
+};
+let vistaAtual = "entrada";
+
+/* Uma tela só é alcançável se o PAPEL a alcança. O rail já esconde o que
+   não é da alçada, mas a regra mora aqui também: esconder um botão não é
+   controle de acesso, e uma chamada vinda de outro caminho não pode
+   abrir uma tela que a pessoa não deveria ter. */
+function podeVer(v) {
+  if (v === "entrada") return true;
+  if (v === "adm") return ehAdm();
+  if (v === "painel") return ehChefia() || ehGeral() || ehAdm();
+  return !ehAdm();   // lancar, mes, aus: quem registra atividade
+}
+function irPara(v) {
+  if (!VISTAS[v]) return;
+  /* Sem identidade só existe a entrada — evita que um clique no rail
+     leve a uma tela que ainda não tem dado nenhum para mostrar. */
+  if (v !== "entrada" && !(dirRaiz && ident)) v = "entrada";
+  if (!podeVer(v)) v = ehAdm() ? "adm" : "lancar";
+  vistaAtual = v;
+  for (const [nome, id] of Object.entries(VISTAS)) $(id).hidden = nome !== v;
+  /* aria-current="page" (e não a mera presença do atributo): é o valor
+     que o CSS casa e o que o leitor de tela anuncia como "página atual". */
+  for (const b of railItens())
+    b.setAttribute("aria-current", b.dataset.vista === v ? "page" : "false");
+  document.querySelector(".palco").scrollTop = 0;
+  window.scrollTo(0, 0);
+  /* O gráfico só mede o contêiner quando ele está visível: ao entrar no
+     painel, resgata o desenho que ficou pendente. */
+  if (v === "painel") desenhoPendente();
+}
+const railItens = () => [...document.querySelectorAll(".rail-item")];
+document.getElementById("railNav").addEventListener("click", (e) => {
+  const b = e.target.closest(".rail-item");
+  if (b) irPara(b.dataset.vista);
+});
+/* aria-current="page" é o que o CSS usa para marcar o item ativo */
+for (const b of railItens()) b.setAttribute("aria-current", "false");
+
+/* Mostra no rail só o que o papel alcança. O administrador não lança
+   nada, então o grupo "Meu trabalho" inteiro some para ele. */
+function ajustarRail() {
+  const lanca = Boolean(ident) && !ehAdm();
+  const gere  = ehChefia() || ehGeral() || ehAdm();
+  $("railNav").hidden = !ident;
+  $("grupoMeu").hidden = !lanca;
+  for (const id of ["navLancar", "navMes", "navAus"]) $(id).hidden = !lanca;
+  $("grupoGestao").hidden = !gere;
+  $("navPainel").hidden = !gere;
+  $("navAdm").hidden = !ehAdm();
+  $("navPainelRotulo").textContent =
+    ehChefia() ? "Painel da unidade" : ehGeral() ? "Painel geral" : "Lançamentos";
+}
+
+/* A tela de entrada some assim que pasta e identidade estão resolvidas,
+   e volta quando alguma das duas se desfaz. */
+function ajustarConfig() {
+  const pronto = Boolean(dirRaiz && ident);
+  $("seloPasta").textContent = dirRaiz ? "✓" : "1";
+  $("seloPasta").classList.toggle("ok", Boolean(dirRaiz));
+  $("seloIdent").textContent = ident ? "✓" : "2";
+  $("seloIdent").classList.toggle("ok", Boolean(ident));
+  $("railPessoa").hidden = !ident;
+  $("btnTrocar").hidden = !ident;
+  $("txtIdentResumo").textContent = ident
+    ? [ident.unidade && ident.unidade !== GERAL ? ident.unidade : null,
+       ROTULO_PAPEL[ident.perfil],
+       ident.carga ? ident.carga + "h/dia" : null].filter(Boolean).join(" · ")
+    : "";
+  $("railIniciais").textContent = ident ? iniciais(ident.nome) : "";
+  ajustarRail();
+  if (!pronto) irPara("entrada");
+  else if (vistaAtual === "entrada") irPara(ehAdm() ? "adm" : "lancar");
+}
+const ROTULO_PAPEL = { servidor: "servidor(a)", chefia: "chefia",
+                       geral: "chefia geral", adm: "administrador" };
+const iniciais = (nome) => nome.trim().split(/\s+/)
+  .filter(p => p.length > 2).slice(0, 2).map(p => p[0].toUpperCase()).join("") ||
+  nome.slice(0, 2).toUpperCase();
+/* O botão dentro do <summary> não pode abrir/fechar a faixa ao ser
+   clicado — é ação própria, não cabeçalho. */
+$("btnAtualizar").addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); });
+async function conectarSilencioso() {
+  if (!("showDirectoryPicker" in window))
+    return avisar($("avisoPasta"),
+      "Este navegador não oferece acesso a pastas. Use Chrome ou Edge.", true);
+  const salvo = await obterHandleRaiz();
+  if (salvo && await garantirPermissao(salvo, "readwrite", false)) {
+    dirRaiz = salvo;
+    estadoConexao(true, `Conectado a “${salvo.name}”`);
+    await aposConectar();
+  } else if (salvo) {
+    estadoConexao(false, `Pasta “${salvo.name}” memorizada — clique para reconectar`);
+    $("btnPasta").textContent = "Reconectar pasta";
+  }
+}
+$("btnPasta").addEventListener("click", async () => {
+  try {
+    let handle = null;
+    const salvo = await obterHandleRaiz();
+    if (salvo && $("btnPasta").textContent === "Reconectar pasta" &&
+        await garantirPermissao(salvo, "readwrite")) {
+      handle = salvo;
+    } else {
+      handle = await showDirectoryPicker({ id: "unidadeCentral", mode: "readwrite" });
+      await salvarHandleRaiz(handle);
+    }
+    dirRaiz = handle;
+    estadoConexao(true, `Conectado a “${handle.name}”`);
+    await aposConectar();
+  } catch (e) {
+    if (e && e.name !== "AbortError")
+      avisar($("avisoPasta"), "Não foi possível acessar a pasta: " + e.message, true);
+  }
+});
+$("btnAtualizar").addEventListener("click", aposConectar);
+
+async function aposConectar() {
+  await carregarConfig();
+  // valida o selo de instalação da pasta
+  const idLocal = localStorage.getItem(CHAVE_INST);
+  if (CFG.instalacao) {
+    if (idLocal && idLocal !== CFG.instalacao.id) situacaoPasta = "divergente";
+    else {
+      situacaoPasta = "oficial";
+      localStorage.setItem(CHAVE_INST, CFG.instalacao.id);
+    }
+  } else situacaoPasta = "nao-oficializada";
+  montarPessoas();
+  $("cardIdent").hidden = false;
+  if (situacaoPasta === "nao-oficializada")
+    avisar($("avisoIdent"),
+      "Esta pasta ainda não foi oficializada. Apenas o Administrador pode se identificar para configurá-la.", true);
+  if (situacaoPasta === "divergente")
+    avisar($("avisoIdent"),
+      "Esta pasta é DIFERENTE da pasta oficial usada anteriormente neste computador. Verifique o caminho; se a mudança for intencional, apenas o Administrador pode confirmá-la.", true);
+  if (situacaoPasta === "oficial") {
+    if (!ident) await restaurarIdentidade();
+    else { if (ehAdm()) renderAdm(); await recarregar(); }
+  } else {
+    // identidade anterior não vale numa pasta não validada
+    if (ident && !ehAdm()) limparIdentidade();
+  }
+}
+/* Lê o config.json central; NÃO cria mais automaticamente — a
+   criação/oficialização é ato exclusivo do administrador. */
+async function carregarConfig() {
+  try {
+    const cfg = await lerConfig(dirRaiz);
+    if (cfg && cfg.unidades) {
+      CFG = {
+        unidades: cfg.unidades,
+        chefiaGeral: cfg.chefiaGeral ?? null,
+        senhas: cfg.senhas || {},
+        exigirSenha: Boolean(cfg.exigirSenha),
+        instalacao: cfg.instalacao || null
+      };
+    } else {
+      CFG.instalacao = null; // sem config: pasta virgem
+    }
+  } catch { /* mantém a semente do catalogo.js */ }
+}
+async function oficializarPasta(pessoa) {
+  CFG.instalacao = {
+    id: crypto.randomUUID(),
+    por: pessoa.nome,
+    em: new Date().toISOString()
+  };
+  await gravarConfig(dirRaiz, CFG);
+  localStorage.setItem(CHAVE_INST, CFG.instalacao.id);
+  situacaoPasta = "oficial";
+  montarPessoas();
+}
+
+/* ============================ IDENTIFICAÇÃO ============================ */
+let PESSOAS = [];
+function montarPessoas() {
+  PESSOAS = [];
+  let html = "";
+  PESSOAS.push({ perfil: "adm", unidade: null, nome: ADM_NOME });
+  html += `<optgroup label="Administração">
+    <option value="0">${ADM_NOME}</option></optgroup>`;
+  if (situacaoPasta === "oficial") {
+  if (CFG.chefiaGeral) {
+    PESSOAS.push({ perfil: "geral", unidade: GERAL, nome: CFG.chefiaGeral });
+    html += `<optgroup label="Chefia geral">
+      <option value="${PESSOAS.length - 1}">${escapar(CFG.chefiaGeral)}</option></optgroup>`;
+  }
+  for (const u of Object.keys(CFG.unidades)) {
+    const grupo = [];
+    if (CFG.unidades[u].chefia) {
+      PESSOAS.push({ perfil: "chefia", unidade: u, nome: CFG.unidades[u].chefia });
+      grupo.push(`<option value="${PESSOAS.length - 1}">${escapar(CFG.unidades[u].chefia)} — chefia</option>`);
+    }
+    for (const s of servidoresDe(u)) {
+      PESSOAS.push({ perfil: "servidor", unidade: u, nome: s });
+      grupo.push(`<option value="${PESSOAS.length - 1}">${escapar(s)}</option>`);
+    }
+    if (grupo.length) html += `<optgroup label="${escapar(u)}">${grupo.join("")}</optgroup>`;
+  }
+  }
+  $("selPessoa").innerHTML = html;
+  aoTrocarPessoa();
+}
+const hashDe = (nome) => CFG.senhas[nome] || null;
+
+/* ---------------------------- CARGA HORÁRIA ----------------------------
+   Só quem registra atividades tem carga horária — o administrador não
+   lança nada, então para ele o campo nem aparece. */
+const chipsCarga = [...document.querySelectorAll("#chipsCarga .chip")];
+function marcarCarga(h) {
+  cargaSel = h;
+  chipsCarga.forEach(c => c.setAttribute("aria-pressed", String(+c.dataset.h === h)));
+}
+$("chipsCarga").addEventListener("click", (e) => {
+  const c = e.target.closest(".chip");
+  // marcar a carga já atende à cobrança do botão: some com o alerta
+  if (c) { marcarCarga(+c.dataset.h); $("avisoIdent").style.display = "none"; }
+});
+
+/* Um "change" tardio (rede lenta) não pode sobrescrever a carga de uma
+   pessoa escolhida depois: cada chamada carimba um bilhete e só o mais
+   recente tem permissão de escrever na tela. */
+let bilheteCarga = 0;
+async function aoTrocarPessoa() {
+  const p = PESSOAS[+$("selPessoa").value];
+  // o administrador sempre tem senha (a inicial é "adm")
+  $("cSenha").hidden = !(p && (hashDe(p.nome) || p.perfil === "adm"));
+  $("inpSenha").value = "";
+
+  const temCarga = Boolean(p) && p.perfil !== "adm";
+  $("cCarga").hidden = !temCarga;
+  marcarCarga(null);
+  if (!temCarga) return;
+
+  const meu = ++bilheteCarga;
+  $("hintCarga").textContent = "Verificando a carga já registrada…";
+  let salva = null;
+  if (dirRaiz) {
+    try { salva = await lerCargaHoraria(dirRaiz, p.unidade, p.nome); } catch {}
+  }
+  if (meu !== bilheteCarga) return;   // a pessoa já mudou: descarta
+  if (salva) marcarCarga(salva);
+  $("hintCarga").textContent = salva
+    ? `Marcada como ${salva} horas da última vez. Só altere se a sua jornada tiver mudado.`
+    : "Ainda não registrada — marque a sua jornada diária para continuar.";
+}
+$("selPessoa").addEventListener("change", aoTrocarPessoa);
+
+/* -------------------- ESCRITA DO ARQUIVO DA PESSOA --------------------
+   O arquivo guarda TRÊS coisas: carga horária, lançamentos e ausências.
+   Gravar só uma delas apagaria as outras duas, então toda escrita passa
+   por aqui: lê o estado atual, aplica a mudança e regrava o conjunto.
+   Ponto único de escrita — não chame gravarMeuArquivo direto. */
+async function atualizarArquivoPessoa(unidade, nome, mudar) {
+  /* Leitura estrita: se o arquivo existir e não for decifrável, isto
+     lança em vez de devolver null — sem isso, gravaríamos um arquivo
+     novo e vazio por cima do histórico da pessoa. */
+  const atual = await lerArquivoParaGravar(dirRaiz, unidade, nome);
+  const estado = {
+    registros: (atual && atual.registros) || [],
+    ausencias: (atual && atual.ausencias) || [],
+    carga: (atual && atual.cargaHoraria) || null
+  };
+  mudar(estado);
+  await gravarMeuArquivo(dirRaiz, unidade, nome,
+    estado.registros, estado.carga, estado.ausencias);
+  return estado;
+}
+/* A recusa por arquivo ilegível já explica tudo e não é falha de
+   gravação — mostrar "não foi possível gravar" na frente dela mentiria
+   sobre o que aconteceu. */
+const msgErro = (e, prefixo) => e.arquivoIlegivel ? e.message : prefixo + e.message;
+
+/* Grava a carga preservando lançamentos e ausências já existentes. */
+async function salvarCarga(pessoa, carga) {
+  await atualizarArquivoPessoa(pessoa.unidade, pessoa.nome, (e) => { e.carga = carga; });
+}
+
+async function senhaConfere(p, senha) {
+  const hash = hashDe(p.nome);
+  if (hash) return (await sha256hex(p.nome + "|" + senha)) === hash;
+  if (p.perfil === "adm") return senha === ADM_SENHA_INICIAL;
+  return null; // sem senha cadastrada
+}
+$("btnIniciar").addEventListener("click", async () => {
+  const p = PESSOAS[+$("selPessoa").value];
+  if (!p) return avisar($("avisoIdent"),
+    "Nenhuma pessoa cadastrada — o administrador pode preencher o catálogo.", true);
+  const precisaSenha = hashDe(p.nome) || p.perfil === "adm";
+  if (precisaSenha) {
+    const senha = $("inpSenha").value;
+    if (!senha) return avisar($("avisoIdent"), "Informe a senha.", true);
+    if (!(await senhaConfere(p, senha))) {
+      $("inpSenha").value = "";
+      return avisar($("avisoIdent"), "Senha incorreta.", true);
+    }
+  } else if (CFG.exigirSenha) {
+    return avisar($("avisoIdent"),
+      "Senha obrigatória, mas ainda não definida para esta pessoa. Peça ao administrador.", true);
+  }
+  $("inpSenha").value = "";
+  /* A carga é exigida uma única vez por pessoa: sem ela, a média de
+     pontos por hora que virá depois não teria denominador, e um valor
+     presumido (8h) contaminaria silenciosamente quem faz 6h. */
+  if (p.perfil !== "adm" && !cargaSel)
+    return avisar($("avisoIdent"),
+      "Marque a sua carga horária diária (8 ou 6 horas) para continuar.", true);
+  if (p.perfil !== "adm" && situacaoPasta !== "oficial")
+    return avisar($("avisoIdent"),
+      "Somente o Administrador pode entrar antes de a pasta ser validada.", true);
+  if (p.perfil === "adm" && situacaoPasta === "nao-oficializada") {
+    if (!confirm(`Oficializar a pasta conectada como a pasta central do sistema?\nTodas as pessoas passarão a entrar somente por ela.`)) return;
+    try { await oficializarPasta(p); }
+    catch (e) { return avisar($("avisoIdent"), "Não foi possível oficializar (sem escrita na pasta?): " + e.message, true); }
+    avisar($("avisoIdent"), "Pasta oficializada com sucesso.");
+  }
+  if (p.perfil === "adm" && situacaoPasta === "divergente") {
+    if (!confirm("Adotar ESTA pasta como a oficial neste computador, substituindo a anterior?")) return;
+    localStorage.setItem(CHAVE_INST, CFG.instalacao.id);
+    situacaoPasta = "oficial";
+    montarPessoas();
+    $("selPessoa").value = "0";
+  }
+  /* Grava antes de travar a identidade: se a rede recusar a escrita,
+     a pessoa continua na etapa 2 e vê o motivo, em vez de seguir com
+     uma carga que só existe nesta aba. */
+  if (p.perfil !== "adm") {
+    try { await salvarCarga(p, cargaSel); }
+    catch (e) {
+      return avisar($("avisoIdent"),
+        msgErro(e, "Não foi possível gravar a carga horária na rede: "), true);
+    }
+  }
+  identificar(p, cargaSel);
+});
+
+function travarIdentidade(travar) {
+  $("linhaPessoa").hidden = travar;
+  $("resumoIdent").hidden = !travar;
+}
+function identificar(pessoa, carga = null) {
+  ident = { ...pessoa, carga };
+  cargaSel = carga;
+  localStorage.setItem(CHAVE_ID, JSON.stringify(ident));
+  /* textContent, não innerHTML: o nome vem do config.json, que é texto
+     de fora. O papel e a unidade foram para a linha de baixo do rail. */
+  $("idAtual").textContent = ident.nome;
+  travarIdentidade(true);
+  if (ehAdm()) renderAdm();
+  prepararPainel();
+  ajustarConfig();
+  if (dirRaiz) recarregar();
+}
+async function restaurarIdentidade() {
+  /* válida apenas se a pessoa ainda existir na configuração central;
+     perfis com senha exigem nova digitação a cada sessão? Não — o
+     travamento vale como "lembrar-me" nesta máquina/navegador. */
+  try {
+    const salvo = JSON.parse(localStorage.getItem(CHAVE_ID));
+    const i = PESSOAS.findIndex(x => salvo &&
+      x.perfil === salvo.perfil && x.unidade === salvo.unidade && x.nome === salvo.nome);
+    if (i >= 0) {
+      $("selPessoa").value = String(i);
+      /* O arquivo da rede manda: se a pessoa mudou a carga em outra
+         máquina, é aquele valor que vale, não o guardado aqui. */
+      let carga = salvo.carga || null;
+      if (PESSOAS[i].perfil !== "adm") {
+        try { carga = (await lerCargaHoraria(dirRaiz, PESSOAS[i].unidade, PESSOAS[i].nome)) || carga; }
+        catch {}
+        /* Sem carga em lugar nenhum (identidade de uma versão anterior):
+           não restaura — a pessoa marca uma vez e segue. */
+        if (!carga) { localStorage.removeItem(CHAVE_ID); return aoTrocarPessoa(); }
+      }
+      identificar(PESSOAS[i], carga);
+    }
+    else localStorage.removeItem(CHAVE_ID);
+  } catch {}
+}
+function limparIdentidade() {
+  ident = null;
+  localStorage.removeItem(CHAVE_ID);
+  dados = { registros: [], ausencias: [], aprovU: {}, aprovG: {} };
+  complexidade = null;
+  $("inpAtividade").value = "";
+  $("busca").classList.remove("tem-texto");
+  $("selProcesso").value = ""; $("campoProcesso").hidden = true;
+  $("campoFrequentes").hidden = true; $("frequentes").innerHTML = "";
+  limparEscolha();
+  $("inpAusDe").value = ""; $("inpAusAte").value = ""; $("inpAusObs").value = "";
+  $("tbodyMinhasAus").innerHTML = ""; $("tbodyAus").innerHTML = "";
+  $("tbodyMeus").innerHTML = ""; $("lancadoHoje").innerHTML = "";
+  $("secIndicadores").hidden = true;
+  $("secGraficos").hidden = true;
+  visPendente = null;
+  gPessoas?.dispose(); gPessoas = null;
+  gUnidades?.dispose(); gUnidades = null;
+  visOrdem = "alfa"; $("btnOrdem").textContent = "ordenar por volume";
+  $("tbody").innerHTML = "";
+  $("selServidorVer").value = "*"; $("selSituacao").value = "";
+  $("inpMes").value = ""; $("inpMesMeu").value = "";
+  $("idAtual").textContent = "Ninguém identificado";
+  $("navPend").hidden = true; $("navMesPct").textContent = "";
+  travarIdentidade(false);
+  ajustarConfig();
+  aoTrocarPessoa();
+}
+function pedirTroca() {
+  if (confirm("Trocar de identidade? Os painéis serão fechados e recarregados."))
+    limparIdentidade();
+}
+$("btnTrocar").addEventListener("click", pedirTroca);
+$("btnTrocarEntrada").addEventListener("click", pedirTroca);
+
+/* =========================== CARREGAR DADOS =========================== */
+async function recarregar() {
+  if (!dirRaiz || !ident) return;
+  try {
+    dados = { registros: [], ausencias: [], aprovU: {}, aprovG: {} };
+    dados.aprovG = await lerAprovacoes(dirRaiz, GERAL);
+    if (ehServidor()) {
+      const meu = await lerMeuArquivo(dirRaiz, ident.unidade, ident.nome);
+      dados.registros = (meu && meu.registros) || [];
+      dados.ausencias = (meu && meu.ausencias) || [];
+      dados.aprovU = await lerAprovacoes(dirRaiz, ident.unidade);
+    } else if (ehChefia()) {
+      dados.registros = await lerLancamentosDaUnidade(dirRaiz, ident.unidade);
+      dados.ausencias = await lerAusenciasDaUnidade(dirRaiz, ident.unidade);
+      dados.aprovU = await lerAprovacoes(dirRaiz, ident.unidade);
+    } else { // chefia geral e administrador: visão ampla
+      const sel = $("selUnidadeVer").value || "*";
+      const unidades = sel === "*" ? [...Object.keys(CFG.unidades), GERAL] : [sel];
+      for (const un of unidades) {
+        dados.registros.push(...await lerLancamentosDaUnidade(dirRaiz, un));
+        dados.ausencias.push(...await lerAusenciasDaUnidade(dirRaiz, un));
+        if (un !== GERAL)
+          Object.assign(dados.aprovU, await lerAprovacoes(dirRaiz, un));
+      }
+    }
+    render();
+  } catch (e) {
+    avisar($("avisoPasta"), "Falha ao ler a pasta da rede: " + e.message, true);
+  }
+}
+
+/* ============================ FORMULÁRIO ============================ */
+/* Catálogo achatado: a busca percorre TODAS as atividades de uma vez,
+   sem exigir que a pessoa acerte antes o processo de trabalho.
+   "n" é a forma normalizada (sem acento, minúscula) usada na comparação. */
+function normalizar(s) {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+function palavras(s) {
+  return normalizar(s).split(/[^a-z0-9]+/).filter(w => w.length > 2);
+}
+/* Radical aproximado do português: o catálogo é escrito com
+   substantivos ("catalogação", "indexação") e as pessoas digitam
+   verbos ("catalogar", "indexar"). Sem isto a busca não encontra nada.
+   Recall importa mais que precisão aqui — a lista é curta. */
+const SUFIXOS = ["acoes", "acao", "icoes", "icao", "coes", "cao",
+  "imentos", "imento", "mentos", "mento", "ncias", "ncia",
+  "adores", "ador", "antes", "ante", "ivos", "ivo", "ados", "adas",
+  "ado", "ada", "agem", "ares", "ar", "er", "ir",
+  "ais", "eis", "ois", "ns", "os", "as", "es", "s"];
+const TROCA = { ais: "al", eis: "el", ois: "ol", ns: "m" };
+function radical(w) {
+  if (w.length < 4) return w;
+  for (const s of SUFIXOS) {
+    /* mantém pelo menos 3 letras de base: evita reduzir "doação" a "d" */
+    if (w.length - s.length >= 3 && w.endsWith(s)) {
+      const base = w.slice(0, w.length - s.length);
+      return TROCA[s] ? base + TROCA[s] : base;
+    }
+  }
+  return w;
+}
+/* Casa por substring literal (o que a pessoa vê) ou por radical. */
+function casa(a, termo) {
+  if (a.n.includes(termo)) return true;
+  const r = radical(termo);
+  return a.st.some(w => w.startsWith(r));
+}
+/* Catálogo achatado: a busca percorre TODAS as atividades de uma vez,
+   sem exigir que a pessoa acerte antes o processo de trabalho.
+   "n" é o texto normalizado; "st" são os radicais das suas palavras.
+   Declarado depois de radical()/SUFIXOS porque é avaliado na carga. */
+const ATIVIDADES = PROCESSOS.flatMap((p, pi) =>
+  p.atividades.map((a, ai) => ({
+    pi, ai, proc: p.nome, t: a.t, c: a.c,
+    n: normalizar(a.t + " " + p.nome),
+    st: [...new Set(palavras(a.t + " " + p.nome).map(radical))]
+  }))
+).sort((x, y) => x.t.localeCompare(y.t, "pt-BR", { sensitivity: "base" }));
+/* Ordem alfabética, e não a do catalogo.js: a lista é percorrida com o
+   olho, e a ordem em que alguém digitou as atividades no arquivo não
+   diz nada a quem lê. localeCompare em pt-BR põe "ação" junto de "acao"
+   e o "ç" no lugar do "c" — ordenar pelo código do caractere jogaria
+   todos os acentuados para o fim da lista. Os campos pi/ai continuam
+   apontando para o catálogo, então o filtro por processo não muda. */
+/* REGRA DA CASA: todo texto que vier de fora do código-fonte — arquivo de
+   outra pessoa na rede, config.json, catalogo.js — passa por aqui antes
+   de entrar em innerHTML, inclusive dentro de atributos. Sem isto, uma
+   observação com "<img src=x onerror=...>" digitada por um servidor vira
+   código executado na sessão de quem abre o painel, e essa sessão tem
+   permissão de escrita na pasta central inteira.
+   Aceita nulo e número porque lançamentos antigos podem não ter todos os
+   campos: a falta de um campo não pode derrubar a tela. */
+function escapar(s) {
+  return String(s ?? "").replace(/[&<>"]/g, (ch) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+}
+/* Realça os termos buscados no texto já escapado. */
+function realcar(texto, termos) {
+  let html = escapar(texto);
+  if (!termos.length) return html;
+  const alvo = normalizar(texto);
+  const faixas = [];
+  for (const termo of termos) {
+    let de = alvo.indexOf(termo);
+    while (de !== -1) { faixas.push([de, de + termo.length]); de = alvo.indexOf(termo, de + 1); }
+  }
+  if (!faixas.length) return html;
+  faixas.sort((x, y) => x[0] - y[0]);
+  const juntas = [];
+  for (const f of faixas) {
+    const ult = juntas[juntas.length - 1];
+    if (ult && f[0] <= ult[1]) ult[1] = Math.max(ult[1], f[1]);
+    else juntas.push([...f]);
+  }
+  html = "";
+  let cursor = 0;
+  for (const [de, ate] of juntas) {
+    html += escapar(texto.slice(cursor, de)) + "<mark>" + escapar(texto.slice(de, ate)) + "</mark>";
+    cursor = ate;
+  }
+  return html + escapar(texto.slice(cursor));
+}
+
+let atvSel = null;      // atividade escolhida (objeto de ATIVIDADES)
+let opcoes = [];        // opções atualmente listadas
+let marcada = -1;       // índice destacado pelo teclado
+
+function montarProcessos() {
+  $("qtdAtividades").textContent = ATIVIDADES.length;
+  $("selProcesso").innerHTML =
+    `<option value="">Todos os processos</option>` +
+    PROCESSOS.map((p, i) => `<option value="${i}">${escapar(p.nome)}</option>`).join("");
+  atualizarChips();
+}
+/* Filtra por todos os termos digitados (ordem livre) e pelo processo,
+   quando o filtro opcional de processo estiver em uso. */
+function filtrar() {
+  const termos = normalizar($("inpAtividade").value).split(/\s+/).filter(Boolean);
+  const proc = $("selProcesso").value;
+  return ATIVIDADES.filter(a =>
+    (proc === "" || a.pi === +proc) && termos.every(t => casa(a, t)));
+}
+function abrirLista(mostrarTudo = false) {
+  const termos = normalizar($("inpAtividade").value).split(/\s+/).filter(Boolean);
+  opcoes = filtrar();
+  marcada = opcoes.length ? 0 : -1;
+  const lista = $("listaAtividades");
+  lista.innerHTML = opcoes.length
+    ? opcoes.map((a, i) => `
+        <div class="opt" role="option" id="opt-${i}" data-i="${i}"
+             aria-selected="${i === marcada}">
+          <span class="t">${realcar(a.t, termos)}</span>
+          <span class="p">${realcar(a.proc, termos)}</span>
+        </div>`).join("")
+    : `<div class="nada">Nenhuma atividade encontrada. Tente outra palavra.</div>`;
+  if (!mostrarTudo && !termos.length && !opcoes.length) return fecharLista();
+  lista.dataset.aberta = "true";
+  $("inpAtividade").setAttribute("aria-expanded", "true");
+  rolarAteMarcada();
+}
+function fecharLista() {
+  $("listaAtividades").dataset.aberta = "false";
+  $("inpAtividade").setAttribute("aria-expanded", "false");
+  $("inpAtividade").removeAttribute("aria-activedescendant");
+}
+function marcar(i) {
+  if (!opcoes.length) return;
+  marcada = (i + opcoes.length) % opcoes.length;
+  [...$("listaAtividades").children].forEach((el, k) =>
+    el.setAttribute("aria-selected", String(k === marcada)));
+  $("inpAtividade").setAttribute("aria-activedescendant", "opt-" + marcada);
+  rolarAteMarcada();
+}
+function rolarAteMarcada() {
+  const el = $("listaAtividades").querySelector('[aria-selected="true"]');
+  if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest" });
+}
+/* Confirma a escolha: mostra o texto INTEGRAL da atividade (o motivo
+   pelo qual o <select> era ruim) e libera as complexidades válidas. */
+function escolher(a) {
+  atvSel = a;
+  $("inpAtividade").value = "";
+  $("busca").classList.remove("tem-texto");
+  $("atvEscolhida").dataset.tem = "true";
+  $("atvEscolhida").innerHTML =
+    `<span class="t">${escapar(a.t)}</span><span class="p">${escapar(a.proc)}</span>`;
+  fecharLista();
+  atualizarChips();
+}
+function limparEscolha() {
+  atvSel = null;
+  $("atvEscolhida").dataset.tem = "false";
+  $("atvEscolhida").innerHTML = "";
+  atualizarChips();
+}
+function atualizarChips() {
+  complexidade = null;
+  const permitidas = atvSel ? atvSel.c : [];
+  chips.forEach(ch => {
+    ch.disabled = !permitidas.includes(ch.dataset.c);
+    ch.setAttribute("aria-pressed", "false");
+  });
+  if (permitidas.length === 1) selecionarChip(permitidas[0]);
+}
+function selecionarChip(c) {
+  complexidade = c;
+  chips.forEach(ch => ch.setAttribute("aria-pressed", String(ch.dataset.c === c)));
+}
+chips.forEach(ch => ch.addEventListener("click", () => selecionarChip(ch.dataset.c)));
+
+/* ---- Eventos da busca ---- */
+$("inpAtividade").addEventListener("input", () => {
+  $("busca").classList.toggle("tem-texto", $("inpAtividade").value !== "");
+  abrirLista(true);
+});
+$("inpAtividade").addEventListener("focus", () => abrirLista(true));
+$("inpAtividade").addEventListener("keydown", (e) => {
+  const aberta = $("listaAtividades").dataset.aberta === "true";
+  if (e.key === "ArrowDown")      { e.preventDefault(); aberta ? marcar(marcada + 1) : abrirLista(true); }
+  else if (e.key === "ArrowUp")   { e.preventDefault(); if (aberta) marcar(marcada - 1); }
+  else if (e.key === "Enter")     { if (aberta && opcoes[marcada]) { e.preventDefault(); escolher(opcoes[marcada]); } }
+  else if (e.key === "Escape")    { fecharLista(); }
+});
+$("listaAtividades").addEventListener("mousedown", (e) => {
+  const opt = e.target.closest(".opt");
+  if (opt) { e.preventDefault(); escolher(opcoes[+opt.dataset.i]); }
+});
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("#busca")) fecharLista();
+});
+$("btnLimparBusca").addEventListener("click", () => {
+  $("inpAtividade").value = "";
+  $("busca").classList.remove("tem-texto");
+  limparEscolha();
+  $("inpAtividade").focus();
+});
+$("btnFiltrarProc").addEventListener("click", () => {
+  const campo = $("campoProcesso");
+  campo.hidden = !campo.hidden;
+  if (campo.hidden) { $("selProcesso").value = ""; }
+  else $("selProcesso").focus();
+});
+$("selProcesso").addEventListener("change", () => abrirLista(true));
+
+/* ---- Atividades frequentes: derivadas dos próprios lançamentos ---- */
+/* Para quem repete as mesmas tarefas todo dia, registrar vira dois
+   cliques. A lista sai do histórico da pessoa — nada a configurar.
+   São três, e não cinco: passando disso o atalho ocupa mais tela que o
+   próprio campo de busca, e a quinta atividade mais repetida já não é
+   repetida o bastante para valer um botão fixo. */
+const MAX_FREQUENTES = 3;
+function montarFrequentes() {
+  const meus = dados.registros.filter(r => r.servidor === ident?.nome);
+  const contagem = new Map();
+  for (const r of meus) contagem.set(r.atividade, (contagem.get(r.atividade) || 0) + 1);
+  /* Descarta as saídas do catálogo ANTES de cortar: cortando primeiro, uma
+     atividade que saiu do catálogo levava embora uma das vagas. */
+  const top = [...contagem.entries()]
+    .sort((x, y) => y[1] - x[1])
+    .map(([texto, n]) => ({ a: ATIVIDADES.find(x => x.t === texto), n }))
+    .filter(x => x.a)
+    .slice(0, MAX_FREQUENTES);
+  $("campoFrequentes").hidden = top.length === 0;
+  /* O macroprocesso vem ANTES da atividade: é ele que situa a tarefa, e
+     lido depois virava rodapé de uma frase já encerrada. */
+  $("frequentes").innerHTML = top.map(({ a, n }, i) => `
+    <button type="button" class="freq" data-i="${i}" title="${escapar(a.t)}">
+      <small class="proc">${escapar(a.proc)}</small>
+      ${escapar(a.t.length > 68 ? a.t.slice(0, 68).trim() + "…" : a.t)}
+      <small>${n} ${n === 1 ? "registro" : "registros"}</small>
+    </button>`).join("");
+  $("frequentes").dataset.mapa = JSON.stringify(top.map(x => ATIVIDADES.indexOf(x.a)));
+}
+$("frequentes").addEventListener("click", (e) => {
+  const btn = e.target.closest(".freq");
+  if (!btn) return;
+  const mapa = JSON.parse($("frequentes").dataset.mapa || "[]");
+  const a = ATIVIDADES[mapa[+btn.dataset.i]];
+  if (a) { escolher(a); $("inpAtividade").blur(); }
+});
+
+/* ================================ AUSÊNCIAS ================================
+   Período de afastamento, medido em DIAS CORRIDOS. Não vale pontos, não
+   passa por aprovação (decisão de projeto) e não entra na tabela de
+   atividades. Fica no arquivo da própria pessoa, em "ausencias". */
+const rotuloTipo = (k) =>
+  (TIPOS_AUSENCIA.find(t => t.k === k) || {}).rotulo || k;
+
+/* Dias corridos, inclusive as duas pontas. Comparação em UTC para que
+   o fuso do computador não coma ou invente um dia. */
+function diasCorridos(de, ate) {
+  const d1 = Date.parse(de + "T00:00:00Z"), d2 = Date.parse(ate + "T00:00:00Z");
+  return Math.round((d2 - d1) / 86400000) + 1;
+}
+const periodoTxt = (a) =>
+  a.de === a.ate ? fmtData(a.de) : `${fmtData(a.de)} a ${fmtData(a.ate)}`;
+
+/* Duas ausências se sobrepõem quando uma começa antes de a outra
+   terminar e vice-versa. Datas ISO comparam bem como texto. */
+const sobrepoe = (a, b) => a.de <= b.ate && b.de <= a.ate;
+
+const minhasAusencias = () => dados.ausencias
+  .filter(a => a.servidor === ident.nome)
+  .sort((x, y) => y.de.localeCompare(x.de));
+
+/* Uma ausência entra no mês filtrado se ENCOSTA nele em algum dia — não
+   basta começar nele: férias de 28/08 a 10/09 valem para agosto e para
+   setembro. */
+function ausenciasFiltradas() {
+  const mes = $("inpMes").value;
+  const pessoa = $("selServidorVer").value;
+  if (!mes) return [];
+  const ini = mes + "-01", fim = mes + "-31";
+  return dados.ausencias
+    .filter(a => a.de <= fim && a.ate >= ini)
+    .filter(a => ehServidor() ? a.servidor === ident.nome : true)
+    .filter(a => (!pessoa || pessoa === "*") ? true : a.servidor === pessoa)
+    .sort((x, y) => x.de.localeCompare(y.de) || x.servidor.localeCompare(y.servidor));
+}
+
+function montarTiposAusencia() {
+  $("selTipoAus").innerHTML = TIPOS_AUSENCIA
+    .map(t => `<option value="${escapar(t.k)}">${escapar(t.rotulo)}</option>`).join("");
+}
+
+$("btnRegistrarAus").addEventListener("click", async () => {
+  if (!dirRaiz) return avisar($("avisoAus"), "Conecte a pasta da rede antes de registrar.", true);
+  const tipo = $("selTipoAus").value;
+  const de = $("inpAusDe").value, ate = $("inpAusAte").value;
+  if (!de || !ate) return avisar($("avisoAus"), "Informe o primeiro e o último dia da ausência.", true);
+  if (ate < de) return avisar($("avisoAus"), "O último dia não pode ser anterior ao primeiro.", true);
+
+  const nova = {
+    id: "aus-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+    unidade: ident.unidade, servidor: ident.nome, papel: ident.perfil,
+    tipo, de, ate, obs: $("inpAusObs").value.trim()
+  };
+  /* Sobreposição é quase sempre engano de digitação ou lançamento
+     repetido; barrar aqui evita contar o mesmo dia duas vezes na meta. */
+  const choque = minhasAusencias().find(a => sobrepoe(a, nova));
+  if (choque) return avisar($("avisoAus"),
+    `Este período se sobrepõe a uma ausência já registrada: ${rotuloTipo(choque.tipo)}, ${periodoTxt(choque)}.`, true);
+
+  let gravou = false;
+  try {
+    await atualizarArquivoPessoa(ident.unidade, ident.nome, (e) => {
+      e.ausencias.push(nova);
+      e.carga = ident.carga;
+    });
+    $("inpAusObs").value = "";
+    await recarregar();
+    gravou = true;
+  } catch (e) {
+    avisar($("avisoAus"), msgErro(e, "Não foi possível gravar na rede: "), true);
+  }
+  if (gravou) mostrarReciboAus(nova);
+});
+
+/* Exclusão: a própria pessoa apaga as suas; o administrador apaga as de
+   qualquer um, como já faz com lançamentos (papel de correção). */
+async function excluirAusencia(id) {
+  const a = dados.ausencias.find(x => x.id === id);
+  if (!a) return;
+  const minha = a.servidor === ident.nome;
+  if (!minha && !ehAdm()) return;
+  if (!confirm(minha
+    ? `Excluir a ausência ${rotuloTipo(a.tipo)}, ${periodoTxt(a)}?`
+    : `Excluir a ausência de ${a.servidor} (${rotuloTipo(a.tipo)}, ${periodoTxt(a)})?`)) return;
+  try {
+    await atualizarArquivoPessoa(a.unidade, a.servidor, (e) => {
+      e.ausencias = e.ausencias.filter(x => x.id !== id);
+    });
+    await recarregar();
+  } catch (e) {
+    avisar($(minha ? "avisoAus" : "avisoPainel"),
+      msgErro(e, "Não foi possível excluir na rede: "), true);
+  }
+}
+/* As duas listas de ausência (a própria, na tela Ausências, e a da
+   alçada, na aba do painel) usam o mesmo botão data-delaus. */
+for (const alvo of ["vAus", "painelAus"]) {
+  $(alvo).addEventListener("click", (e) => {
+    const id = e.target.dataset.delaus;
+    if (id) excluirAusencia(id);
+  });
+}
+
+function renderAusencias() {
+  /* ---- lista pessoal (todo mundo que registra tem a sua) ---- */
+  const minhas = minhasAusencias();
+  $("tbodyMinhasAus").innerHTML = minhas.map(a => `
+    <tr>
+      <td><span class="tag-aus">${escapar(rotuloTipo(a.tipo))}</span></td>
+      <td>${periodoTxt(a)}</td>
+      <td class="num">${diasCorridos(a.de, a.ate)}</td>
+      <td>${escapar(a.obs || "—")}</td>
+      <td><button type="button" class="excluir" data-delaus="${escapar(a.id)}" aria-label="Excluir ausência">excluir</button></td>
+    </tr>`).join("");
+  $("vazioMinhasAus").hidden = minhas.length > 0;
+  $("contMinhasAus").textContent = minhas.length;
+
+  /* ---- painel: ausências das pessoas sob a alçada de quem olha ---- */
+  const lista = ausenciasFiltradas();
+  $("tbodyAus").innerHTML = lista.map(a => `
+    <tr>
+      <td>${escapar(a.servidor)}</td>
+      <td>${a.unidade === GERAL ? "GERAL" : escapar(a.unidade)}</td>
+      <td><span class="tag-aus">${escapar(rotuloTipo(a.tipo))}</span></td>
+      <td>${periodoTxt(a)}</td>
+      <td class="num">${diasCorridos(a.de, a.ate)}</td>
+      <td>${escapar(a.obs || "—")}</td>
+      <td>${(a.servidor === ident.nome || ehAdm())
+        ? `<button type="button" class="excluir" data-delaus="${escapar(a.id)}" aria-label="Excluir ausência">excluir</button>` : ""}</td>
+    </tr>`).join("");
+  $("vazioAus").hidden = lista.length > 0;
+
+  const pessoas = new Set(lista.map(a => a.servidor));
+  const dias = lista.reduce((s, a) => s + diasCorridos(a.de, a.ate), 0);
+  $("resumoAus").innerHTML = lista.length
+    ? `<b>${lista.length}</b> ausência(s) de <b>${pessoas.size}</b> pessoa(s), somando <b>${dias}</b> dia(s) corrido(s) no mês filtrado.
+       <br><small style="color:var(--grafite)">Dias CORRIDOS, não úteis — inclui fins de semana e feriados. No percentual da meta o que conta é outra coisa: os dias com lançamento que caem dentro destes períodos saem da conta.</small>`
+    : "";
+  $("resumoAus").hidden = !lista.length;
+}
+
+/* ============================ META ALCANÇADA ============================
+   Meta = pontos por DIA TRABALHADO (15 para 8h, 11 para 6h, no
+   catalogo.js). O denominador NÃO é o mês inteiro: são só os dias em
+   que a pessoa efetivamente lançou atividade. Ficam de fora:
+
+   - dias sem lançamento nenhum (não se sabe se houve trabalho);
+   - dias cobertos por uma ausência registrada — e aí os pontos desse
+     dia saem TAMBÉM do numerador. Tirar o dia da conta e manter os
+     pontos dele inflaria o percentual.
+
+   Consequência a ter em mente ao ler o número: quem lançou em 2 dias e
+   bateu a meta nos 2 aparece com 100%, igual a quem lançou em 20. Por
+   isso o número nunca é exibido sozinho — vem sempre com "em N dia(s)".
+
+   Meses com lançamentos anteriores à v11 (sem carga horária gravada)
+   não têm meta calculável para esses dias: eles entram em diasSemCarga
+   e ficam fora do percentual, que é então marcado como parcial. */
+function desempenho(regsPessoa, ausenciasPessoa) {
+  const emAusencia = (data) => ausenciasPessoa.some(a => a.de <= data && data <= a.ate);
+
+  const porDia = new Map();
+  for (const r of regsPessoa) {
+    if (emAusencia(r.data)) continue;
+    const d = porDia.get(r.data) || { pontos: 0, carga: null };
+    d.pontos += r.pontos;
+    if (r.cargaHoraria) d.carga = r.cargaHoraria;
+    porDia.set(r.data, d);
+  }
+
+  let dias = 0, pontos = 0, diasComMeta = 0, pontosComMeta = 0, esperado = 0;
+  for (const d of porDia.values()) {
+    dias++; pontos += d.pontos;
+    const meta = META_DIARIA[d.carga];
+    if (meta) { diasComMeta++; pontosComMeta += d.pontos; esperado += meta; }
+  }
+  return {
+    dias, pontos,
+    media: dias ? pontos / dias : 0,
+    diasSemCarga: dias - diasComMeta,
+    /* null = não dá para calcular (nenhum dia com carga conhecida) */
+    pct: esperado ? Math.round(pontosComMeta / esperado * 100) : null
+  };
+}
+/* Ausências da pessoa, sem filtro de mês: um período pode começar no
+   mês anterior e ainda cobrir dias deste. */
+const ausenciasDe = (nome) => dados.ausencias.filter(a => a.servidor === nome);
+
+const fmtMedia = (n) => n.toFixed(1).replace(".", ",");
+
+/* Recibo da ausência: mesma janela do lançamento, mesmo motivo. */
+function mostrarReciboAus(a) {
+  $("reciboTitulo").textContent = "Ausência registrada";
+  $("reciboSub").textContent = [a.servidor,
+    a.unidade === GERAL ? "Chefia geral" : a.unidade].filter(Boolean).join(" · ");
+  const linhas = [
+    ["Tipo", rotuloTipo(a.tipo)],
+    ["Período", periodoTxt(a)],
+    ["Dias corridos", String(diasCorridos(a.de, a.ate))]
+  ];
+  if (a.obs) linhas.push(["Observações", a.obs]);
+  linhas.push(["Situação", "Registrada — ausências não passam por aprovação"]);
+  $("reciboCorpo").innerHTML = linhas
+    .map(([k, v]) => `<dt>${k}</dt><dd>${escapar(String(v))}</dd>`).join("");
+  $("reciboTotal").textContent = "";
+  $("dlgRecibo").showModal();
+}
+
+/* --------------------------- RECIBO DO LANÇAMENTO ---------------------------
+   Quem aprova é determinado pelo PAPEL de quem lançou (mesma regra de
+   podeAprovar): servidor -> chefia da unidade; chefia de unidade ->
+   chefia geral; chefia geral -> ela própria, no painel geral. */
+function quemAprova(papel) {
+  // frase inteira, com a preposição: "por a chefia" não existe em português
+  if (papel === "servidor") return "pela chefia da unidade";
+  if (papel === "chefia")   return "pela chefia geral";
+  return "por você mesmo, no painel geral";
+}
+function mostrarRecibo(reg) {
+  // a mesma janela serve às ausências: devolve o título ao do lançamento
+  $("reciboTitulo").textContent = "Lançamento registrado";
+  $("reciboSub").textContent = [
+    reg.servidor,
+    reg.unidade === GERAL ? "Chefia geral" : reg.unidade,
+    reg.cargaHoraria ? reg.cargaHoraria + "h/dia" : null
+  ].filter(Boolean).join(" · ");
+
+  const linhas = [
+    ["Data", fmtData(reg.data)],
+    ["Atividade", reg.atividade],
+    ["Processo", reg.processo],
+    ["Complexidade", `${ROTULO_COMPLEXIDADE[reg.complexidade]} — ${reg.pontos} pontos`]
+  ];
+  if (reg.obs) linhas.push(["Observações", reg.obs]);
+  linhas.push(["Situação", `Pendente de aprovação ${quemAprova(reg.papel)}`]);
+
+  $("reciboCorpo").innerHTML = linhas
+    .map(([k, v]) => `<dt>${k}</dt><dd>${escapar(String(v))}</dd>`).join("");
+  $("reciboTotal").textContent = `Total no mês: ${$("totMes").textContent} pontos`;
+  $("dlgRecibo").showModal();
+}
+$("btnReciboOK").addEventListener("click", () => $("dlgRecibo").close());
+/* Devolve o foco ao campo de busca: o caso comum é lançar a próxima
+   atividade em seguida. */
+$("dlgRecibo").addEventListener("close", () => $("inpAtividade").focus());
+
+$("btnRegistrar").addEventListener("click", async () => {
+  if (!dirRaiz) return avisar($("aviso"), "Conecte a pasta da rede antes de registrar.", true);
+  const data = $("inpData").value;
+  if (!data) return avisar($("aviso"), "Informe a data do lançamento.", true);
+  if (!atvSel) return avisar($("aviso"), "Escolha a atividade realizada.", true);
+  if (!complexidade) return avisar($("aviso"), "Escolha a complexidade da atividade.", true);
+  const reg = {
+    id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+    data, unidade: ident.unidade, servidor: ident.nome, papel: ident.perfil,
+    processo: atvSel.proc, atividade: atvSel.t,
+    complexidade, pontos: PONTOS[complexidade],
+    /* Carimbada no lançamento, não só no cabeçalho: quem passa de 8h
+       para 6h no meio do ano não deve ver a média dos meses anteriores
+       mudar retroativamente. */
+    cargaHoraria: ident.carga,
+    obs: $("inpObs").value.trim()
+    /* "abono" saiu daqui na v11: virou ausência por período, no card
+       próprio. Lançamentos antigos com abono:true continuam sendo
+       exibidos e exportados como antes. */
+  };
+  let gravou = false;
+  try {
+    await atualizarArquivoPessoa(ident.unidade, ident.nome, (e) => {
+      e.registros.push(reg);
+      e.carga = ident.carga;
+    });
+    $("inpObs").value = "";
+    mudarMes(data.slice(0, 7));
+    avisar($("aviso"), `Atividade registrada — ${reg.pontos} pontos em ${fmtData(data)}.`);
+    /* recarregar() antes do recibo: o total do mês exibido nele precisa
+       já incluir este lançamento. */
+    await recarregar();
+    gravou = true;
+  } catch (e) {
+    avisar($("aviso"), msgErro(e, "Não foi possível gravar na rede: "), true);
+  }
+  /* Fora do try de propósito: o lançamento JÁ está na rede. Um defeito ao
+     montar o recibo não pode virar "não foi possível gravar", que mandaria
+     a pessoa lançar tudo de novo e duplicar o registro. */
+  if (gravou) mostrarRecibo(reg);
+});
+
+/* ============================ PAINEL / TABELA ============================ */
+/* ============================ ABAS DO PAINEL ============================
+   O acordeão da v12/v13 saiu. Ele deixava abrir tudo ao mesmo tempo, o
+   que na prática ninguém fazia: aprovar, analisar o mês e conferir
+   ausências são três tarefas distintas, e uma de cada vez. Abas dizem
+   quais são as três antes de escolher, coisa que um acordeão fechado
+   não diz.
+
+   A aba escolhida fica guardada neste navegador, como estava o estado
+   das seções: quem vive aprovando volta direto para "Aprovações". */
+const CHAVE_ABA = "ra.aba.v1";
+const ABAS = { aprov: "painelAprov", visao: "painelVisao", aus: "painelAus" };
+let abaAtual = "aprov";
+
+function irAba(k) {
+  if (!ABAS[k]) k = "aprov";
+  abaAtual = k;
+  for (const [nome, id] of Object.entries(ABAS)) $(id).hidden = nome !== k;
+  for (const b of document.querySelectorAll(".aba"))
+    b.setAttribute("aria-selected", String(b.dataset.aba === k));
+  localStorage.setItem(CHAVE_ABA, k);
+  if (k === "visao") desenhoPendente();
+}
+/* ECharts não mede um contêiner que o navegador não está exibindo: o
+   gráfico sairia com altura zero. Por isso o desenho fica na fila e é
+   resgatado quando a aba (e a tela) ficam de fato visíveis. */
+function desenhoPendente() {
+  if (vistaAtual !== "painel" || abaAtual !== "visao" || !visPendente) return;
+  const regs = visPendente; visPendente = null;
+  desenharGraficos(regs);
+}
+document.querySelector(".abas").addEventListener("click", (e) => {
+  const b = e.target.closest(".aba");
+  if (b) irAba(b.dataset.aba);
+});
+/* setas esquerda/direita percorrem as abas, como manda o padrão */
+document.querySelector(".abas").addEventListener("keydown", (e) => {
+  if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+  const vis = [...document.querySelectorAll(".aba")].filter(b => !b.hidden);
+  const i = vis.findIndex(b => b.dataset.aba === abaAtual);
+  const p = vis[(i + (e.key === "ArrowRight" ? 1 : -1) + vis.length) % vis.length];
+  if (p) { e.preventDefault(); irAba(p.dataset.aba); p.focus(); }
+});
+function restaurarAba() {
+  irAba(localStorage.getItem(CHAVE_ABA) || "aprov");
+}
+
+function prepararPainel() {
+  const amplo = ehGeral() || ehAdm();
+  /* O painel agora é uma TELA, e o servidor simplesmente não a tem: o
+     que ele via ali (os próprios lançamentos) virou a tela "Meu mês", e
+     as ausências dele, a tela "Ausências". */
+  restaurarAba();
+  $("fSituacao").hidden = false;
+  $("fServidor").hidden = false;
+  $("fUnidadeGeral").hidden = !amplo;
+  $("btnAprovarTodos").hidden = !(ehChefia() || ehGeral());
+  if (amplo) {
+    $("selUnidadeVer").innerHTML =
+      `<option value="*">Todas as unidades</option>` +
+      `<option value="${GERAL}">${GERAL} (chefia geral)</option>` +
+      Object.keys(CFG.unidades).map(u => `<option value="${escapar(u)}">${escapar(u)}</option>`).join("");
+  }
+  $("hintForm").textContent =
+    ehServidor() ? "Registre uma atividade por vez. A aprovação é feita pela chefia da unidade." :
+    ehChefia()   ? "Registre uma atividade por vez. Seus lançamentos como chefia são aprovados pela chefia geral." :
+                   "Registre uma atividade por vez. Seus lançamentos ficam na pasta GERAL e são aprovados por você, no painel.";
+  $("tituloPainel").textContent =
+    ehChefia()   ? `Painel da unidade ${ident.unidade}` :
+    ehGeral()    ? "Painel geral" : "Lançamentos (administração)";
+  $("hintPainel").textContent =
+    ehChefia()   ? "Você aprova os lançamentos dos servidores da unidade; os seus próprios aguardam a chefia geral. A chefia geral também pode aprovar os da sua unidade — nesse caso a aprovação sai no nome dela e só ela pode desfazê-la." :
+    ehGeral()    ? "Você aprova QUALQUER lançamento: das chefias de unidade, dos servidores e os seus próprios. A via ordinária dos servidores continua sendo a chefia da unidade; o que você aprovar fica registrado no seu nome, na pasta GERAL, e só por você pode ser desfeito." :
+                   "Como administrador você pode excluir qualquer lançamento (correção de erros), inclusive aprovados. Aprovações continuam sendo atribuição das chefias.";
+  $("subMes").textContent = ident
+    ? [ident.nome, ident.unidade && ident.unidade !== GERAL ? ident.unidade : null,
+       ident.carga ? ident.carga + " h/dia" : null,
+       META_DIARIA[ident.carga] ? `meta de ${META_DIARIA[ident.carga]} pontos por dia trabalhado` : null
+      ].filter(Boolean).join(" · ")
+    : "";
+  $("txtDestino").textContent = ident && !ehAdm()
+    ? `Grava em ${ident.unidade}/lancamentos/${slug(ident.nome)}.json`
+    : "";
+  if (!$("inpMes").value) mudarMes(hoje().slice(0, 7));
+}
+
+/* Mês de referência: um só valor para as duas telas que o mostram
+   ("Meu mês" e o painel). Dois campos na tela, um estado só — ver dois
+   meses diferentes ao mesmo tempo confundiria mais do que ajudaria. */
+function mudarMes(m) {
+  $("inpMes").value = m;
+  $("inpMesMeu").value = m;
+}
+
+function registrosFiltrados() {
+  const mes = $("inpMes").value;
+  const pessoa = $("selServidorVer").value;
+  const sit = $("selSituacao").value;
+  return dados.registros
+    .filter(r => r.data.startsWith(mes))
+    .filter(r => ehServidor() ? ehMeu(r) : true)
+    .filter(r => (!pessoa || pessoa === "*") ? true : r.servidor === pessoa)
+    .filter(r => !sit ? true : (sit === "ap") === Boolean(aprovacaoDe(r)))
+    .sort((x, y) => x.data.localeCompare(y.data) ||
+                    x.servidor.localeCompare(y.servidor) ||
+                    x.id.localeCompare(y.id));
+}
+
+/* Nome do dia da semana. Meio-dia local evita que o fuso jogue a data
+   para o dia anterior, como aconteceria com "T00:00". */
+const DIA_SEMANA = ["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
+const nomeDoDia = (iso) => DIA_SEMANA[new Date(iso + "T12:00:00").getDay()];
+
+/* Etiqueta de situação, igual nas duas tabelas. */
+function etiquetaSituacao(ap) {
+  return `<span class="st ${ap ? "ap" : "pe"}"
+    title="${ap ? "Aprovado por " + escapar(ap.por || "chefia") : "Aguardando aprovação"}"
+    >${ap ? "Aprovado" : "Pendente"}</span>`;
+}
+/* Célula de atividade: texto, processo e observação, tudo escapado. */
+function celulaAtividade(r) {
+  return `<span class="atv-t">${escapar(r.atividade)}` +
+    (r.abono ? ' <span class="tag-abono">abono</span>' : '') + `</span>` +
+    `<span class="atv-s">${escapar(ROTULO_COMPLEXIDADE[r.complexidade] || "")}` +
+    ` · ${escapar(r.processo)}</span>` +
+    (r.obs ? `<span class="atv-s">${escapar(r.obs)}</span>` : "");
+}
+
+function render() {
+  if (!ident) return;
+  if (!ehAdm()) montarFrequentes();
+  if (ehChefia() || ehGeral() || ehAdm()) {
+    /* Inclui quem só tem ausência e nenhum lançamento — senão essa
+       pessoa some do filtro justamente na aba em que ela aparece. */
+    const nomes = [...new Set([...dados.registros, ...dados.ausencias]
+      .map(r => r.servidor))].sort();
+    const sel = $("selServidorVer"); const antes = sel.value;
+    sel.innerHTML = `<option value="*">Todas as pessoas</option>` +
+      nomes.map(n => `<option value="${escapar(n)}">${escapar(n)}</option>`).join("");
+    if (nomes.includes(antes)) sel.value = antes;
+  }
+
+  /* ---------------- painel (chefia, chefia geral, adm) ---------------- */
+  const regs = registrosFiltrados();
+  const linhas = [];
+  let i = 0;
+  while (i < regs.length) {
+    const dia = regs[i].data;
+    const doDia = [];
+    while (i < regs.length && regs[i].data === dia) { doDia.push(regs[i]); i++; }
+    const somaDia = doDia.reduce((s, r) => s + r.pontos, 0);
+    /* Cabeçalho de DIA abrindo o grupo, com o total já somado. Substitui
+       a linha de subtotal que vinha depois e que dependia de um colspan
+       fixo — o que desalinhava a coluna Pontos quando a tela estreita
+       escondia colunas. Aqui não há colspan a acertar: a faixa ocupa a
+       largura toda de propósito. */
+    linhas.push(`<tr class="dia"><td colspan="5">
+      <span class="d">${nomeDoDia(dia)}, ${fmtData(dia)}</span>
+      <span class="p"> · ${somaDia} pontos em ${doDia.length} lançamento(s)</span></td></tr>`);
+    for (const r of doDia) {
+      const ap = aprovacaoDe(r);
+      const tagPapel = papelDe(r) !== "servidor"
+        ? ` <span class="tag-papel">${papelDe(r) === "geral" ? "chefia geral" : "chefia"}</span>` : "";
+      /* Botão em vez de caixa de seleção: aprovar é a ação principal de
+         quem abre esta tela, e a caixa de 13 px era alvo pequeno demais.
+         Já aprovado, o controle dá lugar a quem aprovou e quando —
+         desmarcar continua possível pelo mesmo botão. */
+      let situacao;
+      if (podeAprovar(r) && !ap)
+        situacao = `<button type="button" class="acao mini" data-ap="${escapar(r.id)}"
+          data-valor="1">Aprovar</button>`;
+      else if (podeAprovar(r) && ap)
+        situacao = `${etiquetaSituacao(ap)}
+          <button type="button" class="excluir" data-ap="${escapar(r.id)}" data-valor=""
+          >desfazer</button>`;
+      else situacao = etiquetaSituacao(ap) +
+        (ap && ap.em ? `<span class="aprovado-em"> em ${fmtData(ap.em.slice(0, 10))}</span>` : "");
+      const acao = ((ehMeu(r) && !ap) || ehAdm())
+        ? ` <button type="button" class="excluir" data-del="${escapar(r.id)}"
+             aria-label="Excluir lançamento de ${escapar(r.servidor)}">excluir</button>` : "";
+      linhas.push(`<tr class="${ap ? "" : "pendente"}">
+        <td>${fmtData(r.data).slice(0, 5)}</td>
+        <td>${escapar(r.servidor)}${tagPapel}${(ehGeral() || ehAdm()) && r.unidade !== GERAL
+          ? `<span class="atv-s">${escapar(r.unidade)}</span>` : ""}</td>
+        <td>${celulaAtividade(r)}</td>
+        <td class="num">${r.pontos}</td>
+        <td style="white-space:nowrap">${situacao}${acao}</td>
+      </tr>`);
+    }
+  }
+  $("tbody").innerHTML = linhas.join("");
+  $("vazio").hidden = regs.length > 0;
+  const pend = regs.filter(r => !aprovacaoDe(r)).length;
+  $("resumoPendentes").innerHTML =
+    `${regs.length} lançamento(s) no mês · ` +
+    (pend ? `<span style="color:var(--dourado)">${pend} pendente(s)</span>` : "tudo aprovado");
+
+  /* ---------------- meus lançamentos ("Meu mês") ---------------- */
+  const meus = dados.registros
+    .filter(r => ehMeu(r) && r.data.startsWith($("inpMesMeu").value))
+    .sort((x, y) => y.data.localeCompare(x.data) || x.id.localeCompare(y.id));
+  const lm = [];
+  let j = 0;
+  while (j < meus.length) {
+    const dia = meus[j].data;
+    const doDia = [];
+    while (j < meus.length && meus[j].data === dia) { doDia.push(meus[j]); j++; }
+    const soma = doDia.reduce((s, r) => s + r.pontos, 0);
+    lm.push(`<tr class="dia"><td colspan="5">
+      <span class="d">${nomeDoDia(dia)}, ${fmtData(dia)}</span>
+      <span class="p"> · ${soma} pontos</span></td></tr>`);
+    for (const r of doDia) {
+      const ap = aprovacaoDe(r);
+      lm.push(`<tr>
+        <td>${fmtData(r.data).slice(0, 5)}</td>
+        <td>${celulaAtividade(r)}</td>
+        <td class="num">${r.pontos}</td>
+        <td>${etiquetaSituacao(ap)}</td>
+        <td>${!ap ? `<button type="button" class="excluir" data-del="${escapar(r.id)}"
+              aria-label="Excluir lançamento">excluir</button>` : ""}</td>
+      </tr>`);
+    }
+  }
+  $("tbodyMeus").innerHTML = lm.join("");
+  $("vazioMeus").hidden = meus.length > 0;
+  $("contMeus").textContent = meus.length;
+
+  const pontosMes = meus.reduce((s, r) => s + r.pontos, 0);
+  const pendMeus = meus.filter(r => !aprovacaoDe(r)).length;
+  $("totMes").textContent = pontosMes;
+  $("mesPontos").textContent = pontosMes;
+  $("mesPend").textContent = pendMeus;
+  $("mesPendPe").textContent = meus.length
+    ? `${meus.length - pendMeus} já aprovado(s) de ${meus.length} lançamento(s)`
+    : "sem lançamentos no mês";
+
+  /* Meta alcançada no mês. Usa TODOS os lançamentos do mês, aprovados ou
+     não: a meta mede o trabalho feito, não a velocidade da chefia em
+     aprovar. */
+  const dp = desempenho(meus, ausenciasDe(ident.nome));
+  const baseTxt = !dp.dias
+    ? "sem lançamentos no mês"
+    : dp.pct === null
+      ? `${dp.dias} dia(s) lançado(s), sem carga horária gravada`
+      : `média de ${fmtMedia(dp.media)} pts em ${dp.dias} dia(s) com lançamento` +
+        (dp.diasSemCarga ? ` · ${dp.diasSemCarga} dia(s) fora da conta (sem carga)` : "");
+  $("totMeta").textContent = dp.pct === null ? "—" : dp.pct + "%";
+  $("totMeta").dataset.abaixo = String(dp.pct !== null && dp.pct < 100);
+  $("totMetaBase").textContent = baseTxt;
+  $("mesPct").textContent = dp.pct === null ? "—" : dp.pct + "%";
+  $("mesPctBase").textContent = baseTxt;
+  $("mesBarra").style.width = Math.min(100, dp.pct || 0) + "%";
+  $("mesBarra").dataset.abaixo = String(dp.pct !== null && dp.pct < 100);
+  $("mesPontosPe").textContent = dp.dias
+    ? `${meus.length} lançamentos · média ${fmtMedia(dp.media)}/dia`
+    : "";
+  $("navMesPct").textContent = dp.pct === null ? "" : dp.pct + "%";
+
+  /* ---------------- cartão “Hoje” da tela de lançamento ---------------- */
+  const diaSel = $("inpData").value;
+  const doDiaSel = meus.filter(r => r.data === diaSel);
+  const ptsDia = doDiaSel.reduce((s, r) => s + r.pontos, 0);
+  const metaDia = META_DIARIA[ident.carga] || 0;
+  $("totDia").textContent = ptsDia;
+  $("hojeRotulo").textContent = diaSel
+    ? (diaSel === hoje() ? "Hoje · " : "") + fmtData(diaSel)
+    : "Dia selecionado";
+  $("hojeMeta").textContent = metaDia ? ` de ${metaDia} pontos previstos` : "";
+  $("hojeBarra").style.width = metaDia ? Math.min(100, ptsDia / metaDia * 100) + "%" : "0";
+  $("hojeBarra").dataset.abaixo = String(metaDia > 0 && ptsDia < metaDia);
+  $("hojeQtd").textContent =
+    `${doDiaSel.length} lançamento${doDiaSel.length === 1 ? "" : "s"}`;
+  $("hojeSituacao").textContent = !metaDia ? ""
+    : ptsDia >= metaDia ? "meta do dia cumprida" : `faltam ${metaDia - ptsDia}`;
+  $("lancadoQtd").textContent = doDiaSel.length || "";
+  $("lancadoHoje").innerHTML = doDiaSel.map(r => `
+    <li><span class="pts">${r.pontos}</span>
+      <span class="txt">${escapar(r.atividade)}<br>${etiquetaSituacao(aprovacaoDe(r))}</span></li>`).join("");
+  $("lancadoVazio").hidden = doDiaSel.length > 0;
+
+  /* ---------------- resumo por pessoa (aba Visão do mês) ---------------- */
+  if (ehChefia() || ehGeral() || ehAdm()) {
+    const porSrv = {};
+    for (const r of regs) {
+      porSrv[r.servidor] ??= { pts: 0, pend: 0, regs: [] };
+      porSrv[r.servidor].pts += r.pontos;
+      porSrv[r.servidor].regs.push(r);
+      if (!aprovacaoDe(r)) porSrv[r.servidor].pend++;
+    }
+    $("resumo").innerHTML = Object.entries(porSrv).sort()
+      .map(([n, v]) => {
+        const d = desempenho(v.regs, ausenciasDe(n));
+        const etiqueta = d.pct === null
+          ? '<span class="info">meta não calculável</span>'
+          : `<span class="meta-pct" data-abaixo="${d.pct < 100}"
+               title="Média de ${fmtMedia(d.media)} pontos em ${d.dias} dia(s) com lançamento; dias vazios e de ausência ficam fora da conta.">${d.pct}% da meta</span>`;
+        return `<div class="srv">
+          <span class="nome" title="${escapar(n)}">${escapar(n)}</span>
+          <span class="pts">${v.pts}</span> pts
+          <span class="info">· ${v.pend ? v.pend + " pendente(s)" : "tudo aprovado"}</span>
+          <div style="margin-top:7px">${etiqueta}
+            <span class="info"> em ${d.dias} dia(s)</span></div></div>`;
+      })
+      .join("");
+    $("btnAprovarTodos").disabled = !regs.some(r => podeAprovar(r) && !aprovacaoDe(r));
+    $("btnAprovarTodos").textContent =
+      pend ? `Aprovar ${regs.filter(r => podeAprovar(r) && !aprovacaoDe(r)).length} pendente(s) desta visão`
+           : "Aprovar pendentes";
+  }
+
+  renderVis(regs);
+  renderAusencias();
+
+  /* Contadores nas abas e no rail: dizem se vale a pena entrar. */
+  $("contLanc").textContent = pend || "";
+  $("contResumo").textContent = "";
+  $("contAus").textContent = ausenciasFiltradas().length || "";
+  const meusPend = (ehChefia() || ehGeral())
+    ? regs.filter(r => podeAprovar(r) && !aprovacaoDe(r)).length : 0;
+  $("navPend").textContent = meusPend;
+  $("navPend").hidden = meusPend === 0;
+}
+
+/* ======================= VISÃO GERENCIAL (gráficos) =======================
+   Só aparece para a chefia geral e para o administrador — são os únicos
+   papéis que enxergam mais de uma unidade. Tudo é desenhado a partir de
+   registrosFiltrados(), o mesmo conjunto que alimenta a tabela: se os
+   números divergirem da tabela, é bug.
+
+   Duas leituras, uma pergunta cada:
+   - barra empilhada por pessoa: QUANTAS atividades (comprimento) e de
+     QUE complexidade (composição);
+   - mapa de calor por unidade: onde se concentra cada nível.
+
+   Nota sobre "pontos": PONTOS = {b:5, m:10, a:15} é função direta da
+   complexidade, então pontuação e complexidade são a MESMA variável.
+   Por isso pontos aparecem só como KPI, nunca como um segundo gráfico
+   ao lado (seria o mesmo dado duas vezes) e nunca num segundo eixo. */
+const COMPL = [
+  { k: "b", rotulo: "Baixa", cor: "#86b6ef" },
+  { k: "m", rotulo: "Média", cor: "#2a78d6" },
+  { k: "a", rotulo: "Alta",  cor: "#104281" }
+];
+const VIS_INK    = "#22352C";  /* --tinta   */
+const VIS_MUDO   = "#5C6660";  /* --grafite */
+const VIS_LINHA  = "#D6DBD5";  /* --linha   */
+const VIS_PAPEL  = "#FFFFFF";  /* --ficha: a superfície dos gráficos */
+let gPessoas = null, gUnidades = null;
+let visOrdem = "alfa";         /* "alfa" | "volume" — ver btnOrdem */
+
+/* Conta atividades por chave (pessoa ou unidade) e complexidade. */
+function agrupar(regs, chave) {
+  const m = new Map();
+  for (const r of regs) {
+    const k = chave(r);
+    if (!m.has(k)) m.set(k, { b: 0, m: 0, a: 0, total: 0, pontos: 0 });
+    const v = m.get(k);
+    v[r.complexidade]++; v.total++; v.pontos += r.pontos;
+  }
+  return m;
+}
+
+/* Dados aguardando a seção de gráficos abrir (ver o listener de toggle). */
+let visPendente = null;
+
+function renderVis(regs) {
+  /* v12: a chefia de unidade passou a ver os mesmos indicadores e
+     gráficos da chefia geral. Não é preciso restringir nada aqui: o
+     recarregar() já carrega só a unidade dela, então "exceto os dados
+     de outras unidades" sai de graça do escopo dos dados. O mapa de
+     calor por unidade se esconde sozinho quando há uma unidade só. */
+  const mostrar = (ehChefia() || ehGeral() || ehAdm()) && regs.length > 0;
+  $("secIndicadores").hidden = !mostrar;
+  $("secGraficos").hidden = !mostrar;
+  if (!mostrar) { visPendente = null; return; }
+
+  /* ---------- KPIs (seção "Indicadores do mês") ---------- */
+  const pontos = regs.reduce((s, r) => s + r.pontos, 0);
+  const aprov  = regs.filter(r => aprovacaoDe(r)).length;
+  $("kpiLanc").textContent   = regs.length;
+  $("kpiPontos").textContent = pontos;
+  $("kpiAprov").innerHTML    = Math.round(aprov / regs.length * 100) +
+                               `<span class="sufixo">%</span>`;
+  $("kpiPend").textContent   = regs.length - aprov;
+
+  /* Gráfico só se desenha com a tela e a aba visíveis; fora disso fica
+     na fila e é resgatado por desenhoPendente(). */
+  if (vistaAtual !== "painel" || abaAtual !== "visao") { visPendente = regs; return; }
+  visPendente = null;
+  desenharGraficos(regs);
+}
+
+function desenharGraficos(regs) {
+  /* ---------- barra empilhada: pessoa × complexidade ---------- */
+  const porPessoa = agrupar(regs, r => r.servidor);
+  let nomes = [...porPessoa.keys()];
+  /* Alfabética é o padrão de propósito: ordenar por volume transforma o
+     painel num ranking de produtividade, e o dado não sustenta essa
+     leitura. Desde a v11 a jornada e as ausências são CAPTURADAS, mas
+     nenhum cálculo aqui as desconta ainda — quem trabalhou meio mês
+     aparece ao lado de quem trabalhou o mês inteiro. Quem quiser o
+     ranking pede explicitamente. */
+  nomes.sort(visOrdem === "volume"
+    ? (x, y) => porPessoa.get(y).total - porPessoa.get(x).total || x.localeCompare(y)
+    : (x, y) => x.localeCompare(y));
+  /* O eixo Y do ECharts cresce de baixo para cima: inverter deixa o
+     primeiro nome no TOPO, que é como a lista é lida. */
+  const eixo = nomes.slice().reverse();
+
+  const series = COMPL.map((c, i) => ({
+    name: c.rotulo,
+    type: "bar",
+    stack: "total",
+    barMaxWidth: 24,
+    itemStyle: {
+      color: c.cor,
+      /* O "espaçador de superfície": 1px de branco de cada lado soma os
+         2px de respiro entre segmentos encostados. Não é contorno — é
+         o fundo passando entre as marcas. */
+      borderColor: VIS_PAPEL, borderWidth: 1
+    },
+    data: eixo.map(n => {
+      const v = porPessoa.get(n);
+      /* Ponta arredondada só no último segmento com valor de cada barra. */
+      const ultimo = COMPL.map(x => x.k).reduce(
+        (acc, k, j) => v[k] > 0 ? j : acc, -1);
+      return { value: v[c.k],
+               itemStyle: i === ultimo ? { borderRadius: [0, 4, 4, 0] } : {} };
+    })
+  }));
+
+  /* Nomes completos ("João Vitor Albuquerque Mendonça") engolem a área
+     de plotagem no celular: o rótulo é limitado a um terço da largura e
+     truncado com reticências — o nome inteiro continua na dica, no
+     #resumo e na tabela. */
+  const larguraRotulo = Math.max(84,
+    Math.min(210, Math.round(($("chartPessoas").clientWidth || 640) * 0.33)));
+
+  gPessoas = desenhar("chartPessoas", gPessoas,
+    Math.max(170, eixo.length * 34 + 96), {
+    grid: { left: 8, right: 28, top: 40, bottom: 28, containLabel: true },
+    legend: { data: COMPL.map(c => c.rotulo), top: 6, left: 0, itemGap: 16,
+              itemWidth: 12, itemHeight: 12, icon: "roundRect",
+              textStyle: { color: VIS_MUDO, fontSize: 12 } },
+    tooltip: {
+      trigger: "axis", axisPointer: { type: "shadow" },
+      backgroundColor: "#fff", borderColor: VIS_LINHA, borderWidth: 1,
+      textStyle: { color: VIS_INK, fontSize: 12 },
+      formatter: (ps) => {
+        const v = porPessoa.get(ps[0].name);
+        /* A dica do ECharts também é HTML: nome de pessoa entra escapado
+           pelo mesmo motivo da tabela. */
+        return `<b>${escapar(ps[0].name)}</b><br>` +
+          COMPL.map(c => `${c.rotulo}: ${v[c.k]}`).join("<br>") +
+          `<br><span style="color:${VIS_MUDO}">Total: ${v.total} atividade(s) · ${v.pontos} pts</span>`;
+      }
+    },
+    xAxis: { type: "value", minInterval: 1,
+             /* hideOverlap evita "0 3 6 9121518" em tela estreita. */
+             axisLabel: { color: VIS_MUDO, fontSize: 11, hideOverlap: true },
+             axisLine: { show: false }, axisTick: { show: false },
+             splitLine: { lineStyle: { color: VIS_LINHA, width: 1 } } },
+    yAxis: { type: "category", data: eixo,
+             axisLabel: { color: VIS_INK, fontSize: 12,
+                          width: larguraRotulo, overflow: "truncate", ellipsis: "…" },
+             axisLine: { lineStyle: { color: VIS_LINHA } },
+             axisTick: { show: false } },
+    series
+  });
+
+  const abonos = regs.filter(r => r.abono).length;
+  $("notaPessoas").textContent =
+    "Comprimento da barra = número de atividades; a cor divide por complexidade " +
+    "(mais escuro = mais complexo). Os mesmos números estão na tabela abaixo." +
+    (abonos ? ` Inclui ${abonos} lançamento(s) de abono anteriores à v11, que contam como atividade.` : "") +
+    /* As ausências existem desde a v11, mas NENHUM cálculo as desconta
+       ainda — dizer isso aqui evita que a barra seja lida como carga
+       disponível. */
+    " As ausências registradas não estão descontadas deste gráfico.";
+
+  /* ---------- mapa de calor: unidade × complexidade ---------- */
+  const porUnidade = agrupar(regs, r => r.unidade);
+  const unidades = [...porUnidade.keys()].sort();
+  /* Com uma unidade só na tela o mapa vira uma linha de três células e
+     não diz nada que a barra acima já não tenha dito. */
+  $("figUnidades").hidden = unidades.length < 2;
+  if (unidades.length < 2) { gUnidades?.dispose(); gUnidades = null; return; }
+
+  const linhas = unidades.slice().reverse();
+  const celulas = [];
+  let maxCel = 0;
+  linhas.forEach((u, y) => COMPL.forEach((c, x) => {
+    const n = porUnidade.get(u)[c.k];
+    maxCel = Math.max(maxCel, n);
+    celulas.push([x, y, n]);
+  }));
+
+  gUnidades = desenhar("chartUnidades", gUnidades,
+    Math.max(180, linhas.length * 38 + 108), {
+    grid: { left: 8, right: 16, top: 16, bottom: 62, containLabel: true },
+    tooltip: {
+      backgroundColor: "#fff", borderColor: VIS_LINHA, borderWidth: 1,
+      textStyle: { color: VIS_INK, fontSize: 12 },
+      formatter: (p) => `<b>${escapar(linhas[p.value[1]])}</b><br>` +
+        `Complexidade ${COMPL[p.value[0]].rotulo.toLowerCase()}: ` +
+        `${p.value[2]} atividade(s)`
+    },
+    xAxis: { type: "category", data: COMPL.map(c => c.rotulo), position: "top",
+             axisLabel: { color: VIS_MUDO, fontSize: 12 },
+             axisLine: { show: false }, axisTick: { show: false },
+             splitArea: { show: false } },
+    yAxis: { type: "category", data: linhas,
+             axisLabel: { color: VIS_INK, fontSize: 12 },
+             axisLine: { show: false }, axisTick: { show: false },
+             splitArea: { show: false } },
+    /* Escala sequencial contínua: um matiz só, claro → escuro. Aqui o
+       passo mais claro PODE encostar na superfície, porque significa
+       "perto de zero" — o número dentro da célula garante a leitura. */
+    visualMap: {
+      min: 0, max: Math.max(1, maxCel), calculable: false,
+      orient: "horizontal", left: "center", bottom: 4, itemWidth: 12, itemHeight: 90,
+      text: ["mais", "menos"], textStyle: { color: VIS_MUDO, fontSize: 11 },
+      inRange: { color: ["#eaf2fd", "#9ec5f4", "#3987e5", "#184f95", "#0d366b"] }
+    },
+    series: [{
+      type: "heatmap",
+      /* Texto dentro de preenchimento colorido: branco ou tinta conforme
+         a luminância da célula, para nunca perder contraste. */
+      data: celulas.map(([x, y, n]) => ({
+        value: [x, y, n],
+        label: { color: n > maxCel * 0.55 ? "#fff" : VIS_INK }
+      })),
+      itemStyle: { borderColor: VIS_PAPEL, borderWidth: 1 },
+      /* O zero é escrito. Célula clara e vazia parece dado faltando;
+         "0" diz que a unidade não registrou nada naquele nível. */
+      label: { show: true, fontSize: 12, formatter: (p) => String(p.value[2]) },
+      emphasis: { itemStyle: { borderColor: VIS_INK, borderWidth: 2 } }
+    }]
+  });
+}
+
+/* Cria ou reaproveita a instância do ECharts de um contêiner. */
+function desenhar(id, instancia, altura, opcao) {
+  const el = $(id);
+  el.style.height = altura + "px";
+  if (!instancia || instancia.isDisposed()) instancia = echarts.init(el, null, { renderer: "canvas" });
+  else instancia.resize();
+  instancia.setOption(opcao, true);
+  return instancia;
+}
+
+$("btnOrdem").addEventListener("click", () => {
+  visOrdem = visOrdem === "alfa" ? "volume" : "alfa";
+  $("btnOrdem").textContent =
+    visOrdem === "alfa" ? "ordenar por volume" : "ordem alfabética";
+  render();
+});
+
+let visTimerResize;
+window.addEventListener("resize", () => {
+  clearTimeout(visTimerResize);
+  visTimerResize = setTimeout(() => {
+    if ($("secGraficos").hidden || vistaAtual !== "painel" || abaAtual !== "visao") return;
+    gPessoas?.resize(); gUnidades?.resize();
+  }, 150);
+});
+
+["selServidorVer", "selSituacao"].forEach(id =>
+  $(id).addEventListener("change", render));
+$("selUnidadeVer").addEventListener("change", recarregar);
+$("inpData").addEventListener("change", render);
+/* Os dois campos de mês são a mesma referência: mexer num move o outro. */
+$("inpMes").addEventListener("change", () => { mudarMes($("inpMes").value); render(); });
+$("inpMesMeu").addEventListener("change", () => { mudarMes($("inpMesMeu").value); render(); });
+
+/* -------- ações nas tabelas: excluir e aprovar -------- */
+async function excluirLancamento(del) {
+  const r = dados.registros.find(x => x.id === del);
+  if (!r) return;
+  if (!(ehMeu(r) && !aprovacaoDe(r)) && !ehAdm()) return;
+  const msg = ehAdm()
+    ? `Excluir o lançamento de ${r.servidor} em ${fmtData(r.data)} (${r.pontos} pts)${aprovacaoDe(r) ? ", JÁ APROVADO," : ""} de forma definitiva?`
+    : "Excluir este lançamento?";
+  if (!confirm(msg)) return;
+  try {
+    /* Excluir um lançamento (inclusive o adm excluindo de outra pessoa)
+       não pode apagar a carga horária nem as ausências do dono do
+       arquivo — daí passar pelo ponto único de escrita. */
+    await atualizarArquivoPessoa(r.unidade, r.servidor, (e) => {
+      e.registros = e.registros.filter(x => x.id !== del);
+    });
+    // administrador: remove também a aprovação órfã, se houver
+    if (ehAdm() && aprovacaoDe(r)) {
+      const unidadeArq = papelDe(r) === "servidor" ? r.unidade : GERAL;
+      try {
+        const mapa = await lerAprovacoes(dirRaiz, unidadeArq);
+        if (mapa[del]) { delete mapa[del]; await gravarAprovacoes(dirRaiz, unidadeArq, mapa, ident.nome); }
+      } catch { /* sem permissão de escrita no arquivo de aprovações: segue */ }
+    }
+    await recarregar();
+  } catch (er) {
+    avisar($(vistaAtual === "painel" ? "avisoPainel" : "aviso"),
+      msgErro(er, "Não foi possível gravar na rede: "), true);
+  }
+}
+/* Excluir vale nas duas tabelas: a do painel e a de "Meu mês". */
+for (const alvo of ["tbody", "tbodyMeus"]) {
+  $(alvo).addEventListener("click", (e) => {
+    const b = e.target.closest("[data-del]");
+    if (b) excluirLancamento(b.dataset.del);
+  });
+}
+/* Aprovar/desfazer viraram BOTÃO (antes, caixa de seleção de 13 px).
+   data-valor="1" aprova; vazio, desfaz. */
+$("tbody").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-ap]");
+  if (!b) return;
+  const r = dados.registros.find(x => x.id === b.dataset.ap);
+  if (r && podeAprovar(r)) aplicarAprovacao([r], Boolean(b.dataset.valor));
+});
+$("btnAprovarTodos").addEventListener("click", () => {
+  const alvo = registrosFiltrados().filter(r => podeAprovar(r) && !aprovacaoDe(r));
+  if (alvo.length && confirm(`Aprovar ${alvo.length} lançamento(s) pendente(s)?`))
+    aplicarAprovacao(alvo, true);
+});
+async function aplicarAprovacao(registros, aprovar) {
+  /* Cada papel grava SÓ no seu arquivo de aprovações: a chefia geral em
+     GERAL/aprovacoes.json, a chefia de unidade no da sua unidade. É o
+     que mantém "um arquivo, um único escritor" mesmo agora que os dois
+     podem aprovar o lançamento de um servidor. */
+  const unidadeArq = ehGeral() ? GERAL : ident.unidade;
+  const meuMapa = () => (ehGeral() ? dados.aprovG : dados.aprovU);
+
+  /* Desaprovar só alcança o que está no MEU arquivo. Se a aprovação foi
+     gravada pelo outro papel, apagar daqui não a remove — e a marca
+     voltaria sozinha na próxima renderização, parecendo defeito. */
+  const alheias = aprovar ? []
+    : registros.filter(r => aprovacaoDe(r) && !meuMapa()[r.id]);
+  const alvo = registros.filter(r => !alheias.includes(r));
+
+  try {
+    if (alvo.length) {
+      const mapa = await lerAprovacoes(dirRaiz, unidadeArq);
+      for (const r of alvo) {
+        if (aprovar) mapa[r.id] = { por: ident.nome, em: new Date().toISOString() };
+        else delete mapa[r.id];
+      }
+      await gravarAprovacoes(dirRaiz, unidadeArq, mapa, ident.nome);
+      if (ehGeral()) dados.aprovG = mapa; else dados.aprovU = mapa;
+    }
+
+    const partes = [];
+    if (alvo.length) partes.push(
+      `${alvo.length} lançamento(s) ${aprovar ? "aprovado(s)" : "marcado(s) como pendente(s)"}.`);
+    if (alheias.length) partes.push(
+      `${alheias.length} não pôde(puderam) ser desmarcado(s): a aprovação foi registrada ` +
+      (ehGeral() ? "pela chefia da unidade e só lá pode ser desfeita."
+                 : "pela chefia geral e só por ela pode ser desfeita."));
+    avisar($("avisoPainel"), partes.join(" "), alheias.length > 0);
+    render();
+  } catch (e) {
+    avisar($("avisoPainel"), "Não foi possível gravar as aprovações: " + e.message, true);
+  }
+}
+
+/* ============================ ADMINISTRAÇÃO ============================ */
+function pessoasAdministraveis() {
+  const lista = [{ nome: ADM_NOME, desc: "Administrador" }];
+  if (CFG.chefiaGeral) lista.push({ nome: CFG.chefiaGeral, desc: "Chefia geral" });
+  for (const u of Object.keys(CFG.unidades)) {
+    if (CFG.unidades[u].chefia) lista.push({ nome: CFG.unidades[u].chefia, desc: `Chefia · ${u}` });
+    for (const s of servidoresDe(u)) lista.push({ nome: s, desc: `Servidor · ${u}` });
+  }
+  return lista;
+}
+function renderAdm() {
+  $("infoInstalacao").textContent = CFG.instalacao
+    ? `Oficializada por ${CFG.instalacao.por} em ${fmtData(CFG.instalacao.em.slice(0, 10))} · identificador ${CFG.instalacao.id.slice(0, 8)}…  As pessoas só conseguem entrar em pastas com este selo.`
+    : "Pasta ainda não oficializada — confirme sua identidade nesta pasta para oficializá-la.";
+  $("chkExigirSenha").checked = CFG.exigirSenha;
+  $("tbodySenhas").innerHTML = pessoasAdministraveis().map(p => {
+    const tem = Boolean(CFG.senhas[p.nome]);
+    const st = (p.nome === ADM_NOME && !tem)
+      ? `<span class="st pe">inicial ("${ADM_SENHA_INICIAL}")</span>`
+      : `<span class="st ${tem ? "ap" : "pe"}">${tem ? "definida" : "sem senha"}</span>`;
+    return `<tr>
+      <td>${escapar(p.nome)}</td>
+      <td>${escapar(p.desc)}</td>
+      <td>${st}</td>
+      <td style="white-space:nowrap">
+        <button class="acao sec mini" data-senha="${escapar(p.nome)}">${tem ? "Alterar" : "Definir"} senha</button>
+        ${tem && p.nome !== ADM_NOME ? `<button class="excluir" data-rmsenha="${escapar(p.nome)}">Remover</button>` : ""}
+      </td></tr>`;
+  }).join("");
+  $("txtCatalogo").value = JSON.stringify(
+    { unidades: CFG.unidades, chefiaGeral: CFG.chefiaGeral }, null, 2);
+}
+async function salvarCFG(msgOk) {
+  if (!dirRaiz) return avisar($("avisoAdm"), "Conecte a pasta da rede primeiro.", true);
+  try {
+    await gravarConfig(dirRaiz, CFG);
+    avisar($("avisoAdm"), msgOk);
+    montarPessoas();
+    renderAdm();
+  } catch (e) {
+    avisar($("avisoAdm"), "Não foi possível gravar o config.json: " + e.message, true);
+  }
+}
+$("vAdm").addEventListener("click", async (e) => {
+  const nomeSenha = e.target.dataset.senha;
+  const nomeRm = e.target.dataset.rmsenha;
+  if (nomeSenha) {
+    const s1 = prompt(`Nova senha para ${nomeSenha}:`);
+    if (s1 === null) return;
+    if (s1.length < 4) return avisar($("avisoAdm"), "Use uma senha com pelo menos 4 caracteres.", true);
+    const s2 = prompt("Repita a nova senha:");
+    if (s2 === null) return;
+    if (s1 !== s2) return avisar($("avisoAdm"), "As senhas não conferem.", true);
+    CFG.senhas[nomeSenha] = await sha256hex(nomeSenha + "|" + s1);
+    await salvarCFG(`Senha de ${nomeSenha} atualizada.`);
+  }
+  if (nomeRm && confirm(`Remover a senha de ${nomeRm}?`)) {
+    delete CFG.senhas[nomeRm];
+    await salvarCFG(`Senha de ${nomeRm} removida.`);
+  }
+});
+$("chkExigirSenha").addEventListener("change", async (e) => {
+  CFG.exigirSenha = e.target.checked;
+  await salvarCFG(`Exigência de senha ${CFG.exigirSenha ? "ativada" : "desativada"}.`);
+});
+$("btnSalvarCatalogo").addEventListener("click", async () => {
+  let novo;
+  try { novo = JSON.parse($("txtCatalogo").value); }
+  catch (e) { return avisar($("avisoAdm"), "JSON inválido: " + e.message, true); }
+  if (!novo || typeof novo.unidades !== "object" || Array.isArray(novo.unidades))
+    return avisar($("avisoAdm"), 'Estrutura esperada: { "unidades": { ... }, "chefiaGeral": "nome" | null }', true);
+  for (const [u, v] of Object.entries(novo.unidades)) {
+    if (!v || typeof v !== "object" || !Array.isArray(v.servidores) ||
+        !("chefia" in v) || (v.chefia !== null && typeof v.chefia !== "string"))
+      return avisar($("avisoAdm"),
+        `Unidade "${u}" inválida: use { "chefia": "nome" | null, "servidores": ["..."] }`, true);
+  }
+  CFG.unidades = novo.unidades;
+  CFG.chefiaGeral = (typeof novo.chefiaGeral === "string" && novo.chefiaGeral.trim()) || null;
+  await salvarCFG("Catálogo salvo — vale para todos ao recarregarem os dados.");
+});
+
+/* ------------------------------- CSV -------------------------------
+   Uma função só para as duas telas que exportam lançamentos: o painel
+   (visão da alçada) e "Meu mês" (os próprios). O conteúdo das colunas
+   não mudou desde a v11 — quem já tem planilha montada continua
+   abrindo do mesmo jeito. */
+function baixarCSV(nome, cab, linhas) {
+  const esc = (v) => `"${String(v ?? "").replaceAll('"', '""')}"`;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(
+    ["\ufeff" + cab.map(esc).join(";") + "\r\n" + linhas.join("\r\n")],
+    { type: "text/csv;charset=utf-8" }));
+  a.download = nome;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function linhasCSVLancamentos(regs) {
+  const esc = (v) => `"${String(v ?? "").replaceAll('"', '""')}"`;
+  return regs.map(r => {
+    const ap = aprovacaoDe(r);
+    return [fmtData(r.data), r.unidade, r.servidor,
+      papelDe(r) === "servidor" ? "Servidor" : papelDe(r) === "chefia" ? "Chefia" : "Chefia geral",
+      // lançamentos anteriores à v11 não têm carga: sai vazio, não zero
+      r.cargaHoraria || "",
+      r.processo, r.atividade, ROTULO_COMPLEXIDADE[r.complexidade], r.pontos, r.obs,
+      // só lançamentos até a v10 têm abono; nos novos a coluna sai vazia
+      r.abono ? "Sim" : "", ap ? "Aprovado" : "Pendente",
+      ap?.por || "", ap ? fmtData(ap.em.slice(0, 10)) : ""].map(esc).join(";");
+  });
+}
+const CAB_LANC = ["Data", "Unidade", "Pessoa", "Papel", "Carga horária", "Processo",
+                  "Atividade", "Complexidade", "Pontuação", "Observações", "Abono",
+                  "Situação", "Aprovado por", "Aprovado em"];
+
+$("btnCSVMeus").addEventListener("click", () => {
+  const meus = dados.registros
+    .filter(r => ehMeu(r) && r.data.startsWith($("inpMesMeu").value))
+    .sort((x, y) => x.data.localeCompare(y.data) || x.id.localeCompare(y.id));
+  baixarCSV(`meus-lancamentos-${slug(ident.nome)}-${$("inpMesMeu").value}.csv`,
+    CAB_LANC, linhasCSVLancamentos(meus));
+});
+
+$("btnCSV").addEventListener("click", () => {
+  const regs = registrosFiltrados();
+  const esc = (v) => `"${String(v ?? "").replaceAll('"', '""')}"`;
+  const escopo = (ehGeral() || ehAdm())
+    ? ($("selUnidadeVer").value === "*" ? "todas" : $("selUnidadeVer").value)
+    : ident.unidade;
+  baixarCSV(`registro-${escopo}-${$("inpMes").value}.csv`,
+    CAB_LANC, linhasCSVLancamentos(regs));
+});
+
+$("btnCSVAus").addEventListener("click", () => {
+  const lista = ausenciasFiltradas();
+  const esc = (v) => `"${String(v ?? "").replaceAll('"', '""')}"`;
+  const cab = ["Pessoa", "Unidade", "Papel", "Tipo", "Primeiro dia", "Último dia",
+               "Dias corridos", "Observações"];
+  const linhas = lista.map(a => [
+    a.servidor, a.unidade === GERAL ? "GERAL" : a.unidade,
+    papelDe(a) === "servidor" ? "Servidor" : papelDe(a) === "chefia" ? "Chefia" : "Chefia geral",
+    rotuloTipo(a.tipo), fmtData(a.de), fmtData(a.ate),
+    diasCorridos(a.de, a.ate), a.obs
+  ].map(esc).join(";"));
+  const escopo = (ehGeral() || ehAdm())
+    ? ($("selUnidadeVer").value === "*" ? "todas" : $("selUnidadeVer").value)
+    : ident.unidade;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(
+    ["﻿" + cab.map(esc).join(";") + "\r\n" + linhas.join("\r\n")],
+    { type: "text/csv;charset=utf-8" }));
+  a.download = `ausencias-${escopo}-${$("inpMes").value}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+/* --------------------------- INICIALIZAÇÃO --------------------------- */
+montarPessoas();
+montarProcessos();
+montarTiposAusencia();
+$("inpSenha").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") $("btnIniciar").click();
+});
+$("inpData").value = hoje();
+mudarMes(hoje().slice(0, 7));
+$("txtCaminho").textContent =
+  (typeof PASTA_REDE !== "undefined" && PASTA_REDE) || "definida pelo administrador";
+ajustarConfig();   // começa na entrada, com o rail vazio
+conectarSilencioso();
+
+if ("serviceWorker" in navigator && location.protocol.startsWith("http"))
+  navigator.serviceWorker.register("sw.js");
+</script>
+
+</body>
+</html>
