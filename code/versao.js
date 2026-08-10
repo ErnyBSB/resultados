@@ -18,8 +18,8 @@
    existe justamente para funcionar sem ela (ver LEIA-ME).
    ========================================================= */
 const APP = {
-  versao:      "1.2",                  // acompanha a tag do repositório
-  rotulo:      "versão 1.2 (ago/26)",  // etiqueta exibida no rail
+  versao:      "1.3",                  // acompanha a tag do repositório
+  rotulo:      "versão 1.3 (ago/26)",  // etiqueta exibida no rail
   atualizado:  "10.08.2026",           // data desta publicação
   repositorio: "https://github.com/ErnyBSB/resultados"
 };

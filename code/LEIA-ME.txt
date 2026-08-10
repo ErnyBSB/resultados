@@ -1,4 +1,4 @@
-PROGRAMA DE RESULTADOS — COBIB (versão 1.2, ago/26 — PWA em rede)
+PROGRAMA DE RESULTADOS — COBIB (versão 1.3, ago/26 — PWA em rede)
 =================================================================
 
 O aplicativo passou a se chamar PROGRAMA DE RESULTADOS na v12 (antes,
@@ -7,7 +7,7 @@ a aba do navegador e para o manifest — ou seja, também para o ícone de
 quem instalar o PWA. A pasta da rede, os arquivos e o formato dos dados
 não mudaram com a troca de nome.
 
-A versão aparece ao lado do título, como etiqueta: "versão 1.2
+A versão aparece ao lado do título, como etiqueta: "versão 1.3
 (ago/26)". Ela é escrita em UM lugar só, o versao.js (ver a seção
 seguinte); publicar uma versão nova é mexer nesse arquivo e marcar a
 tag correspondente no repositório.
@@ -36,7 +36,7 @@ cache, esquecer o segundo tinha um efeito ruim e silencioso: a tela
 anunciava a versão nova enquanto o navegador continuava servindo os
 arquivos da anterior. Agora o index.html preenche a etiqueta e a janela
 a partir do versao.js, e o sw.js monta a chave do cache com
-importScripts do mesmo arquivo ("1.2" vira "ra-1.2").
+importScripts do mesmo arquivo ("1.3" vira "ra-1.3").
 
 A data de "Última atualização" é preenchida à mão, ali do lado. Ela
 poderia vir do GitHub, mas isso exigiria uma consulta pela internet — e
@@ -44,6 +44,66 @@ este aplicativo existe para funcionar sem ela, numa máquina que só
 enxerga a pasta da rede. A data seria justamente a informação que
 faltaria quando mais se precisa dela. Sendo manual, fica na linha
 seguinte à da versão: quem troca uma vê a outra.
+
+Ausências ocultas, à espera da gestão (novidade da v1.3)
+--------------------------------------------------------
+A seção AUSÊNCIAS saiu da tela — a tela do servidor e a aba do painel —
+enquanto a gestão discute o assunto. Ela NÃO foi apagada: o código
+continua inteiro, os arquivos das pessoas continuam guardando as
+ausências já registradas, e o cálculo do percentual da meta continua
+descontando os dias cobertos por elas. O que mudou é só o que aparece.
+
+Quem liga e desliga é o ADMINISTRADOR, no painel dele, num cartão
+chamado "Seções em avaliação". A chave fica no config.json
+(mostrarAusencias), que só o administrador grava — então a decisão vale
+igual para todos, e chega às outras pessoas no próximo "Atualizar dados
+da rede". Não é uma preferência de cada um: é uma decisão de gestão, e
+o lugar dela é a configuração central.
+
+O padrão é OCULTO, e de propósito: config.json gravado por uma versão
+anterior à 1.3 não tem a chave, e a leitura trata a falta dela como
+"não mostrar". Assim a seção some sozinha ao atualizar o aplicativo,
+que é o que a decisão pediu, sem exigir que ninguém faça nada.
+
+O que some junto
+----------------
+Esconder o item do rail não bastaria — a tela continuaria alcançável
+por qualquer chamada a irPara("aus"). A regra está no podeVer(), como
+todas as outras. Além dele:
+
+- o item "Ausências" no rail e a tela inteira;
+- a aba "Ausências" do painel. Se ela era a aba guardada neste
+  navegador (ra.aba.v1), o painel abre em "Aprovações" em vez de abrir
+  numa aba escondida, em branco;
+- os trechos de texto que citam ausências, marcados no HTML com
+  data-ausencias.
+
+Textos em duas redações
+-----------------------
+Três frases explicam a meta citando as ausências ("dias sem lançamento
+e dias de ausência ficam fora do cálculo"). Com a seção desligada, essa
+frase fala de uma coisa que a pessoa não tem como ver — e apagar só o
+trecho do meio deixaria a pontuação sem sentido.
+
+Por isso essas frases existem em DUAS redações no próprio HTML: a
+marcada com data-ausencias, que cita as ausências, e a marcada com
+data-sem-ausencias, que não cita. Uma aparece, a outra fica oculta,
+conforme o estado da seção. É repetição, e ela é o preço de manter as
+duas versões honestas sem gerar texto por JavaScript.
+
+A tela de Ajuda foi reescrita nessa mesma lógica: o cartão que se
+chamava "Ausências, e o que a meta mede" vira "O que a meta mede"
+enquanto a seção estiver desligada, e volta ao que era quando ela for
+ligada. As capturas do rail e do painel foram refeitas sem a seção —
+uma imagem mostrando um item que não existe na tela ensina o caminho
+errado com toda a confiança de uma fotografia.
+
+O que NÃO mudou
+---------------
+Nada nos dados. Ausências gravadas continuam nos arquivos das pessoas,
+no mesmo formato; o percentual da meta continua tirando da conta os
+dias cobertos por elas; e ligar a seção de volta faz tudo reaparecer
+como estava, inclusive o que foi registrado antes de ela ser ocultada.
 
 Ajuda dentro do aplicativo (novidade da v1.2)
 ---------------------------------------------
@@ -158,8 +218,8 @@ Publicar uma versão passou a ser, então, DUAS coisas que precisam
 concordar entre si: o versao.js e a tag do repositório. Até a v1.0 eram
 três — a etiqueta do index.html contava separadamente —, e a v1.1
 juntou as duas primeiras num arquivo só (ver "Sobre o programa", acima).
-A versão do versao.js acompanha a tag: a tag v1.2 corresponde a "1.2" e
-à chave de cache "ra-1.2".
+A versão do versao.js acompanha a tag: a tag v1.3 corresponde a "1.3" e
+à chave de cache "ra-1.3".
 
 A tela foi redesenhada na v14 (novidade)
 ----------------------------------------
@@ -352,7 +412,7 @@ rede não precisa fazer nada, e lançamentos, ausências, aprovações e
 config.json continuam sendo lidos exatamente como antes.
 
 Como o sw.js serve primeiro o que está em cache, cada versão troca a
-chave do cache (esta usa "ra-1.2", montada a partir do versao.js). Sem
+chave do cache (esta usa "ra-1.3", montada a partir do versao.js). Sem
 essa troca, quem já abriu a versão anterior continuaria recebendo a
 tela antiga.
 

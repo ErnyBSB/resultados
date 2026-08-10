@@ -1,6 +1,6 @@
 # Programa de Resultados — COBIB
 ## Relatório Técnico do Projeto
-### Versão 1.2 · Aplicação Web Progressiva (PWA) *client-side*
+### Versão 1.3 · Aplicação Web Progressiva (PWA) *client-side*
 
 > Documento de referência para manutenção e evolução do sistema.
 > Destinado a desenvolvedores humanos e a modelos de IA.
@@ -116,6 +116,7 @@ vive neste repositório.
 | **1.0** | Saída do beta. Nenhuma mudança de tela, regra ou arquivo em relação à v14 — o que mudou foi o estado do programa (deixou de ser experimento) e a forma de guardar versões (ver 1.3). |
 | **1.1** | Janela **"Sobre o programa"**, alcançável pelo rail mesmo antes da identificação; e a versão do aplicativo passa a ser escrita em **um lugar só** (`versao.js`), de onde saem a etiqueta do rail, a janela e a chave do cache do service worker. |
 | **1.2** | Tela de **Ajuda** embutida, com quatro capturas: objetivo do programa, papéis, organização da tela, como lançar, como buscar, o que a meta mede e como a chefia aprova. Alcançável antes da identificação, como o "Sobre". |
+| **1.3** | A seção **Ausências** fica oculta enquanto a gestão discute o assunto, ligável pelo administrador no `config.json` (`mostrarAusencias`). Nada foi removido: código, dados e o desconto de ausências no cálculo da meta continuam como estavam. |
 
 ### 1.3. Versionamento por *tags* (novidade da 1.0)
 
@@ -138,10 +139,10 @@ estar escrita no próprio histórico.
 **Publicar uma versão são duas coisas que precisam concordar entre si:**
 
 1. `code/versao.js` → o número, a etiqueta exibida e a data de atualização;
-2. a *tag* do repositório (`git tag -a v1.2`).
+2. a *tag* do repositório (`git tag -a v1.3`).
 
-A versão do `versao.js` acompanha a tag: a tag `v1.2` corresponde a `"1.2"` e à
-chave de cache `"ra-1.2"`. Até a 1.0 eram **três** coisas — a etiqueta do
+A versão do `versao.js` acompanha a tag: a tag `v1.3` corresponde a `"1.3"` e à
+chave de cache `"ra-1.3"`. Até a 1.0 eram **três** coisas — a etiqueta do
 `index.html` e a `VERSAO` do `sw.js` guardavam, cada uma, a sua cópia do número.
 A v1.1 juntou as duas num arquivo só (ver 3.6): a etiqueta do rail, a janela
 "Sobre o programa" e a chave do cache passaram a derivar dele.
@@ -633,6 +634,7 @@ desde a v12, a **leitura** consulta os dois (ver 2.2).
   chefiaGeral: 'Nome' | null,
   senhas: { 'Nome': 'hash-sha256', ... },
   exigirSenha: false,
+  mostrarAusencias: false,     // NOVIDADE v1.3 — seção em avaliação (ver 6.7)
   instalacao: { id: 'uuid', por: 'Administrador', em: '...' }   // selo (v7+)
 }
 ```
@@ -652,6 +654,7 @@ ausência explícita, nunca por migração ou reescrita dos arquivos das pessoas
 | `cargaHoraria` (no lançamento) | pré-v11 | O dia fica fora do percentual e é contado à parte (`diasSemCarga`); no CSV a coluna sai **vazia**, nunca zero. |
 | `cargaHoraria` (no cabeçalho) | pré-v11 | `lerCargaHoraria` devolve `null`; a pessoa marca a jornada uma vez e segue. |
 | `ausencias` | pré-v11 | Tratado como lista vazia. |
+| `mostrarAusencias` | pré-v1.3 | Lido com `=== true`: a falta da chave significa **oculto**, que é o estado em que a seção entrou em avaliação. |
 | `abono: true` | pré-v11 | Continua exibido com a etiqueta "abono" na tabela e exportado na coluna "Abono" do CSV. **Não houve migração para ausências**: um lançamento de abono não guarda período, e inventar um a partir da data isolada produziria dado falso. Nos lançamentos novos a coluna sai vazia. |
 
 ---
@@ -916,6 +919,41 @@ porque o aplicativo é Chrome/Edge por decisão de projeto. Estão em `ARQUIVOS`
 Foram geradas com **dados inventados**, nunca com o catálogo real — o repositório é
 público. Cada `<img>` tem `alt` descritivo, de modo que ninguém dependa da imagem
 para entender o texto.
+
+### 6.7. Seções em avaliação: Ausências oculta (novidade da v1.3)
+
+A seção **Ausências** — a tela do servidor e a aba do painel — está oculta enquanto
+a gestão discute o assunto. **Nada foi removido**: o código está inteiro, os
+arquivos das pessoas continuam guardando as ausências já registradas, e
+`desempenho()` continua tirando da conta os dias cobertos por elas. Só o que
+aparece na tela mudou.
+
+**Onde mora a decisão.** No `config.json`, na chave `mostrarAusencias`, gravada
+apenas pelo administrador — portanto igual para todos, e não uma preferência de
+cada navegador. O administrador liga e desliga num cartão "Seções em avaliação",
+no painel dele; os demais recebem o efeito no próximo "Atualizar dados da rede".
+O padrão é oculto: um `config.json` anterior à v1.3 não tem a chave, e a leitura
+(`cfg.mostrarAusencias === true`) trata a falta dela como "não mostrar".
+
+**O que a chave alcança:**
+
+| Alvo | Como |
+|---|---|
+| Item "Ausências" no rail | `ajustarRail()` |
+| A tela em si, por qualquer caminho | `podeVer("aus")` — esconder o botão não bastaria |
+| Aba "Ausências" do painel | `aplicarAusencias()`; e `irAba()` volta para "Aprovações" quando a aba guardada em `ra.aba.v1` é a oculta, para o painel não abrir em branco |
+| Trechos de texto que citam ausências | atributos `data-ausencias` / `data-sem-ausencias` no HTML |
+
+**Textos em duas redações.** Três frases explicam a meta citando as ausências
+("dias sem lançamento e dias de ausência ficam fora do cálculo"). Com a seção
+desligada, a frase fala de algo que a pessoa não tem como ver; e apagar só o
+trecho do meio deixaria a pontuação sem sentido. Por isso essas frases existem em
+duas redações no HTML — `data-ausencias` e `data-sem-ausencias` —, e
+`aplicarAusencias()` mostra uma e esconde a outra. É repetição assumida: o preço
+de manter as duas versões honestas sem montar texto por JavaScript.
+
+As capturas do rail e do painel foram refeitas sem a seção. Uma imagem que mostra
+um item inexistente ensina o caminho errado com a confiança de uma fotografia.
 
 ---
 
@@ -1198,7 +1236,7 @@ rede pode hospedar o app (ex.: `unidadeCentral\app`).
 torna a navegação no seletor de pastas bem mais simples para as pessoas.
 
 **Atualização de versão:** ver 1.3 — as duas coisas que precisam concordar. A
-versão atual é `1.2`, e o cache correspondente é `ra-1.2`. Na primeira carga após
+versão atual é `1.3`, e o cache correspondente é `ra-1.3`. Na primeira carga após
 atualizar, um recarregamento forçado (Ctrl+F5) ajuda a garantir a troca.
 
 **Compatibilidade:** Chrome e Edge apenas, por decisão de projeto — a File System
@@ -1248,6 +1286,9 @@ ser simulada com qualquer diretório local que tenha a estrutura
   confirmação reforçada mitiga, mas não impede.
 - **Cache pegajoso:** publicar sem trocar a versão no `versao.js` faz o navegador
   continuar servindo a versão anterior.
+- **Ausências oculta:** a seção está desligada por decisão de gestão (6.7). Enquanto
+  isso, ninguém registra novos períodos, e o desconto na meta só alcança o que foi
+  registrado antes.
 - **Ajuda amarrada à versão:** corrigir um texto da tela de Ajuda exige publicar uma
   versão nova (ver 6.6). Dúvidas de rotina, que mudam toda semana, pertencem a um
   documento no repositório, não a esta tela.
@@ -1281,6 +1322,7 @@ Receitas para as alterações mais prováveis, com o ponto exato de intervençã
 | Restringir gráficos de novo à chefia geral | `index.html` → condição em `renderVis()`: tire `ehChefia()`. |
 | Mudar o esquema de um JSON | `rede.js` (gravação) + `index.html` (leitura/uso). Mantenha compatibilidade retroativa. |
 | Publicar uma versão nova | `code/versao.js` (número, etiqueta e data) **+** tag do repositório. Não escreva o número em nenhum outro lugar. |
+| Ligar/desligar a seção Ausências | Painel do administrador → "Seções em avaliação". Em código: `mostraAusencias()` e `aplicarAusencias()` no `index.html`. |
 | Mudar o texto da Ajuda | `index.html` → `<section id="vAjuda">`. Ao trocar uma captura, refaça a imagem em `code/ajuda/` e confira se ela está em `ARQUIVOS`, no `sw.js`. |
 | Mudar o texto da janela "Sobre" | `index.html` → `<dialog id="dlgSobre">`; o que vem do `versao.js` é preenchido em `montarSobre()`. |
 
@@ -1379,7 +1421,7 @@ transações no servidor).
 | Ausência | Período de afastamento, em dias corridos, sem pontos e sem aprovação. |
 | Semente | Dados iniciais em `catalogo.js` copiados para o `config.json` na primeira oficialização. |
 | *Rail* | Barra de navegação escura à esquerda (v14), que vira barra horizontal em tela estreita. |
-| Tag | Marca do Git que identifica uma versão publicada (`v1.2`); substituiu as pastas por versão do beta. |
+| Tag | Marca do Git que identifica uma versão publicada (`v1.3`); substituiu as pastas por versão do beta. |
 | `versao.js` | O único arquivo onde a versão do aplicativo é escrita; dele derivam a etiqueta do rail, a janela "Sobre" e a chave do cache offline. |
 
 ---
@@ -1550,6 +1592,6 @@ Progressive Web App
 
 ---
 
-*Programa de Resultados — COBIB · Relatório Técnico da versão 1.2 (ago/2026).
+*Programa de Resultados — COBIB · Relatório Técnico da versão 1.3 (ago/2026).
 Documento vivo: ao publicar uma versão nova, atualize as seções afetadas e o
 histórico de versões (1.2).*
