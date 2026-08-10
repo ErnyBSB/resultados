@@ -1,4 +1,4 @@
-PROGRAMA DE RESULTADOS — COBIB (versão 1.1, ago/26 — PWA em rede)
+PROGRAMA DE RESULTADOS — COBIB (versão 1.2, ago/26 — PWA em rede)
 =================================================================
 
 O aplicativo passou a se chamar PROGRAMA DE RESULTADOS na v12 (antes,
@@ -7,7 +7,7 @@ a aba do navegador e para o manifest — ou seja, também para o ícone de
 quem instalar o PWA. A pasta da rede, os arquivos e o formato dos dados
 não mudaram com a troca de nome.
 
-A versão aparece ao lado do título, como etiqueta: "versão 1.1
+A versão aparece ao lado do título, como etiqueta: "versão 1.2
 (ago/26)". Ela é escrita em UM lugar só, o versao.js (ver a seção
 seguinte); publicar uma versão nova é mexer nesse arquivo e marcar a
 tag correspondente no repositório.
@@ -36,7 +36,7 @@ cache, esquecer o segundo tinha um efeito ruim e silencioso: a tela
 anunciava a versão nova enquanto o navegador continuava servindo os
 arquivos da anterior. Agora o index.html preenche a etiqueta e a janela
 a partir do versao.js, e o sw.js monta a chave do cache com
-importScripts do mesmo arquivo ("1.1" vira "ra-1.1").
+importScripts do mesmo arquivo ("1.2" vira "ra-1.2").
 
 A data de "Última atualização" é preenchida à mão, ali do lado. Ela
 poderia vir do GitHub, mas isso exigiria uma consulta pela internet — e
@@ -44,6 +44,89 @@ este aplicativo existe para funcionar sem ela, numa máquina que só
 enxerga a pasta da rede. A data seria justamente a informação que
 faltaria quando mais se precisa dela. Sendo manual, fica na linha
 seguinte à da versão: quem troca uma vê a outra.
+
+Ajuda dentro do aplicativo (novidade da v1.2)
+---------------------------------------------
+No rail, logo acima de "Sobre o programa", há agora "Ajuda". É uma TELA
+como as outras, com o que a pessoa precisa saber para começar: o que o
+programa é (e o que ele não é — não é controle de ponto), quem aprova o
+quê, como a tela se organiza, como lançar, como achar a atividade certa,
+o que o percentual da meta mede, como a chefia aprova e o que fazer
+quando algo não funciona. Tem quatro capturas de tela, em ajuda/.
+
+Por que a ajuda mora AQUI, e não no GitHub
+------------------------------------------
+Foi a pergunta discutida antes de escrever uma linha: bastaria um link
+para uma página no GitHub? Não. O objetivo nº 1 deste projeto é
+funcionar sem infraestrutura e sem rede externa; é por isso que o
+ECharts está embarcado em vez de vir de um CDN e que o service worker
+serve primeiro o cache. Ajuda hospedada fora inverte essa lógica no
+pior momento possível: quem clica em "Ajuda" está travado AGORA, e um
+link que não abre não apenas deixa de ajudar como ensina que o programa
+está quebrado.
+
+Peso não era argumento contrário. A pasta inteira tinha 780 KB, dos
+quais 533 KB são o ECharts; as quatro capturas somam 189 KB.
+
+O custo real é outro, e é assumido: CORRIGIR A AJUDA PASSA A EXIGIR
+PUBLICAR UMA VERSÃO — mexer no versao.js, marcar a tag e copiar os
+arquivos para a pasta da rede. Isso é aceitável porque o que está aqui
+é a parte estável (objetivo, papéis, como usar), que só muda quando o
+aplicativo muda — e aí a versão nova já está sendo publicada de
+qualquer forma. As dúvidas que aparecerem no dia a dia, essas mudam
+toda semana e não cabem aqui: vão para o repositório, em texto simples,
+onde se corrigem sem republicar nada.
+
+Tela, e não páginas HTML soltas
+-------------------------------
+A outra opção era um punhado de páginas na pasta, abertas em outra aba.
+Ficaria mais fácil de escrever e pior de manter: a folha de estilo deste
+aplicativo é embutida no index.html, então cada página solta precisaria
+de uma cópia dela, e as cópias divergem. Além disso, abrir outra aba tira
+a pessoa de dentro do programa. O que a v1.2 tem é conteúdo de duas telas
+de texto, não um manual; se um dia virar um, aí sim vale separar.
+
+Como "Sobre o programa", a Ajuda fica FORA da lista de telas e é
+alcançável ANTES da identificação — parte das dúvidas é justamente sobre
+como conectar a pasta e por que o nome não aparece na lista. Isso obrigou
+três ajustes no código, que valem registro para quem for mexer:
+
+- irPara() barrava qualquer tela que não fosse a entrada enquanto não
+  houvesse pasta e identidade; a ajuda escapa dessa barreira porque não
+  depende de dado nenhum;
+- podeVer() devolve verdadeiro para a ajuda em qualquer papel, inclusive
+  o administrador;
+- ajustarConfig() devolvia a pessoa à tela de entrada sempre que pasta ou
+  identidade não estivessem prontas. Como a reconexão da pasta acontece
+  sozinha ao abrir, quem estivesse lendo a ajuda era arrancado da leitura
+  no meio. Agora, estando na ajuda, ele não desvia.
+
+E como o rail de telas fica oculto antes da identificação, a ajuda
+precisou de um botão "Voltar" próprio: sem ele seria uma sala sem porta.
+
+As capturas de tela
+-------------------
+São quatro (barra de navegação, tela de lançamento, busca de atividade e
+painel da chefia), em WebP, somando 189 KB — em PNG seriam 671 KB. WebP
+não é uma aposta: o aplicativo é Chrome/Edge por decisão de projeto, e os
+dois leem o formato há anos.
+
+Estão registradas no sw.js, com as demais. Uma captura fora daquela lista
+apareceria quebrada justamente na máquina sem rede — pior do que não ter
+captura nenhuma.
+
+Foram geradas com dados INVENTADOS (Helena Barros, Ana Beatriz Nunes,
+Carlos Eduardo Prado, Marina Duarte, Roberto Aguiar), e não com o
+catálogo real: o repositório é público, e nome de servidor não deve
+circular em captura de tela. Cada imagem tem um texto alternativo que
+descreve o que ela mostra, para que ninguém dependa da imagem para
+entender a explicação.
+
+Capturas envelhecem depressa — a v14 redesenhou as telas inteiras e
+invalidaria todas de uma vez. Por isso são poucas e só onde a palavra
+não resolve. Ao mexer numa tela retratada, refaça a captura na mesma
+hora; uma imagem desatualizada ensina o caminho errado com toda a
+confiança de uma fotografia.
 
 Saída do beta: esta é a versão 1.0 (novidade)
 ---------------------------------------------
@@ -75,8 +158,8 @@ Publicar uma versão passou a ser, então, DUAS coisas que precisam
 concordar entre si: o versao.js e a tag do repositório. Até a v1.0 eram
 três — a etiqueta do index.html contava separadamente —, e a v1.1
 juntou as duas primeiras num arquivo só (ver "Sobre o programa", acima).
-A versão do versao.js acompanha a tag: a tag v1.1 corresponde a "1.1" e
-à chave de cache "ra-1.1".
+A versão do versao.js acompanha a tag: a tag v1.2 corresponde a "1.2" e
+à chave de cache "ra-1.2".
 
 A tela foi redesenhada na v14 (novidade)
 ----------------------------------------
@@ -269,7 +352,7 @@ rede não precisa fazer nada, e lançamentos, ausências, aprovações e
 config.json continuam sendo lidos exatamente como antes.
 
 Como o sw.js serve primeiro o que está em cache, cada versão troca a
-chave do cache (esta usa "ra-1.1", montada a partir do versao.js). Sem
+chave do cache (esta usa "ra-1.2", montada a partir do versao.js). Sem
 essa troca, quem já abriu a versão anterior continuaria recebendo a
 tela antiga.
 

@@ -4,7 +4,7 @@ Aplicativo web para o registro diário de processos de trabalho e atividades da
 COBIB. Cada servidor lança o que fez, com a complexidade correspondente, e a
 chefia aprova os lançamentos da sua unidade.
 
-**Versão 1.1** (ago/26). Até a 1.0 o programa se chamou *Registro de Atividades*
+**Versão 1.2** (ago/26). Até a 1.0 o programa se chamou *Registro de Atividades*
 e circulou como versão beta, numerada de 1 a 14, no repositório
 [actividades](https://github.com/ErnyBSB/actividades).
 
@@ -43,6 +43,7 @@ code/                    o aplicativo
   gerar-senha.html       ferramenta avulsa: gera o hash das senhas do config.json
   echarts.min.js         biblioteca de gráficos (embarcada, não baixada)
   icons/                 ícones do PWA
+  ajuda/                 capturas usadas na tela de Ajuda
   LEIA-ME.txt            a documentação de verdade: o que faz, e por quê
 Projeto_Design.md             relatório técnico do projeto (acompanha a versão atual)
 Projeto_Design_until_v8.pdf   o mesmo relatório para as versões beta 1 a 8

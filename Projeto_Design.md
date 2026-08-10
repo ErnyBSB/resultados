@@ -1,6 +1,6 @@
 # Programa de Resultados — COBIB
 ## Relatório Técnico do Projeto
-### Versão 1.1 · Aplicação Web Progressiva (PWA) *client-side*
+### Versão 1.2 · Aplicação Web Progressiva (PWA) *client-side*
 
 > Documento de referência para manutenção e evolução do sistema.
 > Destinado a desenvolvedores humanos e a modelos de IA.
@@ -115,6 +115,7 @@ vive neste repositório.
 | **v14** | **Redesenho da navegação**: rolagem única substituída por telas com *rail* fixo à esquerda; painel em abas; aprovar vira botão; total do dia vira cabeçalho de grupo. |
 | **1.0** | Saída do beta. Nenhuma mudança de tela, regra ou arquivo em relação à v14 — o que mudou foi o estado do programa (deixou de ser experimento) e a forma de guardar versões (ver 1.3). |
 | **1.1** | Janela **"Sobre o programa"**, alcançável pelo rail mesmo antes da identificação; e a versão do aplicativo passa a ser escrita em **um lugar só** (`versao.js`), de onde saem a etiqueta do rail, a janela e a chave do cache do service worker. |
+| **1.2** | Tela de **Ajuda** embutida, com quatro capturas: objetivo do programa, papéis, organização da tela, como lançar, como buscar, o que a meta mede e como a chefia aprova. Alcançável antes da identificação, como o "Sobre". |
 
 ### 1.3. Versionamento por *tags* (novidade da 1.0)
 
@@ -137,10 +138,10 @@ estar escrita no próprio histórico.
 **Publicar uma versão são duas coisas que precisam concordar entre si:**
 
 1. `code/versao.js` → o número, a etiqueta exibida e a data de atualização;
-2. a *tag* do repositório (`git tag -a v1.1`).
+2. a *tag* do repositório (`git tag -a v1.2`).
 
-A versão do `versao.js` acompanha a tag: a tag `v1.1` corresponde a `"1.1"` e à
-chave de cache `"ra-1.1"`. Até a 1.0 eram **três** coisas — a etiqueta do
+A versão do `versao.js` acompanha a tag: a tag `v1.2` corresponde a `"1.2"` e à
+chave de cache `"ra-1.2"`. Até a 1.0 eram **três** coisas — a etiqueta do
 `index.html` e a `VERSAO` do `sw.js` guardavam, cada uma, a sua cópia do número.
 A v1.1 juntou as duas num arquivo só (ver 3.6): a etiqueta do rail, a janela
 "Sobre o programa" e a chave do cache passaram a derivar dele.
@@ -258,6 +259,7 @@ code/                    o aplicativo — uma cópia só, sempre a versão atual
   gerar-senha.html       ferramenta avulsa: gera o hash SHA-256 de uma senha
   echarts.min.js         biblioteca de gráficos (embarcada, não baixada)
   icons/                 icon-192.png, icon-512.png
+  ajuda/                 as quatro capturas da tela de Ajuda (WebP)
   LEIA-ME.txt            a documentação de verdade: o que mudou e POR QUÊ
 Projeto_Design_until_v8.pdf   relatório técnico das versões beta 1 a 8
 Projeto_Design.md             este documento
@@ -269,6 +271,7 @@ CLAUDE.md                     instruções para agentes de IA que editem o repo
 |---|---:|---|
 | `index.html` | ~2.900 | Interface (HTML + CSS) e toda a lógica da aplicação em um `<script>`. É o coração do sistema. |
 | `versao.js` | ~25 | Número da versão, etiqueta exibida, data da última atualização e endereço do repositório. Lido pelo `index.html` e pelo `sw.js`. |
+| `ajuda/*.webp` | 189 KB | Capturas usadas na tela de Ajuda. WebP em vez de PNG (671 KB) — o aplicativo é Chrome/Edge por decisão de projeto. |
 | `catalogo.js` | ~166 | Dados-semente: processos, atividades, pontuação, metas diárias, tipos de ausência, unidades, chefias, servidores, senhas iniciais e caminho da pasta. |
 | `rede.js` | ~205 | Camada de acesso à pasta de rede: IndexedDB para o handle, permissões, leitura/gravação de JSON, leitura estrita antes de gravar. |
 | `echarts.min.js` | 521 KB | Build próprio do ECharts, só com o que o aplicativo usa. |
@@ -449,7 +452,9 @@ importScripts("./versao.js");
 const VERSAO = "ra-" + APP.versao;
 const ARQUIVOS = ["./", "./index.html", "./versao.js", "./catalogo.js",
                   "./rede.js", "./echarts.min.js", "./manifest.webmanifest",
-                  "./icons/icon-192.png", "./icons/icon-512.png"];
+                  "./icons/icon-192.png", "./icons/icon-512.png",
+                  "./ajuda/rail.webp", "./ajuda/lancar.webp",
+                  "./ajuda/busca.webp", "./ajuda/painel.webp"];
 ```
 
 O `importScripts` é o que permite ao service worker — que roda em outro contexto,
@@ -873,6 +878,45 @@ no pé do rail —, a lista de telas deixou de crescer (`flex:0 1 auto`) e quem 
 a ser empurrado para o fim é o rodapé (`margin-top:auto`). Em tela estreita, onde o
 rail vira faixa horizontal, o botão fica numa linha própria abaixo dela.
 
+### 6.6. Ajuda (novidade da v1.2)
+
+Uma tela, alcançável pelo rail logo acima de "Sobre o programa", com sete blocos: o
+que o programa é e o que ele não é; quem aprova o quê; como a tela se organiza; como
+lançar; como achar a atividade certa; ausências e o que a meta mede; e o que fazer
+quando algo não funciona. Quatro capturas em `code/ajuda/`.
+
+**Por que embutida, e não no GitHub.** Foi a pergunta discutida antes de escrever a
+primeira linha (registrada na issue #4). O objetivo nº 1 do projeto é funcionar sem
+rede externa, e ajuda hospedada fora inverte essa lógica no pior momento: quem clica
+em "Ajuda" está travado agora, e um link que não abre ensina que o programa está
+quebrado. O custo assumido é o inverso: **corrigir a ajuda passa a exigir publicar
+uma versão**. Aceitável porque o que está embutido é a parte estável — muda quando o
+aplicativo muda, e aí a versão nova já está sendo publicada de qualquer forma.
+
+**Por que uma tela, e não páginas HTML soltas.** A folha de estilo do aplicativo é
+embutida no `index.html`; páginas separadas precisariam de uma cópia dela, e cópias
+divergem. Abrir outra aba também tira a pessoa de dentro do programa.
+
+**Três ajustes que o alcance antes da identificação exigiu** — vale conhecê-los antes
+de mexer na navegação:
+
+| Função | O que fazia | O que passou a fazer |
+|---|---|---|
+| `irPara(v)` | Barrava toda tela que não fosse `entrada` sem pasta e sem identidade | A `ajuda` escapa da barreira: não depende de dado nenhum |
+| `podeVer(v)` | A última linha (`return !ehAdm()`) barraria o administrador | `ajuda` devolve verdadeiro em qualquer papel |
+| `ajustarConfig()` | Devolvia à entrada sempre que pasta ou identidade faltassem | Não desvia quem está na ajuda — a reconexão silenciosa arrancava a pessoa da leitura |
+
+Como o rail de telas fica oculto antes da identificação, a tela tem um botão
+**"Voltar"** próprio, que devolve à tela de origem (`vistaAnterior`). Sem ele, seria
+uma sala sem porta.
+
+**As capturas.** Quatro, em WebP (189 KB; em PNG seriam 671 KB) — o formato é seguro
+porque o aplicativo é Chrome/Edge por decisão de projeto. Estão em `ARQUIVOS`, no
+`sw.js`: fora daquela lista apareceriam quebradas justamente na máquina sem rede.
+Foram geradas com **dados inventados**, nunca com o catálogo real — o repositório é
+público. Cada `<img>` tem `alt` descritivo, de modo que ninguém dependa da imagem
+para entender o texto.
+
 ---
 
 ## 7. Carga horária, meta alcançada e ausências
@@ -1154,7 +1198,7 @@ rede pode hospedar o app (ex.: `unidadeCentral\app`).
 torna a navegação no seletor de pastas bem mais simples para as pessoas.
 
 **Atualização de versão:** ver 1.3 — as duas coisas que precisam concordar. A
-versão atual é `1.1`, e o cache correspondente é `ra-1.1`. Na primeira carga após
+versão atual é `1.2`, e o cache correspondente é `ra-1.2`. Na primeira carga após
 atualizar, um recarregamento forçado (Ctrl+F5) ajuda a garantir a troca.
 
 **Compatibilidade:** Chrome e Edge apenas, por decisão de projeto — a File System
@@ -1204,6 +1248,11 @@ ser simulada com qualquer diretório local que tenha a estrutura
   confirmação reforçada mitiga, mas não impede.
 - **Cache pegajoso:** publicar sem trocar a versão no `versao.js` faz o navegador
   continuar servindo a versão anterior.
+- **Ajuda amarrada à versão:** corrigir um texto da tela de Ajuda exige publicar uma
+  versão nova (ver 6.6). Dúvidas de rotina, que mudam toda semana, pertencem a um
+  documento no repositório, não a esta tela.
+- **Capturas envelhecem:** a v14 redesenhou as telas inteiras e teria invalidado
+  todas de uma vez. Ao mexer numa tela retratada, refaça a captura na mesma hora.
 - **Data de atualização manual:** a data exibida em "Sobre o programa" é digitada
   no `versao.js` ao publicar. Buscá-la do GitHub exigiria internet, que é
   justamente o que não se pode pressupor (ver 3.6).
@@ -1232,6 +1281,7 @@ Receitas para as alterações mais prováveis, com o ponto exato de intervençã
 | Restringir gráficos de novo à chefia geral | `index.html` → condição em `renderVis()`: tire `ehChefia()`. |
 | Mudar o esquema de um JSON | `rede.js` (gravação) + `index.html` (leitura/uso). Mantenha compatibilidade retroativa. |
 | Publicar uma versão nova | `code/versao.js` (número, etiqueta e data) **+** tag do repositório. Não escreva o número em nenhum outro lugar. |
+| Mudar o texto da Ajuda | `index.html` → `<section id="vAjuda">`. Ao trocar uma captura, refaça a imagem em `code/ajuda/` e confira se ela está em `ARQUIVOS`, no `sw.js`. |
 | Mudar o texto da janela "Sobre" | `index.html` → `<dialog id="dlgSobre">`; o que vem do `versao.js` é preenchido em `montarSobre()`. |
 
 ### 13.1. Convenções e cuidados
@@ -1329,7 +1379,7 @@ transações no servidor).
 | Ausência | Período de afastamento, em dias corridos, sem pontos e sem aprovação. |
 | Semente | Dados iniciais em `catalogo.js` copiados para o `config.json` na primeira oficialização. |
 | *Rail* | Barra de navegação escura à esquerda (v14), que vira barra horizontal em tela estreita. |
-| Tag | Marca do Git que identifica uma versão publicada (`v1.1`); substituiu as pastas por versão do beta. |
+| Tag | Marca do Git que identifica uma versão publicada (`v1.2`); substituiu as pastas por versão do beta. |
 | `versao.js` | O único arquivo onde a versão do aplicativo é escrita; dele derivam a etiqueta do rail, a janela "Sobre" e a chave do cache offline. |
 
 ---
@@ -1500,6 +1550,6 @@ Progressive Web App
 
 ---
 
-*Programa de Resultados — COBIB · Relatório Técnico da versão 1.1 (ago/2026).
+*Programa de Resultados — COBIB · Relatório Técnico da versão 1.2 (ago/2026).
 Documento vivo: ao publicar uma versão nova, atualize as seções afetadas e o
 histórico de versões (1.2).*
