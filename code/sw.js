@@ -15,7 +15,16 @@ const ARQUIVOS = [
   "./echarts.min.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./icons/icon-512.png",
+  /* Capturas da tela de Ajuda. Precisam estar AQUI: fora desta lista, a
+     ajuda funcionaria com rede e ficaria cheia de imagens quebradas sem
+     ela — pior do que não ter ajuda nenhuma. Em WebP porque o aplicativo
+     é Chrome/Edge por decisão de projeto, e são 189 KB contra 671 KB em
+     PNG. Ao acrescentar uma captura nova, acrescente-a aqui também. */
+  "./ajuda/rail.webp",
+  "./ajuda/lancar.webp",
+  "./ajuda/busca.webp",
+  "./ajuda/painel.webp"
 ];
 
 self.addEventListener("install", (e) => {
