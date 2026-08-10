@@ -62,8 +62,12 @@ button{font-family:inherit}
 .marca-sub .versao{font-size:10.5px; letter-spacing:.04em; color:var(--rail-mudo);
   border:1px solid #3A463E; border-radius:999px; padding:1px 7px; white-space:nowrap}
 
+/* flex:0 1 auto (e não 1 1 auto): a navegação ocupa só a altura dos seus
+   itens, para que "Sobre o programa" fique logo ABAIXO do último item em
+   vez de ser empurrado para o pé do rail. Quem desce até o fim é o
+   rodapé, pelo margin-top:auto de .rail-pe. */
 .rail-nav{padding:14px 10px; display:flex; flex-direction:column; gap:2px;
-  flex:1 1 auto; overflow-y:auto}
+  flex:0 1 auto; overflow-y:auto}
 .rail-grupo{font-size:10px; letter-spacing:.14em; text-transform:uppercase;
   color:var(--rail-mudo2); padding:6px 10px 8px; margin:0}
 .rail-grupo + .rail-grupo, .rail-nav > .rail-grupo:not(:first-child){padding-top:18px}
@@ -81,7 +85,11 @@ button{font-family:inherit}
   background:var(--dourado-vivo); color:#221909; border-radius:999px;
   min-width:20px; text-align:center; padding:1px 6px}
 
-.rail-pe{padding:14px 16px 16px; border-top:1px solid var(--rail-linha);
+/* "Sobre" vive FORA da navegação (ver o comentário no HTML), então ganha
+   uma linha de separação: sem ela pareceria o último item do grupo de
+   cima, que é justamente o que ele não é. */
+.rail-sobre{padding:8px 10px; border-top:1px solid var(--rail-linha)}
+.rail-pe{margin-top:auto; padding:14px 16px 16px; border-top:1px solid var(--rail-linha);
   display:flex; flex-direction:column; gap:10px}
 .pessoa{display:flex; align-items:center; gap:10px}
 .avatar{flex:none; width:30px; height:30px; border-radius:50%;
@@ -345,6 +353,11 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
 .recibo-rodape{display:flex; align-items:center; justify-content:space-between;
   gap:16px; margin-top:20px; padding-top:16px; border-top:1px solid var(--linha)}
 .recibo-rodape b{font-weight:600}
+/* ---------- sobre o programa ---------- */
+.sobre-corpo{margin:16px 0 0; font-size:13.5px}
+.sobre-corpo p{margin:0 0 9px}
+.sobre-corpo p:last-child{margin-bottom:0}
+.sobre-corpo a{color:var(--verde); overflow-wrap:anywhere}
 
 /* ===================== TELAS ESTREITAS =====================
    A maquete não tinha nenhuma media query — o rail era fixo em 244px.
@@ -362,6 +375,9 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
   .rail-nav{flex-direction:row; overflow-x:auto; gap:6px; padding:10px 12px; flex:none}
   .rail-grupo{display:none}
   .rail-item{width:auto; white-space:nowrap; padding:8px 12px}
+  /* Sem rail em coluna não há "abaixo do último item" nem linha a
+     separar: "Sobre" vira mais um botão na faixa que rola. */
+  .rail-sobre{border-top:0; padding:0 12px 8px}
   .rail-item .rail-num,.rail-item .rail-badge{margin-left:6px}
   .rail-pe{flex-direction:row; align-items:center; flex-wrap:wrap; gap:12px;
     padding:12px 16px}
@@ -396,7 +412,10 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
     <span class="marca">Programa&nbsp;de Resultados</span>
     <div class="marca-sub">
       <span class="org">COBIB</span>
-      <span class="versao">versão 1.0 (ago/26)</span>
+      <!-- Preenchida a partir de APP.rotulo (versao.js). Vazia no HTML de
+           propósito: uma cópia escrita aqui seria um segundo lugar a
+           lembrar de atualizar, que é o que a v1.1 veio eliminar. -->
+      <span class="versao" id="versaoApp"></span>
     </div>
   </div>
 
@@ -415,6 +434,16 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
       <span class="rail-badge" id="navPend" hidden></span></button>
     <button type="button" class="rail-item" data-vista="adm" id="navAdm">
       <span class="ponto"></span>Administração</button>
+  </div>
+
+  <!-- "Sobre" fica FORA do #railNav de propósito. O nav some enquanto
+       ninguém se identificou, e a identidade do programa — nome, licença,
+       de onde veio — é justamente o que se quer poder consultar ANTES de
+       entrar. Fora dele, o botão também não é lido como o último item do
+       grupo "Gestão", ao qual não pertence. -->
+  <div class="rail-sobre">
+    <button type="button" class="rail-item" id="btnSobre">
+      <span class="ponto"></span>Sobre o programa</button>
   </div>
 
   <div class="rail-pe">
@@ -917,12 +946,36 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
   </div>
 </dialog>
 
+<!-- Sobre o programa: janela própria, e não mais um uso da janela do
+     recibo. Aquela já serve a dois assuntos (lançamento e ausência) e
+     devolve o foco ao campo de busca ao fechar, o que aqui estaria
+     errado — de "Sobre" se volta para o botão que o abriu. -->
+<dialog id="dlgSobre" aria-labelledby="sobreTitulo">
+  <h2 id="sobreTitulo">Programa de Resultados</h2>
+  <p class="dica" id="sobreVersao" style="margin:0"></p>
+  <div class="sobre-corpo">
+    <p>Formulário para anotações de tarefas e atividades das pessoas.</p>
+    <p>Licença livre: Creative Commons CC0 1.0 (domínio público).</p>
+    <p>Elaborado no Centro de Documentação da Câmara dos Deputados.</p>
+    <p id="sobreAtualizado"></p>
+    <p>Disponível no GitHub:<br><a id="sobreLink" target="_blank" rel="noopener"></a></p>
+  </div>
+  <div class="recibo-rodape">
+    <b></b>
+    <button type="button" class="acao" id="btnSobreOK" autofocus>Fechar</button>
+  </div>
+</dialog>
+
+<!-- Antes de tudo: o número da versão que a etiqueta do rail, a janela
+     "Sobre" e o cache do service worker compartilham. -->
+<script src="versao.js"></script>
 <script src="catalogo.js"></script>
 <script src="rede.js"></script>
 <!-- Build próprio do ECharts (só barra, mapa de calor, eixo, dica e legenda):
      521 KB contra 1 MB do pacote completo. Fica NA PASTA do aplicativo, nunca
      em CDN — o service worker é cache-first e a máquina pode estar sem
-     internet. Ao trocar por uma versão nova, altere VERSAO no sw.js. -->
+     internet. Ao trocar por uma versão nova, publique uma versão do
+     aplicativo (versao.js), senão o cache antigo continua valendo. -->
 <script src="echarts.min.js"></script>
 
 <script>
@@ -2816,7 +2869,31 @@ $("btnCSVAus").addEventListener("click", () => {
   URL.revokeObjectURL(a.href);
 });
 
+/* ========================== SOBRE O PROGRAMA ==========================
+   O número da versão é escrito em UM lugar (versao.js) e lido em três:
+   a etiqueta do rail, esta janela e a chave do cache do service worker.
+   Antes da v1.1 ele era digitado à mão em dois arquivos, e esquecer um
+   deixava a tela dizendo uma coisa enquanto o cache servia outra.
+
+   Todo o conteúdo entra por textContent e pela propriedade href — nada
+   de innerHTML. É a forma mais forte da regra da casa: onde não há
+   marcação a montar, não se abre a porta para ela. */
+function montarSobre() {
+  $("versaoApp").textContent = APP.rotulo;
+  $("sobreVersao").textContent = "Versão " + APP.versao;
+  $("sobreAtualizado").textContent = "Última atualização: " + APP.atualizado;
+  const link = $("sobreLink");
+  link.href = APP.repositorio;
+  link.textContent = APP.repositorio;
+}
+$("btnSobre").addEventListener("click", () => $("dlgSobre").showModal());
+$("btnSobreOK").addEventListener("click", () => $("dlgSobre").close());
+/* Devolve o foco a quem abriu: sem isto, quem navega por teclado volta
+   ao começo da página e perde o lugar no rail. */
+$("dlgSobre").addEventListener("close", () => $("btnSobre").focus());
+
 /* --------------------------- INICIALIZAÇÃO --------------------------- */
+montarSobre();
 montarPessoas();
 montarProcessos();
 montarTiposAusencia();
