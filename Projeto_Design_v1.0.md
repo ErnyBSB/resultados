@@ -1,6 +1,6 @@
 # Programa de Resultados — COBIB
 ## Relatório Técnico do Projeto
-### Versão 1.0 · Aplicação Web Progressiva (PWA) *client-side*
+### Versão 1.1 · Aplicação Web Progressiva (PWA) *client-side*
 
 > Documento de referência para manutenção e evolução do sistema.
 > Destinado a desenvolvedores humanos e a modelos de IA.
@@ -9,7 +9,11 @@
 > que descrevia o sistema quando ele ainda se chamava **Registro de Atividades** e
 > estava na versão beta 8. A estrutura das seções foi preservada para facilitar a
 > comparação; o conteúdo foi revisto de ponta a ponta e acrescido de tudo que
-> entrou entre a v9 e a 1.0.
+> entrou entre a v9 e a versão atual.
+>
+> O relatório descreve **a versão em uso** e acompanha o `code/`: não há uma cópia
+> por versão. O nome do arquivo guarda a versão em que ele nasceu; o que estava
+> escrito em cada versão publicada se recupera pela tag correspondente.
 
 ---
 
@@ -108,6 +112,7 @@ vive neste repositório.
 | **v13** | Três correções de interface: `[hidden]` que não escondia blocos com `display` próprio; **escapamento de texto de terceiros** antes de entrar em `innerHTML`; desalinhamento do total do dia em tela estreita. |
 | **v14** | **Redesenho da navegação**: rolagem única substituída por telas com *rail* fixo à esquerda; painel em abas; aprovar vira botão; total do dia vira cabeçalho de grupo. |
 | **1.0** | Saída do beta. Nenhuma mudança de tela, regra ou arquivo em relação à v14 — o que mudou foi o estado do programa (deixou de ser experimento) e a forma de guardar versões (ver 1.3). |
+| **1.1** | Janela **"Sobre o programa"**, alcançável pelo rail mesmo antes da identificação; e a versão do aplicativo passa a ser escrita em **um lugar só** (`versao.js`), de onde saem a etiqueta do rail, a janela e a chave do cache do service worker. |
 
 ### 1.3. Versionamento por *tags* (novidade da 1.0)
 
@@ -127,14 +132,16 @@ pastas — é preciso um `git checkout` da tag desejada. Em compensação, a per
 que a pasta nunca respondia ("o que mudou da v12 para a v13, e por quê?") passou a
 estar escrita no próprio histórico.
 
-**Publicar uma versão são três coisas que precisam concordar entre si:**
+**Publicar uma versão são duas coisas que precisam concordar entre si:**
 
-1. `code/sw.js` → `const VERSAO = "ra-1.1"` (sem isso o navegador continua servindo
-   o cache antigo e a mudança não aparece);
-2. `code/index.html` → a etiqueta `<span class="versao">` no cabeçalho;
-3. a *tag* do repositório (`git tag -a v1.1`).
+1. `code/versao.js` → o número, a etiqueta exibida e a data de atualização;
+2. a *tag* do repositório (`git tag -a v1.1`).
 
-A string de `VERSAO` acompanha a tag: a tag `v1.0` corresponde a `"ra-1.0"`.
+A versão do `versao.js` acompanha a tag: a tag `v1.1` corresponde a `"1.1"` e à
+chave de cache `"ra-1.1"`. Até a 1.0 eram **três** coisas — a etiqueta do
+`index.html` e a `VERSAO` do `sw.js` guardavam, cada uma, a sua cópia do número.
+A v1.1 juntou as duas num arquivo só (ver 3.6): a etiqueta do rail, a janela
+"Sobre o programa" e a chave do cache passaram a derivar dele.
 
 > **Não crie** `code/v2/`, `versionBeta/` ou cópias datadas de arquivos. A mudança
 > é feita no lugar; o histórico guarda o passado.
@@ -240,6 +247,7 @@ acordeão virou abas, e foi substituída por `ra.aba.v1`.
 ```
 code/                    o aplicativo — uma cópia só, sempre a versão atual
   index.html             interface, lógica e CSS embutido
+  versao.js              o único lugar onde a versão é escrita
   catalogo.js            catálogo editável: unidades, pessoas, processos,
                          atividades, pontos, tipos de ausência, metas diárias
   rede.js                acesso à pasta de rede: handle, permissões, JSON
@@ -257,7 +265,8 @@ CLAUDE.md                     instruções para agentes de IA que editem o repo
 
 | Arquivo | Linhas | Responsabilidade |
 |---|---:|---|
-| `index.html` | ~2.838 | Interface (HTML + CSS) e toda a lógica da aplicação em um `<script>`. É o coração do sistema. |
+| `index.html` | ~2.900 | Interface (HTML + CSS) e toda a lógica da aplicação em um `<script>`. É o coração do sistema. |
+| `versao.js` | ~25 | Número da versão, etiqueta exibida, data da última atualização e endereço do repositório. Lido pelo `index.html` e pelo `sw.js`. |
 | `catalogo.js` | ~166 | Dados-semente: processos, atividades, pontuação, metas diárias, tipos de ausência, unidades, chefias, servidores, senhas iniciais e caminho da pasta. |
 | `rede.js` | ~205 | Camada de acesso à pasta de rede: IndexedDB para o handle, permissões, leitura/gravação de JSON, leitura estrita antes de gravar. |
 | `echarts.min.js` | 521 KB | Build próprio do ECharts, só com o que o aplicativo usa. |
@@ -434,19 +443,50 @@ grava a lista `ARQUIVOS`; no `activate`, apaga todo cache cujo nome não seja o
 correspondência.
 
 ```js
-const VERSAO = "ra-1.0";
-const ARQUIVOS = ["./", "./index.html", "./catalogo.js", "./rede.js",
-                  "./echarts.min.js", "./manifest.webmanifest",
+importScripts("./versao.js");
+const VERSAO = "ra-" + APP.versao;
+const ARQUIVOS = ["./", "./index.html", "./versao.js", "./catalogo.js",
+                  "./rede.js", "./echarts.min.js", "./manifest.webmanifest",
                   "./icons/icon-192.png", "./icons/icon-512.png"];
 ```
 
-Consequência prática: **uma alteração publicada sem trocar `VERSAO` não chega a
-ninguém que já tenha aberto a versão anterior.** Ao testar mudanças em arquivos
-cacheados, use recarregamento forçado — um `VERSAO` desatualizado serve alegremente
-a versão antiga e esconde a alteração.
+O `importScripts` é o que permite ao service worker — que roda em outro contexto,
+sem DOM e sem acesso ao `index.html` — ler a mesma versão que a tela mostra. Um
+`const` declarado no topo de um script clássico importado fica visível ao script
+que o importou, por estarem no mesmo escopo global.
 
-`gerar-senha.html` não está na lista de cache, por ser ferramenta avulsa do
-administrador: ela não abre offline.
+Consequência prática: **uma alteração publicada sem trocar a versão no `versao.js`
+não chega a ninguém que já tenha aberto a versão anterior.** Ao testar mudanças em
+arquivos cacheados, use recarregamento forçado — uma versão desatualizada serve
+alegremente o cache antigo e esconde a alteração.
+
+Note que `versao.js` **está** na lista de arquivos cacheados: fora dela, o service
+worker buscaria da rede um arquivo de que ele próprio depende. Já o
+`gerar-senha.html` não está, por ser ferramenta avulsa do administrador: ela não
+abre offline.
+
+### 3.6. Onde a versão é escrita
+
+Um arquivo de quatro linhas úteis, lido por dois contextos diferentes:
+
+```js
+const APP = {
+  versao:      "1.1",                  // acompanha a tag do repositório
+  rotulo:      "versão 1.1 (ago/26)",  // etiqueta exibida no rail
+  atualizado:  "10.08.2026",           // data desta publicação
+  repositorio: "https://github.com/ErnyBSB/resultados"
+};
+```
+
+Antes da v1.1 o número era digitado à mão em dois lugares — a etiqueta do rail e a
+`VERSAO` do `sw.js` — e a divergência entre eles tinha um efeito ruim e silencioso:
+a tela anunciava a versão nova enquanto o navegador continuava servindo os arquivos
+da anterior, porque o cache não havia trocado de nome.
+
+A data de atualização é preenchida à mão de propósito. Buscá-la da API do GitHub
+exigiria uma requisição de rede, e o aplicativo existe para funcionar sem internet:
+a data ficaria vazia ou velha exatamente na situação de uso prevista. Sendo manual,
+ela fica na linha seguinte à da versão — quem troca uma vê a outra.
 
 ---
 
@@ -805,6 +845,32 @@ por via das dúvidas.
 > algo falhasse ao montar a janela dentro do `try`, a pessoa veria "não foi possível
 > gravar na rede" e lançaria tudo de novo, duplicando o registro.
 
+### 6.5. Sobre o programa (novidade da v1.1)
+
+No rail, **abaixo do último item** e separado por uma linha, o botão "Sobre o
+programa" abre uma janela modal com a identidade do aplicativo: nome, versão, para
+que serve, licença (Creative Commons CC0 1.0, a mesma do arquivo `LICENSE`), onde
+foi elaborado, data da última atualização e endereço do repositório. Fecha pelo
+botão "Fechar" ou pela tecla Esc, e devolve o foco ao botão que a abriu.
+
+Três decisões que valem registro:
+
+- **O botão vive fora de `#railNav`.** A lista de telas fica oculta enquanto
+  ninguém se identificou, e é justamente antes de entrar que alguém pode querer
+  saber o que é este programa. Dentro da lista, ele também seria lido como o último
+  item do grupo "Gestão", ao qual não pertence.
+- **Janela própria, e não mais um uso do `dlgRecibo`.** Aquela janela já serve a
+  dois assuntos e devolve o foco ao campo de busca de atividade ao fechar, o que
+  aqui estaria errado.
+- **O conteúdo entra por `textContent` e pela propriedade `href`**, nunca por
+  `innerHTML`. É a forma mais forte da regra de 10.2: onde não há marcação a
+  montar, não se abre a porta para ela.
+
+Para que a navegação em coluna colocasse o botão logo abaixo do último item — e não
+no pé do rail —, a lista de telas deixou de crescer (`flex:0 1 auto`) e quem passou
+a ser empurrado para o fim é o rodapé (`margin-top:auto`). Em tela estreita, onde o
+rail vira faixa horizontal, o botão fica numa linha própria abaixo dela.
+
 ---
 
 ## 7. Carga horária, meta alcançada e ausências
@@ -1085,9 +1151,9 @@ rede pode hospedar o app (ex.: `unidadeCentral\app`).
 **Dica de implantação:** mapear a pasta de rede como unidade de disco (ex.: `R:`)
 torna a navegação no seletor de pastas bem mais simples para as pessoas.
 
-**Atualização de versão:** ver 1.3 — as três coisas que precisam concordar. A
-constante atual é `ra-1.0`. Na primeira carga após atualizar, um recarregamento
-forçado (Ctrl+F5) ajuda a garantir a troca.
+**Atualização de versão:** ver 1.3 — as duas coisas que precisam concordar. A
+versão atual é `1.1`, e o cache correspondente é `ra-1.1`. Na primeira carga após
+atualizar, um recarregamento forçado (Ctrl+F5) ajuda a garantir a troca.
 
 **Compatibilidade:** Chrome e Edge apenas, por decisão de projeto — a File System
 Access API não está disponível em Firefox/Safari. Melhorias que ampliem o alcance
@@ -1134,8 +1200,11 @@ ser simulada com qualquer diretório local que tenha a estrutura
 
 - **Escrita administrativa ampla:** a exclusão de registros por engano é possível; a
   confirmação reforçada mitiga, mas não impede.
-- **Cache pegajoso:** publicar sem trocar `VERSAO` no `sw.js` faz o navegador
+- **Cache pegajoso:** publicar sem trocar a versão no `versao.js` faz o navegador
   continuar servindo a versão anterior.
+- **Data de atualização manual:** a data exibida em "Sobre o programa" é digitada
+  no `versao.js` ao publicar. Buscá-la do GitHub exigiria internet, que é
+  justamente o que não se pode pressupor (ver 3.6).
 - **`gerar-senha.html` não é cacheado** e, portanto, não abre offline.
 
 ---
@@ -1160,7 +1229,8 @@ Receitas para as alterações mais prováveis, com o ponto exato de intervençã
 | Alterar tema visual | `index.html` → bloco `<style>`, `:root`. Lembre que verde = aprovado e dourado = pendente. |
 | Restringir gráficos de novo à chefia geral | `index.html` → condição em `renderVis()`: tire `ehChefia()`. |
 | Mudar o esquema de um JSON | `rede.js` (gravação) + `index.html` (leitura/uso). Mantenha compatibilidade retroativa. |
-| Forçar nova versão do PWA | `sw.js` → `VERSAO` **+** etiqueta no `index.html` **+** tag do repositório. |
+| Publicar uma versão nova | `code/versao.js` (número, etiqueta e data) **+** tag do repositório. Não escreva o número em nenhum outro lugar. |
+| Mudar o texto da janela "Sobre" | `index.html` → `<dialog id="dlgSobre">`; o que vem do `versao.js` é preenchido em `montarSobre()`. |
 
 ### 13.1. Convenções e cuidados
 
@@ -1257,7 +1327,8 @@ transações no servidor).
 | Ausência | Período de afastamento, em dias corridos, sem pontos e sem aprovação. |
 | Semente | Dados iniciais em `catalogo.js` copiados para o `config.json` na primeira oficialização. |
 | *Rail* | Barra de navegação escura à esquerda (v14), que vira barra horizontal em tela estreita. |
-| Tag | Marca do Git que identifica uma versão publicada (`v1.0`); substituiu as pastas por versão do beta. |
+| Tag | Marca do Git que identifica uma versão publicada (`v1.1`); substituiu as pastas por versão do beta. |
+| `versao.js` | O único arquivo onde a versão do aplicativo é escrita; dele derivam a etiqueta do rail, a janela "Sobre" e a chave do cache offline. |
 
 ---
 
@@ -1427,6 +1498,6 @@ Progressive Web App
 
 ---
 
-*Programa de Resultados — COBIB · Relatório Técnico da versão 1.0 (ago/2026).
+*Programa de Resultados — COBIB · Relatório Técnico da versão 1.1 (ago/2026).
 Documento vivo: ao publicar uma versão nova, atualize as seções afetadas e o
 histórico de versões (1.2).*

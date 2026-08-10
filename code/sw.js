@@ -1,11 +1,15 @@
 /* Service worker — funcionamento offline (cache-first).
-   Ao publicar uma nova versão do aplicativo, altere o número da VERSAO
-   para que os navegadores baixem os arquivos atualizados. O número
-   acompanha a tag do repositório: a tag v1.0 corresponde a "ra-1.0". */
-const VERSAO = "ra-1.0";
+   A chave do cache vem do versao.js, o único lugar onde a versão do
+   aplicativo é escrita: a versão "1.1" vira o cache "ra-1.1". Trocar a
+   versão lá é o que faz os navegadores baixarem os arquivos novos —
+   sem isso, quem já abriu o aplicativo continua recebendo a tela
+   antiga. Aqui não há número a lembrar de atualizar. */
+importScripts("./versao.js");
+const VERSAO = "ra-" + APP.versao;
 const ARQUIVOS = [
   "./",
   "./index.html",
+  "./versao.js",
   "./catalogo.js",
   "./rede.js",
   "./echarts.min.js",
