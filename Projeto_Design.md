@@ -1,6 +1,6 @@
 # Programa de Resultados — COBIB
 ## Relatório Técnico do Projeto
-### Versão 1.3 · Aplicação Web Progressiva (PWA) *client-side*
+### Versão 1.4 · Aplicação Web Progressiva (PWA) *client-side*
 
 > Documento de referência para manutenção e evolução do sistema.
 > Destinado a desenvolvedores humanos e a modelos de IA.
@@ -116,6 +116,7 @@ vive neste repositório.
 | **1.0** | Saída do beta. Nenhuma mudança de tela, regra ou arquivo em relação à v14 — o que mudou foi o estado do programa (deixou de ser experimento) e a forma de guardar versões (ver 1.3). |
 | **1.1** | Janela **"Sobre o programa"**, alcançável pelo rail mesmo antes da identificação; e a versão do aplicativo passa a ser escrita em **um lugar só** (`versao.js`), de onde saem a etiqueta do rail, a janela e a chave do cache do service worker. |
 | **1.2** | Tela de **Ajuda** embutida, com quatro capturas: objetivo do programa, papéis, organização da tela, como lançar, como buscar, o que a meta mede e como a chefia aprova. Alcançável antes da identificação, como o "Sobre". |
+| **1.4** | O campo de busca de atividade ganha **destaque por superfície** (painel recuado, rótulo visível, texto de apoio dentro dele) e passa a vir **antes** dos atalhos de "Suas mais registradas". |
 | **1.3** | A seção **Ausências** fica oculta enquanto a gestão discute o assunto, ligável pelo administrador no `config.json` (`mostrarAusencias`). Nada foi removido: código, dados e o desconto de ausências no cálculo da meta continuam como estavam. |
 
 ### 1.3. Versionamento por *tags* (novidade da 1.0)
@@ -139,10 +140,10 @@ estar escrita no próprio histórico.
 **Publicar uma versão são duas coisas que precisam concordar entre si:**
 
 1. `code/versao.js` → o número, a etiqueta exibida e a data de atualização;
-2. a *tag* do repositório (`git tag -a v1.3`).
+2. a *tag* do repositório (`git tag -a v1.4`).
 
-A versão do `versao.js` acompanha a tag: a tag `v1.3` corresponde a `"1.3"` e à
-chave de cache `"ra-1.3"`. Até a 1.0 eram **três** coisas — a etiqueta do
+A versão do `versao.js` acompanha a tag: a tag `v1.4` corresponde a `"1.4"` e à
+chave de cache `"ra-1.4"`. Até a 1.0 eram **três** coisas — a etiqueta do
 `index.html` e a `VERSAO` do `sw.js` guardavam, cada uma, a sua cópia do número.
 A v1.1 juntou as duas num arquivo só (ver 3.6): a etiqueta do rail, a janela
 "Sobre o programa" e a chave do cache passaram a derivar dele.
@@ -835,7 +836,18 @@ lista. Hoje:
   próprio campo de busca. As atividades que saíram do catálogo são descartadas
   **antes** do corte em três — cortando primeiro, uma atividade removida do catálogo
   levava embora uma das vagas e o atalho aparecia com dois botões, sem motivo
-  visível.
+  visível. **Desde a v1.4 os atalhos vêm depois do campo**, e não antes (ver abaixo).
+
+**O destaque do campo (v1.4).** O campo e os atalhos tinham o mesmo fundo e a mesma
+borda, e o campo era a quarta caixa idêntica de uma pilha de quatro, a três atalhos
+de distância da pergunta que responde. O destaque **não podia vir de cor** — verde é
+aprovado, dourado é pendente, e emprestar um dos dois para decoração desmancharia a
+convenção. Veio da **superfície**: o campo mora num painel `--papel` dentro do cartão
+branco e continua branco por dentro, invertendo a relação; ganhou rótulo visível (era
+um `<label>` fora da tela, só para leitor de tela) e recebeu, dentro do painel, o
+texto de apoio que explica como ver a lista inteira — 4,87:1 de contraste sobre o
+cinza, acima do mínimo AA. A ordem inverteu porque o campo é o caminho do caso geral;
+o atalho vem depois dele.
 
 ### 6.4. Recibo do lançamento (novidade da v11)
 
@@ -1236,7 +1248,7 @@ rede pode hospedar o app (ex.: `unidadeCentral\app`).
 torna a navegação no seletor de pastas bem mais simples para as pessoas.
 
 **Atualização de versão:** ver 1.3 — as duas coisas que precisam concordar. A
-versão atual é `1.3`, e o cache correspondente é `ra-1.3`. Na primeira carga após
+versão atual é `1.4`, e o cache correspondente é `ra-1.4`. Na primeira carga após
 atualizar, um recarregamento forçado (Ctrl+F5) ajuda a garantir a troca.
 
 **Compatibilidade:** Chrome e Edge apenas, por decisão de projeto — a File System
@@ -1421,7 +1433,7 @@ transações no servidor).
 | Ausência | Período de afastamento, em dias corridos, sem pontos e sem aprovação. |
 | Semente | Dados iniciais em `catalogo.js` copiados para o `config.json` na primeira oficialização. |
 | *Rail* | Barra de navegação escura à esquerda (v14), que vira barra horizontal em tela estreita. |
-| Tag | Marca do Git que identifica uma versão publicada (`v1.3`); substituiu as pastas por versão do beta. |
+| Tag | Marca do Git que identifica uma versão publicada (`v1.4`); substituiu as pastas por versão do beta. |
 | `versao.js` | O único arquivo onde a versão do aplicativo é escrita; dele derivam a etiqueta do rail, a janela "Sobre" e a chave do cache offline. |
 
 ---
@@ -1592,6 +1604,6 @@ Progressive Web App
 
 ---
 
-*Programa de Resultados — COBIB · Relatório Técnico da versão 1.3 (ago/2026).
+*Programa de Resultados — COBIB · Relatório Técnico da versão 1.4 (ago/2026).
 Documento vivo: ao publicar uma versão nova, atualize as seções afetadas e o
 histórico de versões (1.2).*

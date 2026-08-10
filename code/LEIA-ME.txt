@@ -1,4 +1,4 @@
-PROGRAMA DE RESULTADOS — COBIB (versão 1.3, ago/26 — PWA em rede)
+PROGRAMA DE RESULTADOS — COBIB (versão 1.4, ago/26 — PWA em rede)
 =================================================================
 
 O aplicativo passou a se chamar PROGRAMA DE RESULTADOS na v12 (antes,
@@ -7,7 +7,7 @@ a aba do navegador e para o manifest — ou seja, também para o ícone de
 quem instalar o PWA. A pasta da rede, os arquivos e o formato dos dados
 não mudaram com a troca de nome.
 
-A versão aparece ao lado do título, como etiqueta: "versão 1.3
+A versão aparece ao lado do título, como etiqueta: "versão 1.4
 (ago/26)". Ela é escrita em UM lugar só, o versao.js (ver a seção
 seguinte); publicar uma versão nova é mexer nesse arquivo e marcar a
 tag correspondente no repositório.
@@ -36,7 +36,7 @@ cache, esquecer o segundo tinha um efeito ruim e silencioso: a tela
 anunciava a versão nova enquanto o navegador continuava servindo os
 arquivos da anterior. Agora o index.html preenche a etiqueta e a janela
 a partir do versao.js, e o sw.js monta a chave do cache com
-importScripts do mesmo arquivo ("1.3" vira "ra-1.3").
+importScripts do mesmo arquivo ("1.4" vira "ra-1.4").
 
 A data de "Última atualização" é preenchida à mão, ali do lado. Ela
 poderia vir do GitHub, mas isso exigiria uma consulta pela internet — e
@@ -44,6 +44,67 @@ este aplicativo existe para funcionar sem ela, numa máquina que só
 enxerga a pasta da rede. A data seria justamente a informação que
 faltaria quando mais se precisa dela. Sendo manual, fica na linha
 seguinte à da versão: quem troca uma vê a outra.
+
+O campo de busca ganhou destaque (novidade da v1.4)
+---------------------------------------------------
+As pessoas relataram que o campo "Digite parte da atividade" se perdia
+no meio dos atalhos de "Suas mais registradas". A queixa estava certa, e
+por dois motivos somados.
+
+O primeiro é que o campo e os atalhos tinham exatamente o mesmo
+tratamento: fundo branco e a mesma borda cinza. Some a diferença entre
+"coisa em que se clica" e "coisa em que se digita". O segundo é a
+posição: o campo era a QUARTA caixa idêntica de uma pilha de quatro, a
+três atalhos de distância da pergunta "Qual atividade?" que ele responde.
+
+Destaque por superfície, não por cor
+------------------------------------
+A saída mais óbvia seria pintar o campo de alguma cor. Não dá: neste
+programa verde quer dizer aprovado e dourado quer dizer pendente, e
+emprestar qualquer um dos dois para decoração desmancharia a única
+convenção de cor que existe aqui.
+
+O destaque vem então da SUPERFÍCIE. O campo passou a morar num painel
+com o fundo cinza da página (--papel), dentro do cartão branco, e
+continua branco por dentro. A relação se inverte: em vez de ser mais uma
+caixa branca entre caixas brancas, ele é a única superfície clara dentro
+de um recesso. Nenhuma cor nova entrou na folha de estilo.
+
+Dentro do painel entrou também a frase "Deixe o campo vazio e clique
+para ver todas as 72 atividades", com o link de filtrar por processo:
+é ali que se explica como ver a lista inteira, e ela era o texto mais
+apagado do bloco. Sobre o cinza ela dá 4,87:1 de contraste, acima do
+mínimo de 4,5 para texto normal.
+
+O rótulo saiu de trás da tela
+-----------------------------
+O campo tinha um rótulo jogado para fora da janela com
+"position:absolute; left:-9999px" — uma explicação que só chegava a quem
+usa leitor de tela. Agora ele é visível ("Digite parte da atividade"),
+o que dá ao campo o peso tipográfico que faltava e serve a todo mundo.
+Com o rótulo à vista, o texto de exemplo dentro do campo parou de
+repetir a instrução: ficou só "ex.: catalogar, acervo raro, evento".
+
+A busca subiu, os atalhos desceram
+----------------------------------
+A ordem se inverteu: o campo agora vem logo abaixo de "Busque por
+qualquer parte do texto", e "Suas mais registradas" vem depois.
+
+A ordem antiga é da v9, quando os atalhos eram a novidade e ficavam em
+cima por isso. Mas o campo é o caminho de quem NÃO está repetindo tarefa
+— o caso geral —, e a v14 já tinha percebido o problema pela metade, ao
+cortar os atalhos de cinco para três justamente porque "ocupavam mais
+tela que o próprio campo de busca". Agora o atalho vem depois do caminho
+geral, que é o lugar de um atalho.
+
+Quem repete a mesma tarefa todo dia perde um pouco: precisa passar o
+olho pelo campo antes de chegar aos três botões. É a troca aceita — são
+três botões logo abaixo, e não uma tela adiante.
+
+Nada mudou na busca em si: os mesmos termos em qualquer ordem, os mesmos
+acentos e flexões ignorados, as mesmas setas, Enter e Esc, o mesmo
+filtro por processo e a mesma caixa verde da atividade escolhida. As
+capturas da Ajuda que mostravam esta área foram refeitas.
 
 Ausências ocultas, à espera da gestão (novidade da v1.3)
 --------------------------------------------------------
@@ -218,8 +279,8 @@ Publicar uma versão passou a ser, então, DUAS coisas que precisam
 concordar entre si: o versao.js e a tag do repositório. Até a v1.0 eram
 três — a etiqueta do index.html contava separadamente —, e a v1.1
 juntou as duas primeiras num arquivo só (ver "Sobre o programa", acima).
-A versão do versao.js acompanha a tag: a tag v1.3 corresponde a "1.3" e
-à chave de cache "ra-1.3".
+A versão do versao.js acompanha a tag: a tag v1.4 corresponde a "1.4" e
+à chave de cache "ra-1.4".
 
 A tela foi redesenhada na v14 (novidade)
 ----------------------------------------
@@ -412,7 +473,7 @@ rede não precisa fazer nada, e lançamentos, ausências, aprovações e
 config.json continuam sendo lidos exatamente como antes.
 
 Como o sw.js serve primeiro o que está em cache, cada versão troca a
-chave do cache (esta usa "ra-1.3", montada a partir do versao.js). Sem
+chave do cache (esta usa "ra-1.4", montada a partir do versao.js). Sem
 essa troca, quem já abriu a versão anterior continuaria recebendo a
 tela antiga.
 
