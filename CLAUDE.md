@@ -57,8 +57,12 @@ code/                    the app — one copy, always the current version
   LEIA-ME.txt            the real documentation: what changed and WHY
 Projeto_Design.md             technical report for the current version: architecture,
                               data model, roles, decisions, limitations
-Projeto_Design_until_v8.pdf   the same report for the betas v1–v8 (superseded)
+.gitignore                    blocks config.json, test folders and *.local.js
 ```
+
+The beta-era report (`Projeto_Design_until_v8.pdf`) left the tree in v1.5 — it
+carried real names inside the binary. Recover it from the tag when needed:
+`git show v1.4:Projeto_Design_until_v8.pdf > relatorio-v8.pdf`.
 
 **The two documents differ in purpose.** `LEIA-ME.txt` argues each decision in
 chronological, conversational prose — it is what you update on every behavioral
@@ -140,3 +144,9 @@ hide your change.
 - Write the version number anywhere but `versao.js`, or bump it without tagging.
 - Rewrite or migrate JSON files that users already have in the network folder.
 - Write English into the UI, comments, or LEIA-ME.
+- **Commit internal data.** The repository is public: no real person's name, no
+  password (not even hashed), no lançamento. `catalogo.js` is a seed with empty
+  units; real people are registered by the admin into `config.json`, in the network
+  folder, which is never versioned. Examples in docs and screenshots use the
+  invented cast (Helena Barros, Ana Beatriz Nunes, Carlos Eduardo Prado, Marina
+  Duarte, Roberto Aguiar). See "O que nunca vai para o repositório" in LEIA-ME.

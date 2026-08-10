@@ -1,4 +1,4 @@
-PROGRAMA DE RESULTADOS — COBIB (versão 1.4, ago/26 — PWA em rede)
+PROGRAMA DE RESULTADOS — COBIB (versão 1.5, ago/26 — PWA em rede)
 =================================================================
 
 O aplicativo passou a se chamar PROGRAMA DE RESULTADOS na v12 (antes,
@@ -7,7 +7,7 @@ a aba do navegador e para o manifest — ou seja, também para o ícone de
 quem instalar o PWA. A pasta da rede, os arquivos e o formato dos dados
 não mudaram com a troca de nome.
 
-A versão aparece ao lado do título, como etiqueta: "versão 1.4
+A versão aparece ao lado do título, como etiqueta: "versão 1.5
 (ago/26)". Ela é escrita em UM lugar só, o versao.js (ver a seção
 seguinte); publicar uma versão nova é mexer nesse arquivo e marcar a
 tag correspondente no repositório.
@@ -36,7 +36,7 @@ cache, esquecer o segundo tinha um efeito ruim e silencioso: a tela
 anunciava a versão nova enquanto o navegador continuava servindo os
 arquivos da anterior. Agora o index.html preenche a etiqueta e a janela
 a partir do versao.js, e o sw.js monta a chave do cache com
-importScripts do mesmo arquivo ("1.4" vira "ra-1.4").
+importScripts do mesmo arquivo ("1.5" vira "ra-1.5").
 
 A data de "Última atualização" é preenchida à mão, ali do lado. Ela
 poderia vir do GitHub, mas isso exigiria uma consulta pela internet — e
@@ -44,6 +44,75 @@ este aplicativo existe para funcionar sem ela, numa máquina que só
 enxerga a pasta da rede. A data seria justamente a informação que
 faltaria quando mais se precisa dela. Sendo manual, fica na linha
 seguinte à da versão: quem troca uma vê a outra.
+
+O que nunca vai para o repositório (novidade da v1.5)
+-----------------------------------------------------
+O código deste programa mora num repositório PÚBLICO. Isso é bom para
+quem precisar retomá-lo um dia, e é um problema para os dados de dentro
+da casa. A regra, a partir da v1.5, é curta:
+
+  NOME DE PESSOA, SENHA (mesmo em hash) E LANÇAMENTO NÃO SÃO
+  VERSIONADOS. NUNCA.
+
+Onde as pessoas de verdade ficam
+--------------------------------
+No config.json da pasta central da rede, gravado pelo administrador
+através do painel de Administração — e a pasta da rede não é, nem nunca
+foi, parte do repositório. O catalogo.js do repositório traz apenas a
+SEMENTE: as oito unidades com as listas de servidores VAZIAS, chefias
+nulas e nenhum hash de senha.
+
+Isso não tira função nenhuma do programa. Desde a v6, quem manda em
+pessoas, chefias e senhas é o config.json; a semente só é consultada
+enquanto a pasta ainda não foi oficializada. Consequência a saber: numa
+pasta virgem, o administrador digita o catálogo uma vez, no painel. Onde
+a pasta já está oficializada, ninguém percebe diferença.
+
+Por que o catalogo.js continua versionado, mesmo assim
+------------------------------------------------------
+A leitura literal de "não guarde o arquivo real no GitHub" seria tirar o
+catalogo.js do controle de versão. Isso quebraria o aplicativo: o
+index.html o carrega pelo nome, e num clone novo o script daria 404, as
+listas PROCESSOS e ATIVIDADES ficariam indefinidas e a tela abriria em
+branco — justamente o objetivo nº 1 do projeto, abrir a pasta e
+funcionar. O arquivo fica; o que sai dele são as pessoas.
+
+Processos e atividades continuam ali, e devem continuar: são o catálogo
+de trabalho da COBIB, não dado pessoal.
+
+A grade de proteção
+-------------------
+Existe agora um .gitignore, que antes não existia. Ele barra o
+config.json, as pastas de teste que imitam a rede (unidadeCentral/,
+dados/, teste*/) e qualquer arquivo *.local.js. É a parte mais útil
+disto tudo: sem ele, uma pasta de teste com dados reais entrava num
+"git add -A" sem nenhum aviso.
+
+Capturas de tela seguem a mesma regra: as quatro da Ajuda foram feitas
+com um elenco inventado (Helena Barros, Ana Beatriz Nunes, Carlos
+Eduardo Prado, Marina Duarte, Roberto Aguiar), e é assim que devem ser
+refeitas. O mesmo elenco aparece nos exemplos deste arquivo.
+
+O que isto NÃO desfaz
+---------------------
+Dois nomes reais circularam no repositório desde a importação inicial,
+em arquivos de exemplo. Eles saíram da versão atual, mas continuam nos
+commits antigos: limpar a árvore não reescreve a história, e as cinco
+tags publicadas apontam para dentro dela.
+
+Reescrever a história custaria recriar o hash de todos os commits e das
+cinco tags, quebraria qualquer cópia já clonada e ainda assim não
+garantiria a remoção imediata no GitHub, que mantém objetos antigos
+alcançáveis por um tempo. A decisão tomada foi ACEITAR o que já foi
+publicado — são dois nomes de servidores públicos ligados a uma unidade,
+sem lançamento, sem senha e sem config.json junto — e gastar o esforço
+na prevenção, que é o que evita o próximo vazamento em vez do anterior.
+
+O relatório técnico das versões beta (Projeto_Design_until_v8.pdf) saiu
+da árvore pelo mesmo motivo: os nomes estavam dentro do binário, que não
+dá para editar. Ele continua recuperável pela tag:
+
+  git show v1.4:Projeto_Design_until_v8.pdf > relatorio-v8.pdf
 
 O campo de busca ganhou destaque (novidade da v1.4)
 ---------------------------------------------------
@@ -279,8 +348,8 @@ Publicar uma versão passou a ser, então, DUAS coisas que precisam
 concordar entre si: o versao.js e a tag do repositório. Até a v1.0 eram
 três — a etiqueta do index.html contava separadamente —, e a v1.1
 juntou as duas primeiras num arquivo só (ver "Sobre o programa", acima).
-A versão do versao.js acompanha a tag: a tag v1.4 corresponde a "1.4" e
-à chave de cache "ra-1.4".
+A versão do versao.js acompanha a tag: a tag v1.5 corresponde a "1.5" e
+à chave de cache "ra-1.5".
 
 A tela foi redesenhada na v14 (novidade)
 ----------------------------------------
@@ -473,7 +542,7 @@ rede não precisa fazer nada, e lançamentos, ausências, aprovações e
 config.json continuam sendo lidos exatamente como antes.
 
 Como o sw.js serve primeiro o que está em cache, cada versão troca a
-chave do cache (esta usa "ra-1.4", montada a partir do versao.js). Sem
+chave do cache (esta usa "ra-1.5", montada a partir do versao.js). Sem
 essa troca, quem já abriu a versão anterior continuaria recebendo a
 tela antiga.
 
@@ -555,7 +624,7 @@ etapas ocupavam o topo da tela para sempre, com o mesmo destaque do
 trabalho do dia. Agora elas vivem numa faixa fina que se RECOLHE
 sozinha assim que as duas estão resolvidas:
 
-  ● Conectado a "unidadeCentral" · Christiane Rocha · SEORE · 6h/dia
+  ● Conectado a "unidadeCentral" · Ana Beatriz Nunes · SEORE · 6h/dia
                               [Atualizar dados da rede]     AJUSTES ▾
 
 A faixa reabre sozinha quando volta a haver o que fazer nela — ao
@@ -844,8 +913,8 @@ Onde o dado fica gravado
 ------------------------
 No CABEÇALHO do arquivo de lançamentos da PRÓPRIA pessoa:
 
-  SEORE/lancamentos/christiane-rocha.json
-  { "versao": 3, "unidade": "SEORE", "servidor": "Christiane Rocha",
+  SEORE/lancamentos/ana-beatriz-nunes.json
+  { "versao": 3, "unidade": "SEORE", "servidor": "Ana Beatriz Nunes",
     "cargaHoraria": 6, "atualizadoEm": "...",
     "registros": [ ... ], "ausencias": [ ... ] }
 
@@ -971,8 +1040,8 @@ via File System Access API:
   \\COBIB\AmbienteTrabalho\unidadeCentral\
   ├── SEORE\
   │   ├── lancamentos\
-  │   │   ├── christiane-rocha.json   <- só a Christiane grava
-  │   │   ├── silvia-regina.json      <- só a Silvia grava
+  │   │   ├── ana-beatriz-nunes.json  <- só a Ana grava
+  │   │   ├── marina-duarte.json      <- só a Marina grava
   │   │   └── <chefia-da-seore>.json  <- lançamentos da própria chefia
   │   └── aprovacoes.json             <- só a chefia da SEORE grava
   │                                      (aprova os SERVIDORES da unidade)

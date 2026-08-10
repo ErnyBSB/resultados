@@ -1,13 +1,14 @@
 # Programa de Resultados — COBIB
 ## Relatório Técnico do Projeto
-### Versão 1.4 · Aplicação Web Progressiva (PWA) *client-side*
+### Versão 1.5 · Aplicação Web Progressiva (PWA) *client-side*
 
 > Documento de referência para manutenção e evolução do sistema.
 > Destinado a desenvolvedores humanos e a modelos de IA.
 >
-> Este relatório substitui o *Relatório Técnico v8* (`Projeto_Design_until_v8.pdf`),
-> que descrevia o sistema quando ele ainda se chamava **Registro de Atividades** e
-> estava na versão beta 8. A estrutura das seções foi preservada para facilitar a
+> Este relatório substitui o *Relatório Técnico v8*, que descrevia o sistema quando
+> ele ainda se chamava **Registro de Atividades** e estava na versão beta 8. Aquele
+> PDF saiu da árvore na v1.5, por trazer nomes reais dentro do binário; recupere-o
+> pela tag com `git show v1.4:Projeto_Design_until_v8.pdf > relatorio-v8.pdf`. A estrutura das seções foi preservada para facilitar a
 > comparação; o conteúdo foi revisto de ponta a ponta e acrescido de tudo que
 > entrou entre a v9 e a versão atual.
 >
@@ -116,6 +117,7 @@ vive neste repositório.
 | **1.0** | Saída do beta. Nenhuma mudança de tela, regra ou arquivo em relação à v14 — o que mudou foi o estado do programa (deixou de ser experimento) e a forma de guardar versões (ver 1.3). |
 | **1.1** | Janela **"Sobre o programa"**, alcançável pelo rail mesmo antes da identificação; e a versão do aplicativo passa a ser escrita em **um lugar só** (`versao.js`), de onde saem a etiqueta do rail, a janela e a chave do cache do service worker. |
 | **1.2** | Tela de **Ajuda** embutida, com quatro capturas: objetivo do programa, papéis, organização da tela, como lançar, como buscar, o que a meta mede e como a chefia aprova. Alcançável antes da identificação, como o "Sobre". |
+| **1.5** | Dado interno sai do repositório: `catalogo.js` vira semente sem pessoas, exemplos da documentação passam a usar nomes inventados, o PDF das betas sai da árvore e um `.gitignore` barra `config.json` e pastas de teste. |
 | **1.4** | O campo de busca de atividade ganha **destaque por superfície** (painel recuado, rótulo visível, texto de apoio dentro dele) e passa a vir **antes** dos atalhos de "Suas mais registradas". |
 | **1.3** | A seção **Ausências** fica oculta enquanto a gestão discute o assunto, ligável pelo administrador no `config.json` (`mostrarAusencias`). Nada foi removido: código, dados e o desconto de ausências no cálculo da meta continuam como estavam. |
 
@@ -140,10 +142,10 @@ estar escrita no próprio histórico.
 **Publicar uma versão são duas coisas que precisam concordar entre si:**
 
 1. `code/versao.js` → o número, a etiqueta exibida e a data de atualização;
-2. a *tag* do repositório (`git tag -a v1.4`).
+2. a *tag* do repositório (`git tag -a v1.5`).
 
-A versão do `versao.js` acompanha a tag: a tag `v1.4` corresponde a `"1.4"` e à
-chave de cache `"ra-1.4"`. Até a 1.0 eram **três** coisas — a etiqueta do
+A versão do `versao.js` acompanha a tag: a tag `v1.5` corresponde a `"1.5"` e à
+chave de cache `"ra-1.5"`. Até a 1.0 eram **três** coisas — a etiqueta do
 `index.html` e a `VERSAO` do `sw.js` guardavam, cada uma, a sua cópia do número.
 A v1.1 juntou as duas num arquivo só (ver 3.6): a etiqueta do rail, a janela
 "Sobre o programa" e a chave do cache passaram a derivar dele.
@@ -263,8 +265,8 @@ code/                    o aplicativo — uma cópia só, sempre a versão atual
   icons/                 icon-192.png, icon-512.png
   ajuda/                 as quatro capturas da tela de Ajuda (WebP)
   LEIA-ME.txt            a documentação de verdade: o que mudou e POR QUÊ
-Projeto_Design_until_v8.pdf   relatório técnico das versões beta 1 a 8
 Projeto_Design.md             este documento
+.gitignore                    barra config.json, pastas de teste e *.local.js
 README.md                     apresentação curta do repositório
 CLAUDE.md                     instruções para agentes de IA que editem o repo
 ```
@@ -321,11 +323,11 @@ const PROCESSOS = [                                // 5 processos, 72 atividades
   ] }, ...
 ];
 
-const UNIDADES = {                                 // 8 unidades
-  'SEORE': { chefia: 'Nome' | null, servidores: ['...'] }, ...
+const UNIDADES = {                                 // 8 unidades, SEM pessoas
+  'SEORE': { chefia: null, servidores: [] }, ...   //  (ver 10.5)
 };
-const CHEFIA_GERAL = 'Nome' | null;
-const SENHAS = { 'Nome': 'hash-sha256', ... };     // semente de senhas
+const CHEFIA_GERAL = null;
+const SENHAS = {};                                 // vazio no repositório
 const EXIGIR_SENHA = false;
 const PASTA_REDE = '\\\\COBIB\\AmbienteTrabalho\\unidadeCentral';
 ```
@@ -514,7 +516,7 @@ Cada item do array `registros` em `<unidade>/lancamentos/<pessoa>.json`:
   id:           '1730050000000-a1b2c',   // Date.now() + sufixo aleatório (único)
   data:         '2026-08-03',            // ISO aaaa-mm-dd
   unidade:      'SEORE',                 // ou 'GERAL' para a chefia geral
-  servidor:     'Silvia Regina',         // nome de quem lançou
+  servidor:     'Ana Beatriz Nunes',         // nome de quem lançou
   papel:        'servidor',              // 'servidor' | 'chefia' | 'geral'
   processo:     'Tratar conteúdo ...',
   atividade:    'Realizar o processamento técnico ...',
@@ -542,7 +544,7 @@ mudarem retroativamente. O passado é calculado com a jornada que valia então.
 {
   versao: 3,
   unidade: 'SEORE',
-  servidor: 'Silvia Regina',
+  servidor: 'Ana Beatriz Nunes',
   cargaHoraria: 6,                       // NOVIDADE v11 — jornada atual (8|6|null)
   atualizadoEm: '2026-08-03T12:00:00.000Z',
   registros: [ { ...lançamento... }, ... ],
@@ -593,7 +595,7 @@ Cada item do array `ausencias`, no mesmo arquivo da pessoa:
 {
   id:       'aus-1730050000000-a1b2c',
   unidade:  'SEORE',
-  servidor: 'Silvia Regina',
+  servidor: 'Ana Beatriz Nunes',
   papel:    'servidor',
   tipo:     'ferias',        // chave "k" de TIPOS_AUSENCIA — NÃO renomear
   de:       '2026-08-28',    // primeiro dia (inclusive)
@@ -1229,6 +1231,44 @@ declare `display` passa por cima dele — `.totais` declarava `display:grid` e
 O `!important` aqui não é atalho preguiçoso — é exatamente a intenção: "oculto" tem
 de ganhar de qualquer regra de `display`, inclusive das que forem escritas depois.
 
+### 10.5. O que nunca vai para o repositório (novidade da v1.5)
+
+O código vive num repositório **público**. A regra é curta: **nome de pessoa, senha
+— mesmo em hash — e lançamento não são versionados.**
+
+**Onde ficam as pessoas de verdade:** no `config.json` da pasta central da rede,
+gravado pelo administrador através do painel. O `catalogo.js` do repositório traz
+apenas a **semente**: as oito unidades com `servidores: []`, `chefia: null`,
+`CHEFIA_GERAL = null` e `SENHAS = {}`. Nada se perde com isso, porque desde a v6 é
+o `config.json` que manda em pessoas, chefias e senhas; a semente só é consultada
+enquanto a pasta não foi oficializada. Consequência assumida: numa pasta virgem, o
+administrador digita o catálogo uma vez, no painel.
+
+**Por que o `catalogo.js` continua versionado.** Tirá-lo do controle de versão — a
+leitura literal de "não guarde o arquivo real" — quebraria o aplicativo: o
+`index.html` o carrega pelo nome, e num clone novo o script daria 404, `PROCESSOS`
+e `ATIVIDADES` ficariam indefinidas e a tela abriria em branco. O arquivo fica; o
+que sai dele são as pessoas. Processos e atividades permanecem: são o catálogo de
+trabalho da COBIB, não dado pessoal.
+
+**A grade:** o `.gitignore`, que antes não existia, barra `config.json`, as pastas
+de teste que imitam a rede (`unidadeCentral/`, `dados/`, `teste*/`) e `*.local.js`.
+É a parte mais útil da medida — sem ela, uma pasta de teste com dados reais entrava
+num `git add -A` sem aviso nenhum.
+
+**Capturas de tela** seguem a mesma regra e usam um elenco inventado; o mesmo
+elenco aparece nos exemplos deste relatório e do LEIA-ME.
+
+**O que a medida não desfaz.** Dois nomes reais circularam no repositório desde a
+importação inicial e continuam nos commits antigos: limpar a árvore não reescreve a
+história, e as cinco tags publicadas apontam para dentro dela. A decisão registrada
+foi **aceitar** o que já está publicado — dois nomes de servidores públicos ligados
+a uma unidade, sem lançamento, sem senha e sem `config.json` junto — em vez de
+reescrever a história, o que recriaria o hash de todos os commits e das tags,
+quebraria clones existentes e ainda assim não garantiria remoção imediata no
+GitHub. O PDF das betas saiu da árvore pelo mesmo motivo: os nomes estavam dentro
+do binário, que não se edita.
+
 ---
 
 ## 11. PWA, execução e implantação
@@ -1248,7 +1288,7 @@ rede pode hospedar o app (ex.: `unidadeCentral\app`).
 torna a navegação no seletor de pastas bem mais simples para as pessoas.
 
 **Atualização de versão:** ver 1.3 — as duas coisas que precisam concordar. A
-versão atual é `1.4`, e o cache correspondente é `ra-1.4`. Na primeira carga após
+versão atual é `1.5`, e o cache correspondente é `ra-1.5`. Na primeira carga após
 atualizar, um recarregamento forçado (Ctrl+F5) ajuda a garantir a troca.
 
 **Compatibilidade:** Chrome e Edge apenas, por decisão de projeto — a File System
@@ -1433,7 +1473,7 @@ transações no servidor).
 | Ausência | Período de afastamento, em dias corridos, sem pontos e sem aprovação. |
 | Semente | Dados iniciais em `catalogo.js` copiados para o `config.json` na primeira oficialização. |
 | *Rail* | Barra de navegação escura à esquerda (v14), que vira barra horizontal em tela estreita. |
-| Tag | Marca do Git que identifica uma versão publicada (`v1.4`); substituiu as pastas por versão do beta. |
+| Tag | Marca do Git que identifica uma versão publicada (`v1.5`); substituiu as pastas por versão do beta. |
 | `versao.js` | O único arquivo onde a versão do aplicativo é escrita; dele derivam a etiqueta do rail, a janela "Sobre" e a chave do cache offline. |
 
 ---
@@ -1604,6 +1644,6 @@ Progressive Web App
 
 ---
 
-*Programa de Resultados — COBIB · Relatório Técnico da versão 1.4 (ago/2026).
+*Programa de Resultados — COBIB · Relatório Técnico da versão 1.5 (ago/2026).
 Documento vivo: ao publicar uma versão nova, atualize as seções afetadas e o
 histórico de versões (1.2).*
