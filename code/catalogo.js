@@ -27,23 +27,33 @@ const TIPOS_AUSENCIA = [
   { k: "outro",   rotulo: "Outro afastamento" }
 ];
 
-/* Preencha os servidores e a chefia de cada unidade.
-   "chefia": null exibe campo livre para digitar o nome;
-   informado aqui, o nome já vem preenchido na identificação. */
+/* SEMENTE, e não cadastro. Este arquivo vive num repositório PÚBLICO:
+   nome de servidor NÃO entra aqui. As pessoas de verdade são cadastradas
+   pelo administrador, no painel de Administração, e ficam no config.json
+   da pasta central da rede — que nunca é versionado (ver .gitignore e a
+   seção "O que nunca vai para o repositório", no LEIA-ME).
+
+   Estas listas vazias só valem enquanto a pasta ainda não foi
+   oficializada; a partir da oficialização, o config.json manda em tudo o
+   que diga respeito a pessoas, chefias e senhas.
+
+   "chefia": null exibe campo livre para digitar o nome. */
 const UNIDADES = {
   "SEACE":  { chefia: null, servidores: [] },
   "SEARI":  { chefia: null, servidores: [] },
   "SECAQ":  { chefia: null, servidores: [] },
   "SEDIN":  { chefia: null, servidores: [] },
   "SENOV":  { chefia: null, servidores: [] },
-  "SEORE":  { chefia: "Exemplo Chefia SEORE", servidores: ["Christiane Rocha", "Silvia Regina"] },
+  "SEORE":  { chefia: null, servidores: [] },
   "SEPERI": { chefia: null, servidores: [] },
   "SEREN":  { chefia: null, servidores: [] }
 };
 
 /* Nome da chefia geral (opcional; null exibe campo livre). Os
-   lançamentos da chefia geral ficam na pasta GERAL da rede. */
-const CHEFIA_GERAL = "Exemplo Chefia Geral";  // substitua pelo nome real
+   lançamentos da chefia geral ficam na pasta GERAL da rede. Como no
+   restante deste arquivo, o nome real é cadastrado pelo administrador,
+   no painel — não aqui. */
+const CHEFIA_GERAL = null;
 
 const PROCESSOS = [
   {
@@ -154,10 +164,14 @@ const PROCESSOS = [
    Atenção: isto é uma barreira contra uso casual de identidade
    alheia. O controle de acesso real deve vir das permissões
    NTFS/AD da pasta da rede (ver LEIA-ME).
+
+   Este mapa fica VAZIO no repositório. Senha nenhuma, nem em hash, é
+   versionada: as senhas de verdade são definidas pelo administrador, no
+   painel, e ficam no config.json da pasta central.
    ========================================================= */
 const EXIGIR_SENHA = false;
 const SENHAS = {
-  // "Christiane Rocha": "cole-aqui-o-hash-gerado",
+  // "Nome Da Pessoa": "cole-aqui-o-hash-gerado",
 };
 
 /* Caminho da pasta central exibido como orientação na etapa 1
