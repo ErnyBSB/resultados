@@ -53,8 +53,17 @@ code/                    the app — one copy, always the current version
   echarts.min.js         vendored charting lib
   icons/                 icon-192.png, icon-512.png — required for offline install
   LEIA-ME.txt            the real documentation: what changed and WHY
-Projeto_Design_until_v8.pdf   design report covering the betas v1–v8
+Projeto_Design_v1.0.md        technical report for the current version: architecture,
+                              data model, roles, decisions, limitations
+Projeto_Design_until_v8.pdf   the same report for the betas v1–v8 (superseded)
 ```
+
+**The two documents differ in purpose.** `LEIA-ME.txt` argues each decision in
+chronological, conversational prose — it is what you update on every behavioral
+change. `Projeto_Design_v1.0.md` is the structured reference (numbered sections,
+schemas, tables) for someone arriving without context; update it when the
+architecture, the data model, the roles or the limitations move, and add the
+version's row to its history table (section 1.2) when publishing a tag.
 
 ## Working conventions
 

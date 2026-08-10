@@ -42,11 +42,17 @@ code/                    o aplicativo
   echarts.min.js         biblioteca de gráficos (embarcada, não baixada)
   icons/                 ícones do PWA
   LEIA-ME.txt            a documentação de verdade: o que faz, e por quê
-Projeto_Design_until_v8.pdf   relatório de design das versões beta 1 a 8
+Projeto_Design_v1.0.md        relatório técnico da versão 1.0 (atual)
+Projeto_Design_until_v8.pdf   o mesmo relatório para as versões beta 1 a 8
 ```
 
 `LEIA-ME.txt` é a leitura principal para quem for mexer no programa. Ele não é
 uma lista de mudanças: explica o motivo de cada decisão e admite as limitações.
+
+`Projeto_Design_v1.0.md` é o relatório técnico do projeto — arquitetura, modelo de
+dados, perfis, decisões e limitações —, escrito para quem chega sem conhecer o
+código. Ele substitui o `Projeto_Design_until_v8.pdf`, que continua aqui como
+registro de como o sistema era na beta 8.
 
 ## Versões
 
