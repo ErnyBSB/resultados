@@ -272,9 +272,29 @@ tr.pendente td{background:#FEFBF6}
   font-weight:600; font-size:13px}
 .lista-dia .txt{min-width:0; font-size:12.5px; line-height:1.4}
 
-/* ---------- busca de atividade ---------- */
+/* ---------- busca de atividade ----------
+   O campo se confundia com os atalhos de "Suas mais registradas": os dois
+   tinham a MESMA borda e o MESMO fundo, e o campo era a quarta caixa
+   igual de uma pilha de quatro. O destaque não podia vir de cor — verde é
+   aprovado e dourado é pendente, e emprestar qualquer um dos dois para
+   decoração desmancharia a única convenção de cor do programa. Vem de
+   SUPERFÍCIE: o painel recua para o cinza da página e o campo continua
+   branco, de modo que ele passa a ser a única superfície clara ali
+   dentro — o contrário do que era. */
+.busca-bloco{background:var(--papel); border:1px solid var(--linha);
+  border-radius:var(--raio); padding:14px; margin-bottom:16px}
+.busca-bloco .rot{display:block; font-size:12.5px; font-weight:600;
+  color:var(--tinta); margin:0 0 7px}
+/* A dica de apoio fica DENTRO do painel, como pede a issue: é ali que se
+   explica como ver a lista inteira. Sobre o cinza ela dá 4,87:1 de
+   contraste — acima do mínimo de 4,5 exigido para texto normal. */
+.busca-bloco .dica{margin-top:9px}
+.busca-bloco #campoProcesso{margin-top:10px}
 .busca{position:relative}
-.busca input{padding-right:34px}
+/* Borda um ponto mais firme que a dos demais campos: dentro do recesso,
+   é o único elemento em que se digita. */
+.busca input{padding-right:34px; border-color:#C6CDC8}
+.busca input:focus{border-color:var(--verde)}
 .busca .limpar{position:absolute; right:4px; top:50%; transform:translateY(-50%);
   background:none; border:0; color:var(--grafite); cursor:pointer; font-size:17px;
   line-height:1; padding:7px 8px; display:none}
@@ -297,7 +317,9 @@ tr.pendente td{background:#FEFBF6}
   color:var(--verde); font-weight:600; margin-bottom:3px}
 .escolhida .t{font-size:13px; line-height:1.4}
 .escolhida .p{display:block; font-size:11px; color:var(--grafite); margin-top:3px}
-.frequentes{display:flex; flex-direction:column; gap:8px; margin-bottom:12px}
+/* Agora é o ÚLTIMO bloco do cartão: o respiro de baixo passou a ser o
+   próprio padding do cartão. */
+.frequentes{display:flex; flex-direction:column; gap:8px}
 .freq{border:1px solid var(--linha); background:var(--ficha); border-radius:var(--raio-p);
   padding:9px 12px; font:inherit; font-size:12.5px; text-align:left; cursor:pointer;
   color:var(--tinta); line-height:1.4}
@@ -579,28 +601,42 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
             </div>
           </div>
 
-          <div id="campoFrequentes" hidden>
-            <span class="rotulo">Suas mais registradas</span>
-            <div class="frequentes" id="frequentes"></div>
+          <!-- A busca vem ANTES dos atalhos, e não depois. A ordem da v9 punha
+               "Suas mais registradas" primeiro porque os atalhos eram a
+               novidade; na prática o campo é o caminho de quem NÃO está
+               repetindo tarefa — o caso geral — e estava a três caixas de
+               distância da pergunta que responde. O atalho vem depois do
+               caminho geral, que é o lugar de um atalho. -->
+          <div class="busca-bloco">
+            <!-- Rótulo VISÍVEL. Era um <label> jogado para fora da tela com
+                 left:-9999px, isto é, uma explicação que só o leitor de tela
+                 recebia. Visível, ele serve a todo mundo e ainda dá ao campo o
+                 peso tipográfico que faltava. Com ele à vista, o placeholder
+                 não precisa repetir a instrução: fica só com os exemplos. -->
+            <label class="rot" for="inpAtividade">Digite parte da atividade</label>
+            <div class="busca" id="busca">
+              <input type="text" id="inpAtividade" autocomplete="off" role="combobox"
+                     aria-expanded="false" aria-controls="listaAtividades" aria-autocomplete="list"
+                     placeholder="ex.: catalogar, acervo raro, evento">
+              <button type="button" class="limpar" id="btnLimparBusca" aria-label="Limpar busca">&times;</button>
+              <div class="lista" id="listaAtividades" role="listbox" data-aberta="false"></div>
+            </div>
+
+            <p class="dica">
+              Deixe o campo vazio e clique para ver todas as <span id="qtdAtividades">…</span> atividades, ou
+              <button type="button" class="ligacao" id="btnFiltrarProc">filtrar por processo de trabalho</button>
+            </p>
+            <div id="campoProcesso" hidden>
+              <label class="rotulo" for="selProcesso">Processo de trabalho</label>
+              <select id="selProcesso"></select>
+            </div>
           </div>
 
-          <div class="busca" id="busca">
-            <label class="rotulo" for="inpAtividade" style="position:absolute;left:-9999px">Atividade</label>
-            <input type="text" id="inpAtividade" autocomplete="off" role="combobox"
-                   aria-expanded="false" aria-controls="listaAtividades" aria-autocomplete="list"
-                   placeholder="Digite parte da atividade — ex.: catalogar, acervo, evento">
-            <button type="button" class="limpar" id="btnLimparBusca" aria-label="Limpar busca">&times;</button>
-            <div class="lista" id="listaAtividades" role="listbox" data-aberta="false"></div>
-          </div>
           <div class="escolhida" id="atvEscolhida" data-tem="false" aria-live="polite"></div>
 
-          <p class="dica" style="margin-top:10px">
-            Deixe o campo vazio e clique para ver todas as <span id="qtdAtividades">…</span> atividades, ou
-            <button type="button" class="ligacao" id="btnFiltrarProc">filtrar por processo de trabalho</button>
-          </p>
-          <div id="campoProcesso" hidden>
-            <label class="rotulo" for="selProcesso">Processo de trabalho</label>
-            <select id="selProcesso"></select>
+          <div id="campoFrequentes" hidden>
+            <span class="rotulo" style="margin-top:16px">Suas mais registradas</span>
+            <div class="frequentes" id="frequentes"></div>
           </div>
         </div>
 
