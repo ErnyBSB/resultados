@@ -12,8 +12,10 @@
 > entrou entre a v9 e a versão atual.
 >
 > O relatório descreve **a versão em uso** e acompanha o `code/`: não há uma cópia
-> por versão. O nome do arquivo guarda a versão em que ele nasceu; o que estava
-> escrito em cada versão publicada se recupera pela tag correspondente.
+> por versão, e por isso o nome do arquivo não traz número — pela regra do
+> repositório, versão é *tag*, não nome de arquivo. O que estava escrito em cada
+> versão publicada se recupera pela tag correspondente (`git show v1.0:Projeto_Design_v1.0.md`
+> para as anteriores à renomeação).
 
 ---
 
@@ -258,7 +260,7 @@ code/                    o aplicativo — uma cópia só, sempre a versão atual
   icons/                 icon-192.png, icon-512.png
   LEIA-ME.txt            a documentação de verdade: o que mudou e POR QUÊ
 Projeto_Design_until_v8.pdf   relatório técnico das versões beta 1 a 8
-Projeto_Design_v1.0.md        este documento
+Projeto_Design.md             este documento
 README.md                     apresentação curta do repositório
 CLAUDE.md                     instruções para agentes de IA que editem o repo
 ```
