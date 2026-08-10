@@ -85,10 +85,11 @@ button{font-family:inherit}
   background:var(--dourado-vivo); color:#221909; border-radius:999px;
   min-width:20px; text-align:center; padding:1px 6px}
 
-/* "Sobre" vive FORA da navegação (ver o comentário no HTML), então ganha
-   uma linha de separação: sem ela pareceria o último item do grupo de
-   cima, que é justamente o que ele não é. */
-.rail-sobre{padding:8px 10px; border-top:1px solid var(--rail-linha)}
+/* "Ajuda" e "Sobre" vivem FORA da navegação (ver o comentário no HTML),
+   então ganham uma linha de separação: sem ela pareceriam os últimos
+   itens do grupo de cima, que é justamente o que não são. */
+.rail-extra{display:flex; flex-direction:column; gap:2px;
+  padding:8px 10px; border-top:1px solid var(--rail-linha)}
 .rail-pe{margin-top:auto; padding:14px 16px 16px; border-top:1px solid var(--rail-linha);
   display:flex; flex-direction:column; gap:10px}
 .pessoa{display:flex; align-items:center; gap:10px}
@@ -353,6 +354,29 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
 .recibo-rodape{display:flex; align-items:center; justify-content:space-between;
   gap:16px; margin-top:20px; padding-top:16px; border-top:1px solid var(--linha)}
 .recibo-rodape b{font-weight:600}
+
+/* ---------- ajuda ----------
+   Medida de leitura limitada: linha longa demais faz o olho perder a
+   volta, e esta é a única tela do aplicativo feita para ser LIDA, e não
+   preenchida. */
+.ajuda{max-width:80ch}
+.ajuda h3{font-size:13.5px; font-weight:600; margin:18px 0 6px}
+.ajuda h3:first-child{margin-top:0}
+.ajuda p, .ajuda ul{margin:0 0 10px; font-size:13.5px}
+.ajuda ul{padding-left:20px}
+.ajuda li{margin-bottom:5px}
+.ajuda li:last-child{margin-bottom:0}
+.ajuda figure{margin:14px 0 0}
+/* max-width, e não width: a captura da barra de navegação tem 244px de
+   largura real, e esticá-la até a coluna a deixaria borrada. */
+.ajuda img{display:block; max-width:100%; height:auto;
+  border:1px solid var(--linha); border-radius:var(--raio-p)}
+.ajuda figcaption{margin-top:6px; font-size:11.5px; color:var(--grafite)}
+.ajuda table{min-width:0}
+.ajuda .destaque{background:var(--verde-suave); border:1px solid var(--verde-borda);
+  border-radius:var(--raio-p); padding:11px 13px; margin:12px 0 0}
+.ajuda .destaque p:last-child{margin-bottom:0}
+
 /* ---------- sobre o programa ---------- */
 .sobre-corpo{margin:16px 0 0; font-size:13.5px}
 .sobre-corpo p{margin:0 0 9px}
@@ -376,8 +400,8 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
   .rail-grupo{display:none}
   .rail-item{width:auto; white-space:nowrap; padding:8px 12px}
   /* Sem rail em coluna não há "abaixo do último item" nem linha a
-     separar: "Sobre" vira mais um botão na faixa que rola. */
-  .rail-sobre{border-top:0; padding:0 12px 8px}
+     separar: os dois viram botões numa faixa própria, lado a lado. */
+  .rail-extra{flex-direction:row; gap:6px; border-top:0; padding:0 12px 8px}
   .rail-item .rail-num,.rail-item .rail-badge{margin-left:6px}
   .rail-pe{flex-direction:row; align-items:center; flex-wrap:wrap; gap:12px;
     padding:12px 16px}
@@ -436,12 +460,14 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
       <span class="ponto"></span>Administração</button>
   </div>
 
-  <!-- "Sobre" fica FORA do #railNav de propósito. O nav some enquanto
-       ninguém se identificou, e a identidade do programa — nome, licença,
-       de onde veio — é justamente o que se quer poder consultar ANTES de
-       entrar. Fora dele, o botão também não é lido como o último item do
-       grupo "Gestão", ao qual não pertence. -->
-  <div class="rail-sobre">
+  <!-- "Ajuda" e "Sobre" ficam FORA do #railNav de propósito. O nav some
+       enquanto ninguém se identificou, e é justamente antes de entrar que
+       se pergunta o que é este programa e como conectar a pasta. Fora
+       dele, os dois também não são lidos como itens do grupo "Gestão", ao
+       qual não pertencem. -->
+  <div class="rail-extra">
+    <button type="button" class="rail-item" id="btnAjuda" data-vista="ajuda">
+      <span class="ponto"></span>Ajuda</button>
     <button type="button" class="rail-item" id="btnSobre">
       <span class="ponto"></span>Sobre o programa</button>
   </div>
@@ -932,6 +958,239 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
   </div>
 </section>
 
+<!-- ====================== AJUDA ======================
+     Tela, e não páginas HTML soltas: páginas separadas precisariam de uma
+     segunda folha de estilo (a deste aplicativo é embutida) e tirariam a
+     pessoa de dentro do programa. A ajuda também não mora no GitHub: quem
+     clica aqui está travado AGORA, e numa máquina sem internet — que é o
+     cenário para o qual este aplicativo existe — um link externo não abre.
+     As capturas ficam em ajuda/ e estão no cache do sw.js. -->
+<section class="vista" id="vAjuda" hidden>
+  <div class="topo">
+    <div class="titulo">
+      <h1>Ajuda</h1>
+      <p class="sub">O que é o programa, quem faz o quê e como usar no dia a dia.
+        Esta tela funciona sem internet, como o resto do aplicativo.</p>
+    </div>
+    <div class="controles">
+      <button type="button" class="acao sec mini" id="btnVoltarAjuda">← Voltar</button>
+    </div>
+  </div>
+
+  <div class="corpo">
+    <div class="ajuda">
+
+      <div class="cartao">
+        <h2>O que é o Programa de Resultados</h2>
+        <p class="dica">Para que ele serve — e para que ele não serve.</p>
+        <div style="margin-top:14px">
+          <p>É onde cada pessoa registra, no dia em que faz, as atividades que
+            executou. Cada atividade vem de um catálogo comum a todas as unidades e
+            vale pontos conforme a sua <b>complexidade</b>: baixa 5, média 10, alta 15.
+            A chefia confere e aprova o que foi lançado.</p>
+          <p>O objetivo é enxergar o trabalho da COBIB pelo que ele produz —
+            quais processos consomem esforço, de que natureza é esse esforço e como
+            ele se distribui entre as equipes.</p>
+          <div class="destaque">
+            <p><b>O que ele não é:</b> não é controle de ponto nem de frequência. Ele
+              não sabe a que horas você chegou nem quantos dias trabalhou; sabe
+              apenas o que foi registrado. Um dia sem lançamento não é lido como dia
+              sem trabalho — é um dia sobre o qual o sistema nada sabe.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="cartao">
+        <h2>Quem é quem</h2>
+        <p class="dica">O papel vem da configuração central, e não de uma escolha na
+          tela: é ele que define quem aprova o quê.</p>
+        <div class="rolagem" style="margin-top:14px">
+          <table>
+            <thead>
+              <tr><th>Papel</th><th>Registra?</th><th>Aprova</th><th>É aprovado por</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Servidor(a)</td><td>Sim</td><td>—</td><td>A chefia da unidade</td></tr>
+              <tr><td>Chefia da unidade</td><td>Sim</td><td>Os servidores da sua unidade</td><td>A chefia geral</td></tr>
+              <tr><td>Chefia geral</td><td>Sim</td><td>Qualquer lançamento</td><td>Ela mesma</td></tr>
+              <tr><td>Administrador</td><td>Não</td><td>— (não aprova)</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Duas regras que costumam gerar dúvida</h3>
+        <ul>
+          <li>A chefia de unidade <b>não aprova a si mesma</b>: os lançamentos dela
+            ficam pendentes até a chefia geral agir.</li>
+          <li>Quem aprovou é quem pode desfazer. Se a chefia geral aprovou um
+            lançamento seu, a chefia da unidade não consegue desmarcá-lo — e
+            vice-versa. A tela avisa quando isso acontece, em vez de fingir que
+            funcionou.</li>
+        </ul>
+      </div>
+
+      <div class="cartao">
+        <h2>Como a tela se organiza</h2>
+        <p class="dica">Uma tela de cada vez, escolhida na barra escura à esquerda.</p>
+        <div style="margin-top:14px">
+          <p>A barra separa o que você <b>faz</b> do que você <b>fiscaliza</b>. Quem
+            não fiscaliza nada vê só o primeiro grupo:</p>
+          <ul>
+            <li><b>Lançar atividade</b> — o registro do dia.</li>
+            <li><b>Meu mês</b> — seus lançamentos, seus pontos e a meta alcançada.</li>
+            <li><b>Ausências</b> — períodos de afastamento.</li>
+            <li><b>Painel</b> (chefias) — aprovar, analisar o mês e conferir ausências.</li>
+          </ul>
+          <p>Os números ao lado dos itens dizem se vale entrar: o percentual em "Meu
+            mês" e a quantidade de lançamentos esperando você, no painel.</p>
+          <figure>
+            <img src="ajuda/rail.webp" loading="lazy"
+                 alt="Barra de navegação escura à esquerda, com o grupo Meu trabalho
+                      (Lançar atividade, Meu mês com o percentual ao lado, Ausências)
+                      e o grupo Gestão (Painel da unidade com a contagem de pendentes),
+                      e abaixo os itens Ajuda e Sobre o programa.">
+            <figcaption>A barra de navegação, como a vê uma chefia de unidade.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="cartao">
+        <h2>Como lançar uma atividade</h2>
+        <p class="dica">Três passos numerados, uma atividade por vez.</p>
+        <div style="margin-top:14px">
+          <ul>
+            <li><b>Confira a data</b>, no alto à direita. Ela vem com o dia de hoje,
+              mas pode ser mudada para registrar um dia anterior.</li>
+            <li><b>Passo 1 — qual atividade.</b> Busque pelo texto ou use um dos
+              atalhos de "Suas mais registradas".</li>
+            <li><b>Passo 2 — complexidade.</b> Só ficam disponíveis as complexidades
+              que aquela atividade admite; quando ela admite uma só, já vem marcada.
+              A pontuação é consequência da complexidade, não uma escolha à parte.</li>
+            <li><b>Passo 3 — observações</b> (opcional): o número do processo, o
+              título da obra, o que ajudar a lembrar depois.</li>
+          </ul>
+          <p>Ao clicar em <b>Registrar atividade</b> abre-se um recibo com o que foi
+            gravado, que você fecha à mão. À direita, a coluna mostra na hora quanto
+            já foi lançado no dia e quanto falta para a meta.</p>
+          <p>Abaixo do botão aparece o arquivo em que aquilo vai ser gravado. Você
+            só escreve no seu próprio arquivo — é assim que duas pessoas nunca
+            atrapalham o registro uma da outra.</p>
+          <figure>
+            <img src="ajuda/lancar.webp" loading="lazy"
+                 alt="Tela de lançamento: à esquerda os três passos numerados
+                      (atividade, complexidade e observações); à direita o total do
+                      dia, quanto falta para a meta e a lista do que já foi lançado.">
+            <figcaption>A tela de lançamento e o retorno imediato, à direita.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="cartao">
+        <h2>Como achar a atividade certa</h2>
+        <p class="dica">Não é preciso saber a que processo de trabalho ela pertence.</p>
+        <div style="margin-top:14px">
+          <ul>
+            <li><b>Digite qualquer parte do texto</b> — "catalogar", "acervo raro",
+              "evento". Vários termos podem ser digitados em qualquer ordem.</li>
+            <li><b>Acentos e flexões são ignorados:</b> quem digita "catalogar"
+              encontra "catalogação"; "indexar" encontra "indexação".</li>
+            <li><b>Deixe o campo vazio e clique</b> para percorrer a lista inteira,
+              em ordem alfabética.</li>
+            <li><b>Pelo teclado:</b> setas para percorrer, Enter para escolher, Esc
+              para fechar.</li>
+            <li>Se preferir partir do processo de trabalho, use o link
+              <b>filtrar por processo</b>, abaixo do campo.</li>
+          </ul>
+          <p>Ao escolher, o texto completo da atividade fica visível antes de
+            registrar — nada de texto cortado.</p>
+          <p>Se nada aparecer, tente outra palavra: talvez o catálogo chame a mesma
+            tarefa por outro nome. Faltando a atividade no catálogo, fale com a
+            chefia — quem edita o catálogo é a administração.</p>
+          <figure>
+            <img src="ajuda/busca.webp" loading="lazy"
+                 alt="Campo de busca com uma palavra digitada e a lista de atividades
+                      encontradas logo abaixo, cada uma com o processo de trabalho a
+                      que pertence e o trecho procurado destacado.">
+            <figcaption>A busca filtra enquanto você digita e destaca o trecho procurado.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="cartao">
+        <h2>Ausências, e o que a meta mede</h2>
+        <p class="dica">Dois pontos que costumam ser lidos errado.</p>
+        <div style="margin-top:14px">
+          <h3>Ausências</h3>
+          <p>Férias, licenças, banco de horas e abonos são registrados como
+            <b>período</b> — primeiro e último dia —, na tela Ausências. Não valem
+            pontos e não passam por aprovação. Servem para tirar da conta da meta os
+            dias em que não havia como trabalhar.</p>
+          <h3>O percentual da meta</h3>
+          <p>A meta é por <b>dia trabalhado</b>: 15 pontos para quem cumpre 8 horas,
+            11 para quem cumpre 6. O percentual é a média <b>apenas dos dias em que
+            você lançou alguma coisa</b>; dias sem lançamento e dias de ausência
+            ficam fora do cálculo.</p>
+          <div class="destaque">
+            <p>Por isso ele mede <b>intensidade, não assiduidade</b>: quem lançou em
+              2 dias e bateu a meta nos 2 aparece com 100%, igual a quem lançou em
+              20. Para julgar volume, olhe os pontos e o número de dias, que estão
+              sempre ao lado do percentual.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="cartao">
+        <h2>Para as chefias: aprovar</h2>
+        <p class="dica">A aba Aprovações, no painel, é o caminho normal.</p>
+        <div style="margin-top:14px">
+          <ul>
+            <li>Cada linha traz um botão <b>Aprovar</b>. Depois de aprovado, o botão
+              dá lugar à etiqueta verde e a um <b>desfazer</b>.</li>
+            <li><b>Aprovar pendentes</b> aprova de uma vez tudo o que está na tela,
+              respeitando os filtros de mês, pessoa e situação.</li>
+            <li>Os lançamentos aparecem agrupados por dia, com o total do dia na
+              faixa que abre o grupo.</li>
+            <li>As outras duas abas mostram a <b>visão do mês</b> (indicadores,
+              gráficos e resumo por pessoa) e as <b>ausências</b> da sua alçada.</li>
+          </ul>
+          <p>Os dados que você vê são os que estavam na pasta da rede quando a tela
+            foi aberta. Para ver o que outras pessoas gravaram depois disso, use
+            <b>Atualizar dados da rede</b>, no pé da barra à esquerda.</p>
+          <figure>
+            <img src="ajuda/painel.webp" loading="lazy"
+                 alt="Painel da unidade na aba Aprovações: lançamentos agrupados por
+                      dia, com o total do dia na faixa de cabeçalho e um botão Aprovar
+                      em cada linha pendente.">
+            <figcaption>O painel da chefia, na aba Aprovações.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="cartao">
+        <h2>Quando algo não funciona</h2>
+        <div style="margin-top:14px">
+          <ul>
+            <li><b>"Pasta não conectada"</b> — clique em <b>Conectar pasta</b> e
+              escolha a pasta central da rede. A escolha fica memorizada neste
+              computador; nas próximas vezes basta reconectar.</li>
+            <li><b>Seu nome não aparece na lista</b> — a pasta pode ainda não ter
+              sido oficializada pelo administrador, ou seu nome não está no cadastro.
+              Fale com a administração.</li>
+            <li><b>O programa recusou gravar</b> dizendo que um arquivo está
+              ilegível — isso é proposital: gravar por cima apagaria os lançamentos
+              já registrados. Leve o nome do arquivo ao administrador.</li>
+            <li><b>Um lançamento errado</b> pode ser excluído por você mesmo
+              enquanto estiver pendente. Depois de aprovado, só a administração
+              consegue excluí-lo.</li>
+            <li>O programa funciona apenas no <b>Chrome</b> e no <b>Edge</b>: são os
+              navegadores que permitem gravar direto na pasta da rede.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 </main>
 </div>
 
@@ -1060,26 +1319,34 @@ function estadoConexao(ok, txt) {
    apenas esconde o que não é da alçada da pessoa. */
 const VISTAS = {
   lancar: "vLancar", mes: "vMes", aus: "vAus",
-  painel: "vPainel", adm: "vAdm", entrada: "vEntrada"
+  painel: "vPainel", adm: "vAdm", ajuda: "vAjuda", entrada: "vEntrada"
 };
 let vistaAtual = "entrada";
+/* De onde se entrou na ajuda, para o botão "Voltar" devolver ao lugar.
+   Antes da identificação a lista de telas está oculta, então sem isto a
+   ajuda seria uma sala sem porta. */
+let vistaAnterior = "entrada";
 
 /* Uma tela só é alcançável se o PAPEL a alcança. O rail já esconde o que
    não é da alçada, mas a regra mora aqui também: esconder um botão não é
    controle de acesso, e uma chamada vinda de outro caminho não pode
    abrir uma tela que a pessoa não deveria ter. */
 function podeVer(v) {
-  if (v === "entrada") return true;
+  /* A ajuda é de todos, inclusive do administrador e de quem ainda não se
+     identificou: parte das dúvidas é justamente sobre como entrar. */
+  if (v === "entrada" || v === "ajuda") return true;
   if (v === "adm") return ehAdm();
   if (v === "painel") return ehChefia() || ehGeral() || ehAdm();
   return !ehAdm();   // lancar, mes, aus: quem registra atividade
 }
 function irPara(v) {
   if (!VISTAS[v]) return;
-  /* Sem identidade só existe a entrada — evita que um clique no rail
-     leve a uma tela que ainda não tem dado nenhum para mostrar. */
-  if (v !== "entrada" && !(dirRaiz && ident)) v = "entrada";
+  /* Sem identidade só existem a entrada e a ajuda — evita que um clique no
+     rail leve a uma tela que ainda não tem dado nenhum para mostrar. A
+     ajuda escapa porque não depende de dado algum. */
+  if (v !== "entrada" && v !== "ajuda" && !(dirRaiz && ident)) v = "entrada";
   if (!podeVer(v)) v = ehAdm() ? "adm" : "lancar";
+  if (v === "ajuda" && vistaAtual !== "ajuda") vistaAnterior = vistaAtual;
   vistaAtual = v;
   for (const [nome, id] of Object.entries(VISTAS)) $(id).hidden = nome !== v;
   /* aria-current="page" (e não a mera presença do atributo): é o valor
@@ -1132,6 +1399,9 @@ function ajustarConfig() {
     : "";
   $("railIniciais").textContent = ident ? iniciais(ident.nome) : "";
   ajustarRail();
+  /* Quem está lendo a ajuda fica onde está: a reconexão silenciosa da pasta
+     acontece sozinha ao abrir e arrancaria a pessoa da leitura. */
+  if (vistaAtual === "ajuda") return;
   if (!pronto) irPara("entrada");
   else if (vistaAtual === "entrada") irPara(ehAdm() ? "adm" : "lancar");
 }
@@ -2886,6 +3156,14 @@ function montarSobre() {
   link.href = APP.repositorio;
   link.textContent = APP.repositorio;
 }
+/* ================================ AJUDA ================================
+   O botão vive fora do #railNav, então tem o seu próprio ouvinte; o
+   data-vista="ajuda" é o que faz o rail marcá-lo como tela atual.
+   "Voltar" devolve à tela de onde se veio — inclusive à entrada, quando
+   a pessoa abriu a ajuda antes de se identificar. */
+$("btnAjuda").addEventListener("click", () => irPara("ajuda"));
+$("btnVoltarAjuda").addEventListener("click", () => irPara(vistaAnterior));
+
 $("btnSobre").addEventListener("click", () => $("dlgSobre").showModal());
 $("btnSobreOK").addEventListener("click", () => $("dlgSobre").close());
 /* Devolve o foco a quem abriu: sem isto, quem navega por teclado volta
