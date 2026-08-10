@@ -690,8 +690,14 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
         <div class="valor"><span id="mesPct">—</span></div>
         <div class="barra"><i id="mesBarra" style="width:0"></i></div>
         <p class="explica" id="mesPctBase"></p>
-        <p class="explica">Média dos dias em que você lançou. Dias sem lançamento e dias de
-          ausência ficam fora do cálculo — o número mede intensidade, não assiduidade.</p>
+        <!-- Duas redações da mesma explicação: a segunda cita as ausências, e
+             só aparece quando a seção em avaliação está ligada. Esconder um
+             trecho no meio da frase deixaria a pontuação sem sentido. -->
+        <p class="explica" data-sem-ausencias>Média dos dias em que você lançou. Dias sem
+          lançamento ficam fora do cálculo — o número mede intensidade, não assiduidade.</p>
+        <p class="explica" data-ausencias hidden>Média dos dias em que você lançou. Dias sem
+          lançamento e dias de ausência ficam fora do cálculo — o número mede intensidade,
+          não assiduidade.</p>
       </div>
       <div class="num-cartao">
         <span class="rotulo">Pontos no mês</span>
@@ -824,7 +830,8 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
               aria-selected="true" aria-controls="painelAprov">Aprovações<span class="cont" id="contLanc"></span></button>
       <button type="button" class="aba" role="tab" id="abaVisao" data-aba="visao"
               aria-selected="false" aria-controls="painelVisao">Visão do mês<span class="cont" id="contResumo"></span></button>
-      <button type="button" class="aba" role="tab" id="abaAus" data-aba="aus"
+      <!-- oculta enquanto a seção estiver em avaliação; ver aplicarAusencias() -->
+      <button type="button" class="aba" role="tab" id="abaAus" data-aba="aus" hidden
               aria-selected="false" aria-controls="painelAus">Ausências<span class="cont" id="contAus"></span></button>
     </div>
 
@@ -926,6 +933,23 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
     <div class="cartao">
       <h2>Pasta oficial</h2>
       <p class="dica" id="infoInstalacao">—</p>
+    </div>
+
+    <!-- Seções que a gestão ainda discute. A chave fica no config.json, que
+         só o administrador grava, então a decisão vale igual para todos. -->
+    <div class="cartao">
+      <h2>Seções em avaliação</h2>
+      <p class="dica">Partes do programa que aguardam decisão da gestão. Ficam ocultas para
+        todo mundo enquanto isso; ligá-las aqui vale para todos assim que recarregarem os
+        dados da rede. O que já foi registrado continua guardado nos arquivos das pessoas,
+        mesmo com a seção desligada.</p>
+      <label style="display:flex;gap:8px;align-items:center;margin:14px 0 0;font-size:13px">
+        <input type="checkbox" id="chkMostrarAusencias" style="width:auto">
+        Mostrar a seção <b>Ausências</b> (tela do servidor e aba do painel)
+      </label>
+      <p class="dica" style="margin-top:8px">Com a seção desligada, ninguém registra nem
+        consulta ausências pela tela. As ausências já gravadas continuam saindo da conta do
+        percentual da meta — o cálculo não mudou.</p>
     </div>
 
     <div class="cartao">
@@ -1037,17 +1061,19 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
           <ul>
             <li><b>Lançar atividade</b> — o registro do dia.</li>
             <li><b>Meu mês</b> — seus lançamentos, seus pontos e a meta alcançada.</li>
-            <li><b>Ausências</b> — períodos de afastamento.</li>
-            <li><b>Painel</b> (chefias) — aprovar, analisar o mês e conferir ausências.</li>
+            <li data-ausencias hidden><b>Ausências</b> — períodos de afastamento.</li>
+            <li data-sem-ausencias><b>Painel</b> (chefias) — aprovar e analisar o mês.</li>
+            <li data-ausencias hidden><b>Painel</b> (chefias) — aprovar, analisar o mês e
+              conferir ausências.</li>
           </ul>
           <p>Os números ao lado dos itens dizem se vale entrar: o percentual em "Meu
             mês" e a quantidade de lançamentos esperando você, no painel.</p>
           <figure>
             <img src="ajuda/rail.webp" loading="lazy"
                  alt="Barra de navegação escura à esquerda, com o grupo Meu trabalho
-                      (Lançar atividade, Meu mês com o percentual ao lado, Ausências)
-                      e o grupo Gestão (Painel da unidade com a contagem de pendentes),
-                      e abaixo os itens Ajuda e Sobre o programa.">
+                      (Lançar atividade e Meu mês, com o percentual ao lado) e o grupo
+                      Gestão (Painel da unidade com a contagem de pendentes), e abaixo
+                      os itens Ajuda e Sobre o programa.">
             <figcaption>A barra de navegação, como a vê uma chefia de unidade.</figcaption>
           </figure>
         </div>
@@ -1116,19 +1142,25 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
       </div>
 
       <div class="cartao">
-        <h2>Ausências, e o que a meta mede</h2>
-        <p class="dica">Dois pontos que costumam ser lidos errado.</p>
+        <h2 data-sem-ausencias>O que a meta mede</h2>
+        <h2 data-ausencias hidden>Ausências, e o que a meta mede</h2>
+        <p class="dica" data-sem-ausencias>O número mais fácil de ler errado no programa.</p>
+        <p class="dica" data-ausencias hidden>Dois pontos que costumam ser lidos errado.</p>
         <div style="margin-top:14px">
-          <h3>Ausências</h3>
-          <p>Férias, licenças, banco de horas e abonos são registrados como
-            <b>período</b> — primeiro e último dia —, na tela Ausências. Não valem
+          <h3 data-ausencias hidden>Ausências</h3>
+          <p data-ausencias hidden>Férias, licenças, banco de horas e abonos são registrados
+            como <b>período</b> — primeiro e último dia —, na tela Ausências. Não valem
             pontos e não passam por aprovação. Servem para tirar da conta da meta os
             dias em que não havia como trabalhar.</p>
-          <h3>O percentual da meta</h3>
-          <p>A meta é por <b>dia trabalhado</b>: 15 pontos para quem cumpre 8 horas,
-            11 para quem cumpre 6. O percentual é a média <b>apenas dos dias em que
-            você lançou alguma coisa</b>; dias sem lançamento e dias de ausência
-            ficam fora do cálculo.</p>
+          <h3 data-ausencias hidden>O percentual da meta</h3>
+          <p data-sem-ausencias>A meta é por <b>dia trabalhado</b>: 15 pontos para quem
+            cumpre 8 horas, 11 para quem cumpre 6. O percentual é a média <b>apenas dos
+            dias em que você lançou alguma coisa</b>; dias sem lançamento ficam fora do
+            cálculo.</p>
+          <p data-ausencias hidden>A meta é por <b>dia trabalhado</b>: 15 pontos para quem
+            cumpre 8 horas, 11 para quem cumpre 6. O percentual é a média <b>apenas dos
+            dias em que você lançou alguma coisa</b>; dias sem lançamento e dias de
+            ausência ficam fora do cálculo.</p>
           <div class="destaque">
             <p>Por isso ele mede <b>intensidade, não assiduidade</b>: quem lançou em
               2 dias e bateu a meta nos 2 aparece com 100%, igual a quem lançou em
@@ -1149,8 +1181,11 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
               respeitando os filtros de mês, pessoa e situação.</li>
             <li>Os lançamentos aparecem agrupados por dia, com o total do dia na
               faixa que abre o grupo.</li>
-            <li>As outras duas abas mostram a <b>visão do mês</b> (indicadores,
-              gráficos e resumo por pessoa) e as <b>ausências</b> da sua alçada.</li>
+            <li data-sem-ausencias>A outra aba, <b>visão do mês</b>, traz os indicadores,
+              os gráficos e o resumo por pessoa.</li>
+            <li data-ausencias hidden>As outras duas abas mostram a <b>visão do mês</b>
+              (indicadores, gráficos e resumo por pessoa) e as <b>ausências</b> da sua
+              alçada.</li>
           </ul>
           <p>Os dados que você vê são os que estavam na pasta da rede quando a tela
             foi aberta. Para ver o que outras pessoas gravaram depois disso, use
@@ -1259,7 +1294,13 @@ let CFG = {
   unidades: UNIDADES,
   chefiaGeral: (typeof CHEFIA_GERAL !== "undefined" ? CHEFIA_GERAL : null),
   senhas: (typeof SENHAS !== "undefined" ? SENHAS : {}),
-  exigirSenha: (typeof EXIGIR_SENHA !== "undefined" ? EXIGIR_SENHA : false)
+  exigirSenha: (typeof EXIGIR_SENHA !== "undefined" ? EXIGIR_SENHA : false),
+  /* Ausências ficaram OCULTAS na v1.3, enquanto a gestão discute o
+     assunto. O padrão é oculto: a chave só existe nos config.json de
+     quem ligou a seção de propósito, no painel do administrador.
+     Nada foi apagado — nem o código, nem as ausências já gravadas nos
+     arquivos das pessoas, que continuam saindo da conta da meta. */
+  mostrarAusencias: false
 };
 
 const $ = (id) => document.getElementById(id);
@@ -1287,6 +1328,23 @@ const podeAprovar = (r) =>
   (ehChefia() && papelDe(r) === "servidor" && r.unidade === ident.unidade) ||
   ehGeral();
 const ehMeu = (r) => ident && r.servidor === ident.nome && papelDe(r) === ident.perfil;
+/* Seção "Ausências" em avaliação pela gestão (v1.3): ligada ou desligada
+   pelo administrador, no config.json, e portanto igual para todos. */
+const mostraAusencias = () => CFG.mostrarAusencias === true;
+/* Um lugar só decide o que some junto com a seção: os trechos marcados no
+   HTML com data-ausencias (e os textos alternativos, marcados com
+   data-sem-ausencias), a aba do painel e, se alguém estiver nela, a
+   própria tela. O item do rail fica com ajustarRail(), que já cuida do
+   resto do rail. Nada é removido do documento — só escondido. */
+function aplicarAusencias() {
+  const ver = mostraAusencias();
+  for (const el of document.querySelectorAll("[data-ausencias]")) el.hidden = !ver;
+  for (const el of document.querySelectorAll("[data-sem-ausencias]")) el.hidden = ver;
+  $("abaAus").hidden = !ver;
+  if (!ver && abaAtual === "aus") irAba("aprov");
+  if (!ver && vistaAtual === "aus") irPara(ehAdm() ? "adm" : "lancar");
+  if (ident) ajustarRail();
+}
 
 function avisar(el, msg, erro = false) {
   el.textContent = msg;
@@ -1335,6 +1393,9 @@ function podeVer(v) {
   /* A ajuda é de todos, inclusive do administrador e de quem ainda não se
      identificou: parte das dúvidas é justamente sobre como entrar. */
   if (v === "entrada" || v === "ajuda") return true;
+  /* Seção em avaliação: esconder o botão no rail não bastaria — a regra
+     tem de valer para qualquer caminho que chame irPara("aus"). */
+  if (v === "aus") return !ehAdm() && mostraAusencias();
   if (v === "adm") return ehAdm();
   if (v === "painel") return ehChefia() || ehGeral() || ehAdm();
   return !ehAdm();   // lancar, mes, aus: quem registra atividade
@@ -1374,7 +1435,8 @@ function ajustarRail() {
   const gere  = ehChefia() || ehGeral() || ehAdm();
   $("railNav").hidden = !ident;
   $("grupoMeu").hidden = !lanca;
-  for (const id of ["navLancar", "navMes", "navAus"]) $(id).hidden = !lanca;
+  for (const id of ["navLancar", "navMes"]) $(id).hidden = !lanca;
+  $("navAus").hidden = !lanca || !mostraAusencias();
   $("grupoGestao").hidden = !gere;
   $("navPainel").hidden = !gere;
   $("navAdm").hidden = !ehAdm();
@@ -1450,6 +1512,10 @@ $("btnAtualizar").addEventListener("click", aposConectar);
 
 async function aposConectar() {
   await carregarConfig();
+  /* A configuração central manda: quem ligou ou desligou a seção em
+     avaliação foi o administrador, e o efeito chega aqui a cada leitura
+     da pasta — inclusive no "Atualizar dados da rede". */
+  aplicarAusencias();
   // valida o selo de instalação da pasta
   const idLocal = localStorage.getItem(CHAVE_INST);
   if (CFG.instalacao) {
@@ -1486,6 +1552,10 @@ async function carregarConfig() {
         chefiaGeral: cfg.chefiaGeral ?? null,
         senhas: cfg.senhas || {},
         exigirSenha: Boolean(cfg.exigirSenha),
+        /* === true, e não Boolean(): config.json gravado por uma versão
+           anterior à 1.3 não tem a chave, e a falta dela significa
+           OCULTO — o estado em que a seção entrou em avaliação. */
+        mostrarAusencias: cfg.mostrarAusencias === true,
         instalacao: cfg.instalacao || null
       };
     } else {
@@ -2333,7 +2403,10 @@ const ABAS = { aprov: "painelAprov", visao: "painelVisao", aus: "painelAus" };
 let abaAtual = "aprov";
 
 function irAba(k) {
-  if (!ABAS[k]) k = "aprov";
+  /* Com a seção em avaliação desligada, a aba guardada em ra.aba.v1 pode
+     apontar para "aus": cair na aba escondida deixaria o painel em
+     branco, sem nenhuma aba marcada. */
+  if (!ABAS[k] || (k === "aus" && !mostraAusencias())) k = "aprov";
   abaAtual = k;
   for (const [nome, id] of Object.entries(ABAS)) $(id).hidden = nome !== k;
   for (const b of document.querySelectorAll(".aba"))
@@ -2613,7 +2686,7 @@ function render() {
         const etiqueta = d.pct === null
           ? '<span class="info">meta não calculável</span>'
           : `<span class="meta-pct" data-abaixo="${d.pct < 100}"
-               title="Média de ${fmtMedia(d.media)} pontos em ${d.dias} dia(s) com lançamento; dias vazios e de ausência ficam fora da conta.">${d.pct}% da meta</span>`;
+               title="Média de ${fmtMedia(d.media)} pontos em ${d.dias} dia(s) com lançamento; dias vazios${mostraAusencias() ? " e de ausência" : ""} ficam fora da conta.">${d.pct}% da meta</span>`;
         return `<div class="srv">
           <span class="nome" title="${escapar(n)}">${escapar(n)}</span>
           <span class="pts">${v.pts}</span> pts
@@ -2998,6 +3071,7 @@ function renderAdm() {
     ? `Oficializada por ${CFG.instalacao.por} em ${fmtData(CFG.instalacao.em.slice(0, 10))} · identificador ${CFG.instalacao.id.slice(0, 8)}…  As pessoas só conseguem entrar em pastas com este selo.`
     : "Pasta ainda não oficializada — confirme sua identidade nesta pasta para oficializá-la.";
   $("chkExigirSenha").checked = CFG.exigirSenha;
+  $("chkMostrarAusencias").checked = mostraAusencias();
   $("tbodySenhas").innerHTML = pessoasAdministraveis().map(p => {
     const tem = Boolean(CFG.senhas[p.nome]);
     const st = (p.nome === ADM_NOME && !tem)
@@ -3047,6 +3121,13 @@ $("vAdm").addEventListener("click", async (e) => {
 $("chkExigirSenha").addEventListener("change", async (e) => {
   CFG.exigirSenha = e.target.checked;
   await salvarCFG(`Exigência de senha ${CFG.exigirSenha ? "ativada" : "desativada"}.`);
+});
+/* A seção volta (ou some) na hora para o próprio administrador; para os
+   demais, no próximo "Atualizar dados da rede". */
+$("chkMostrarAusencias").addEventListener("change", async (e) => {
+  CFG.mostrarAusencias = e.target.checked;
+  aplicarAusencias();
+  await salvarCFG(`Seção "Ausências" ${CFG.mostrarAusencias ? "ligada" : "desligada"} para todos.`);
 });
 $("btnSalvarCatalogo").addEventListener("click", async () => {
   let novo;
@@ -3172,6 +3253,8 @@ $("dlgSobre").addEventListener("close", () => $("btnSobre").focus());
 
 /* --------------------------- INICIALIZAÇÃO --------------------------- */
 montarSobre();
+/* Antes de qualquer configuração ser lida vale o padrão: seção oculta. */
+aplicarAusencias();
 montarPessoas();
 montarProcessos();
 montarTiposAusencia();
