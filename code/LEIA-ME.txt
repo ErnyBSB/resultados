@@ -1,4 +1,4 @@
-PROGRAMA DE RESULTADOS — COBIB (versão 1.5, ago/26 — PWA em rede)
+PROGRAMA DE RESULTADOS — COBIB (versão 1.6, ago/26 — PWA em rede)
 =================================================================
 
 O aplicativo passou a se chamar PROGRAMA DE RESULTADOS na v12 (antes,
@@ -7,7 +7,7 @@ a aba do navegador e para o manifest — ou seja, também para o ícone de
 quem instalar o PWA. A pasta da rede, os arquivos e o formato dos dados
 não mudaram com a troca de nome.
 
-A versão aparece ao lado do título, como etiqueta: "versão 1.5
+A versão aparece ao lado do título, como etiqueta: "versão 1.6
 (ago/26)". Ela é escrita em UM lugar só, o versao.js (ver a seção
 seguinte); publicar uma versão nova é mexer nesse arquivo e marcar a
 tag correspondente no repositório.
@@ -36,7 +36,7 @@ cache, esquecer o segundo tinha um efeito ruim e silencioso: a tela
 anunciava a versão nova enquanto o navegador continuava servindo os
 arquivos da anterior. Agora o index.html preenche a etiqueta e a janela
 a partir do versao.js, e o sw.js monta a chave do cache com
-importScripts do mesmo arquivo ("1.5" vira "ra-1.5").
+importScripts do mesmo arquivo ("1.6" vira "ra-1.6").
 
 A data de "Última atualização" é preenchida à mão, ali do lado. Ela
 poderia vir do GitHub, mas isso exigiria uma consulta pela internet — e
@@ -388,8 +388,8 @@ Publicar uma versão passou a ser, então, DUAS coisas que precisam
 concordar entre si: o versao.js e a tag do repositório. Até a v1.0 eram
 três — a etiqueta do index.html contava separadamente —, e a v1.1
 juntou as duas primeiras num arquivo só (ver "Sobre o programa", acima).
-A versão do versao.js acompanha a tag: a tag v1.5 corresponde a "1.5" e
-à chave de cache "ra-1.5".
+A versão do versao.js acompanha a tag: a tag v1.6 corresponde a "1.6" e
+à chave de cache "ra-1.6".
 
 A tela foi redesenhada na v14 (novidade)
 ----------------------------------------
@@ -582,7 +582,7 @@ rede não precisa fazer nada, e lançamentos, ausências, aprovações e
 config.json continuam sendo lidos exatamente como antes.
 
 Como o sw.js serve primeiro o que está em cache, cada versão troca a
-chave do cache (esta usa "ra-1.5", montada a partir do versao.js). Sem
+chave do cache (esta usa "ra-1.6", montada a partir do versao.js). Sem
 essa troca, quem já abriu a versão anterior continuaria recebendo a
 tela antiga.
 
