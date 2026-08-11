@@ -1280,6 +1280,15 @@ próprio e cache offline via service worker) exigem servir os arquivos por HTTP(
 código reflete isso: o registro do service worker é condicionado a
 `location.protocol.startsWith("http")`.
 
+**O manifesto segue a mesma condição (desde a 1.6).** Sob `file://` o Chrome trata
+cada arquivo como origem única, e a busca do `manifest.webmanifest` — uma requisição
+em modo CORS — é sempre negada, com repetição, o que enchia o console de erros sem
+consequência funcional. Por isso o `<link rel="manifest">` não é mais escrito no
+`<head>`: ele é criado por código no fim do `index.html`, dentro do mesmo
+`if (location.protocol.startsWith("http"))` que registra o service worker. Servido
+por HTTP(S) o comportamento é idêntico ao anterior; por duplo clique, o link não
+chega a existir.
+
 **Formas de servir** (qualquer uma basta): `python -m http.server 8080`; `npx serve .`;
 ou publicar a pasta em um servidor de arquivos da intranet. O próprio diretório de
 rede pode hospedar o app (ex.: `unidadeCentral\app`).

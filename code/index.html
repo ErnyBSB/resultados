@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Programa de Resultados — COBIB</title>
 <meta name="description" content="Registro diário de processos de trabalho e atividades por unidade e servidor, com aprovação em cadeia pelas chefias.">
-<link rel="manifest" href="manifest.webmanifest">
+<!-- O manifesto NÃO entra aqui: ele é criado por código, no fim da página,
+     junto com o registro do service worker e sob a mesma condição de
+     protocolo. Ver a seção do LEIA-ME sobre o console limpo em file://. -->
 <meta name="theme-color" content="#1D2720">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -3304,8 +3306,20 @@ $("txtCaminho").textContent =
 ajustarConfig();   // começa na entrada, com o rail vazio
 conectarSilencioso();
 
-if ("serviceWorker" in navigator && location.protocol.startsWith("http"))
-  navigator.serviceWorker.register("sw.js");
+/* Manifesto e service worker só existem sob HTTP(S). Aberto por duplo
+   clique a partir da pasta da rede — ou seja, em file:// —, o Chrome trata
+   cada arquivo como origem única e recusa buscar o manifesto: a busca é
+   uma requisição em modo CORS e não tem como dar certo. O <link> ficava
+   fixo no <head> e rendia seis erros vermelhos no console, que não
+   quebravam nada mas faziam quem abre o F12 concluir que o programa
+   estava quebrado. Por isso o link só é criado quando pode ser lido. */
+if (location.protocol.startsWith("http")) {
+  const lnkManifesto = document.createElement("link");
+  lnkManifesto.rel = "manifest";
+  lnkManifesto.href = "manifest.webmanifest";
+  document.head.appendChild(lnkManifesto);
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+}
 </script>
 
 </body>

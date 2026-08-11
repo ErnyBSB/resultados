@@ -45,6 +45,46 @@ enxerga a pasta da rede. A data seria justamente a informação que
 faltaria quando mais se precisa dela. Sendo manual, fica na linha
 seguinte à da versão: quem troca uma vê a outra.
 
+Console limpo em file:// (novidade da v1.6)
+-------------------------------------------
+Quem abre o programa por duplo clique — a forma mais comum aqui, a
+partir da própria pasta da rede — está rodando sob file://, e não sob
+http. Nesse modo o Chrome trata CADA ARQUIVO como uma origem própria,
+isolada de todas as outras, inclusive das que estão na mesma pasta. É
+uma proteção do navegador, não um defeito da rede.
+
+O manifesto do PWA (manifest.webmanifest) era ligado à página por um
+<link rel="manifest"> fixo no <head>. A busca desse arquivo é uma
+requisição em modo CORS, e sob file:// ela não tem como dar certo — o
+navegador nega, tenta de novo e nega outra vez. O resultado eram SEIS
+erros vermelhos no console a cada abertura, todos dizendo a mesma coisa
+com palavras diferentes ("blocked by CORS policy", "'file:' URLs are
+treated as unique security origins", "net::ERR_FAILED").
+
+Nada disso quebrava o programa. O manifesto só serve para INSTALAR o
+PWA (ícone próprio, janela sem barra de endereço, uso offline), e isso
+já dependia de servir os arquivos por HTTP(S) na intranet — está dito
+mais abaixo, em "Como usar". Por duplo clique, o acesso à pasta da
+rede, os lançamentos e as aprovações sempre funcionaram igual.
+
+O prejuízo era de confiança, e não é pequeno: quem abre o F12 diante de
+um problema qualquer encontra seis erros vermelhos, conclui que o
+programa está quebrado e passa a desconfiar dele. Erro que aparece
+sempre e não significa nada também ensina a ignorar os que significam.
+
+O registro do service worker já resolvia isso do jeito certo, desde
+antes: ele só acontece se location.protocol começar com "http". O link
+do manifesto ficou sem a proteção equivalente. Na v1.6 ele saiu do
+<head> e passou a ser criado por código, no fim da página, dentro da
+MESMA condição de protocolo do service worker — os dois só existem onde
+podem existir.
+
+Servido por HTTP(S), nada muda: o manifesto entra na página como antes
+e o PWA continua instalável. Por duplo clique, o link simplesmente não
+é criado, e o console abre limpo. A limitação continua a mesma de
+sempre, apenas deixou de ser anunciada como erro: file:// não instala
+PWA, e nunca instalou.
+
 O que nunca vai para o repositório (novidade da v1.5)
 -----------------------------------------------------
 O código deste programa mora num repositório PÚBLICO. Isso é bom para
