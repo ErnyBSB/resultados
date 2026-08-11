@@ -259,7 +259,8 @@ code/                    o aplicativo — uma cópia só, sempre a versão atual
   catalogo.js            catálogo editável: unidades, pessoas, processos,
                          atividades, pontos, tipos de ausência, metas diárias
   rede.js                acesso à pasta de rede: handle, permissões, JSON
-  sw.js                  service worker; a constante VERSAO controla o cache
+  sw.js                  service worker; monta a chave do cache a partir
+                         do versao.js
   manifest.webmanifest   metadados do PWA
   gerar-senha.html       ferramenta avulsa: gera o hash SHA-256 de uma senha
   echarts.min.js         biblioteca de gráficos (embarcada, não baixada)
@@ -440,7 +441,9 @@ Build **próprio** do ECharts, contendo apenas o que o aplicativo usa: barra, ma
 calor, eixo, dica, legenda e escala de cor. São 521 KB contra 1 MB do pacote
 completo. Fica **na pasta do aplicativo** e é registrado no `sw.js`; nunca use CDN,
 porque o service worker é *cache-first* e a máquina pode estar sem internet. Ao
-trocar a biblioteca por uma versão nova, incremente `VERSAO` no `sw.js`.
+trocar a biblioteca por uma versão nova, publique uma versão do aplicativo — o
+`echarts.min.js` está na lista `ARQUIVOS` do `sw.js`, e sem uma chave de cache nova
+quem já abriu o aplicativo continua recebendo a biblioteca antiga.
 
 É um `<script>` comum, como `catalogo.js` e `rede.js`: sem internet, sem build, sem
 npm.
@@ -1623,9 +1626,10 @@ O Programa de Resultados é um caso incomum de PWA, e vale explicitar por quê:
 - **O offline é real, não parcial.** Como a "fonte de verdade" é uma pasta de rede
   (não a internet), o aplicativo funciona integralmente numa máquina sem internet,
   desde que ela alcance a pasta.
-- **A atualização é manual e explícita:** trocar `VERSAO` no `sw.js`. É o preço de
-  não ter servidor decidindo por nós, e é por isso que a regra das "três coisas que
-  precisam concordar" (1.3) existe.
+- **A atualização é manual e explícita:** trocar a `versao` no `versao.js`, de onde
+  o `sw.js` deriva a chave do cache. É o preço de não ter servidor decidindo por
+  nós, e é por isso que a regra das "duas coisas que precisam concordar" (1.3)
+  existe.
 - **HTTPS só é necessário para instalar.** Abrir o `index.html` por `file://`
   continua dando acesso completo à pasta e a todas as funcionalidades; o que se perde
   é o ícone instalado e o cache offline.
