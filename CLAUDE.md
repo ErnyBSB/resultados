@@ -92,8 +92,11 @@ Until v1.0 this took three edits, because the header label and `sw.js` each held
 their own copy of the number; v1.1 collapsed them into `versao.js`.
 
 **Branches.** One branch per version in progress, merged to `main` by PR, then
-tagged on `main`. Commit subjects are pt-BR and describe the user-visible change,
-not the code: `recusa gravar por cima de arquivo de lançamentos ilegível`.
+tagged on `main`. Commit messages follow Conventional Commits and are written in
+**English** — the UI, the comments and the docs are pt-BR, the git history is not.
+The subject describes the user-visible change, not the code:
+`fix(rede): refuse to overwrite an unreadable lançamentos file`. The body argues
+the why, and the footer carries `Refs: #<issue>` and `Assisted-by: IA`.
 
 **LEIA-ME.txt is part of the deliverable.** It is not a changelog — it argues the
 reasoning behind each decision (why an accordion instead of tabs, why chart rendering

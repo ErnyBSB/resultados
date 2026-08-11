@@ -117,6 +117,7 @@ vive neste repositório.
 | **1.0** | Saída do beta. Nenhuma mudança de tela, regra ou arquivo em relação à v14 — o que mudou foi o estado do programa (deixou de ser experimento) e a forma de guardar versões (ver 1.3). |
 | **1.1** | Janela **"Sobre o programa"**, alcançável pelo rail mesmo antes da identificação; e a versão do aplicativo passa a ser escrita em **um lugar só** (`versao.js`), de onde saem a etiqueta do rail, a janela e a chave do cache do service worker. |
 | **1.2** | Tela de **Ajuda** embutida, com quatro capturas: objetivo do programa, papéis, organização da tela, como lançar, como buscar, o que a meta mede e como a chefia aprova. Alcançável antes da identificação, como o "Sobre". |
+| **1.6** | O `<link rel="manifest">` sai do `<head>` e passa a ser **criado por código**, sob a mesma condição de protocolo que já guardava o registro do service worker. Sob `file://` — o duplo clique — o Chrome tratava cada arquivo como origem única e negava a busca do manifesto, enchendo o console de erros que não quebravam nada. |
 | **1.5** | Dado interno sai do repositório: `catalogo.js` vira semente sem pessoas, exemplos da documentação passam a usar nomes inventados, o PDF das betas sai da árvore e um `.gitignore` barra `config.json` e pastas de teste. |
 | **1.4** | O campo de busca de atividade ganha **destaque por superfície** (painel recuado, rótulo visível, texto de apoio dentro dele) e passa a vir **antes** dos atalhos de "Suas mais registradas". |
 | **1.3** | A seção **Ausências** fica oculta enquanto a gestão discute o assunto, ligável pelo administrador no `config.json` (`mostrarAusencias`). Nada foi removido: código, dados e o desconto de ausências no cálculo da meta continuam como estavam. |
@@ -1280,6 +1281,15 @@ próprio e cache offline via service worker) exigem servir os arquivos por HTTP(
 código reflete isso: o registro do service worker é condicionado a
 `location.protocol.startsWith("http")`.
 
+**O manifesto segue a mesma condição (desde a 1.6).** Sob `file://` o Chrome trata
+cada arquivo como origem única, e a busca do `manifest.webmanifest` — uma requisição
+em modo CORS — é sempre negada, com repetição, o que enchia o console de erros sem
+consequência funcional. Por isso o `<link rel="manifest">` não é mais escrito no
+`<head>`: ele é criado por código no fim do `index.html`, dentro do mesmo
+`if (location.protocol.startsWith("http"))` que registra o service worker. Servido
+por HTTP(S) o comportamento é idêntico ao anterior; por duplo clique, o link não
+chega a existir.
+
 **Formas de servir** (qualquer uma basta): `python -m http.server 8080`; `npx serve .`;
 ou publicar a pasta em um servidor de arquivos da intranet. O próprio diretório de
 rede pode hospedar o app (ex.: `unidadeCentral\app`).
@@ -1288,7 +1298,7 @@ rede pode hospedar o app (ex.: `unidadeCentral\app`).
 torna a navegação no seletor de pastas bem mais simples para as pessoas.
 
 **Atualização de versão:** ver 1.3 — as duas coisas que precisam concordar. A
-versão atual é `1.5`, e o cache correspondente é `ra-1.5`. Na primeira carga após
+versão atual é `1.6`, e o cache correspondente é `ra-1.6`. Na primeira carga após
 atualizar, um recarregamento forçado (Ctrl+F5) ajuda a garantir a troca.
 
 **Compatibilidade:** Chrome e Edge apenas, por decisão de projeto — a File System
