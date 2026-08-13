@@ -5,8 +5,7 @@ COBIB. Cada servidor lança o que fez, com a complexidade correspondente, e a
 chefia aprova os lançamentos da sua unidade.
 
 **Versão 1.6** (ago/26). Até a 1.0 o programa se chamou *Registro de Atividades*
-e circulou como versão beta, numerada de 1 a 14, no repositório
-[actividades](https://github.com/ErnyBSB/actividades).
+e circulou como versão beta, numerada de 1 a 14.
 
 ## Como funciona
 
