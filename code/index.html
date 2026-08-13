@@ -2442,6 +2442,25 @@ $("btnReciboOK").addEventListener("click", () => $("dlgRecibo").close());
    atividade em seguida. */
 $("dlgRecibo").addEventListener("close", () => $("inpAtividade").focus());
 
+/* ------------------------- DATA DO LANÇAMENTO -------------------------
+   O calendário não oferece dia futuro: registra-se o que já foi feito, e
+   uma data adiante quase sempre é engano de digitação no ano. Ela também
+   estragaria a leitura do cartão do dia, que passaria a mostrar meta
+   cumprida por um trabalho que ainda não aconteceu.
+
+   O limite é recalculado ao abrir o campo, e não apenas na carga da
+   página: o programa costuma ficar aberto de um dia para o outro, e um
+   teto carimbado uma vez só viraria "ontem" na manhã seguinte — barrando
+   justamente o dia que a pessoa chegou para lançar.
+
+   Limitação assumida: isto vale para o SELETOR, não para o teclado. Quem
+   digitar a data por cima do campo ainda consegue gravar em data futura.
+   A alternativa seria recusar no botão "Registrar", e a decisão foi não
+   acrescentar mais uma recusa à tela por um caso que o calendário já
+   torna improvável. */
+function limitarDataFutura() { $("inpData").max = hoje(); }
+$("inpData").addEventListener("focus", limitarDataFutura);
+
 $("btnRegistrar").addEventListener("click", async () => {
   if (!dirRaiz) return avisar($("aviso"), "Conecte a pasta da rede antes de registrar.", true);
   const data = $("inpData").value;
@@ -3358,6 +3377,7 @@ $("inpSenha").addEventListener("keydown", (e) => {
   if (e.key === "Enter") $("btnIniciar").click();
 });
 $("inpData").value = hoje();
+limitarDataFutura();
 mudarMes(hoje().slice(0, 7));
 $("txtCaminho").textContent =
   (typeof PASTA_REDE !== "undefined" && PASTA_REDE) || "definida pelo administrador";

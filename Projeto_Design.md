@@ -769,7 +769,7 @@ nela.
 | Tela | Quem alcança | O que mostra |
 |---|---|---|
 | **Entrada** | todos | As duas etapas: pasta da rede e identificação. Some assim que as duas estão resolvidas e volta quando alguma se desfaz. |
-| **Lançar atividade** | quem registra (não-adm) | Formulário em três passos numerados (atividade, complexidade, observações) e, à direita, o efeito imediato: quanto já foi lançado na data, quanto falta para a meta do dia e a lista do que entrou. Abaixo do botão, o arquivo em que aquilo será gravado. |
+| **Lançar atividade** | quem registra (não-adm) | Formulário em três passos numerados (atividade, complexidade, observações) e, à direita, o efeito imediato: quanto já foi lançado na data, quanto falta para a meta do dia e a lista do que entrou. Abaixo do botão, o arquivo em que aquilo será gravado. A data do lançamento não passa do dia corrente: o calendário cinza os dias futuros, e o teto é recalculado a cada foco no campo, para não envelhecer numa aba deixada aberta de um dia para o outro. |
 | **Meu mês** | quem registra | A meta em tamanho grande, com a explicação do que ela mede logo abaixo do número; pontos no mês; aguardando chefia; e a tabela dos próprios lançamentos, com exportação CSV. |
 | **Ausências** | quem registra | Formulário de período à esquerda, lista à direita. |
 | **Painel** | chefia, chefia geral, adm | Três abas: Aprovações, Visão do mês e Ausências. |
@@ -1377,6 +1377,10 @@ ser simulada com qualquer diretório local que tenha a estrutura
   confirmação reforçada mitiga, mas não impede.
 - **Cache pegajoso:** publicar sem trocar a versão no `versao.js` faz o navegador
   continuar servindo a versão anterior.
+- **Teto da data vale para o calendário, não para o teclado:** o `max` do campo
+  cinza os dias futuros no seletor, mas quem digitar a data por cima do campo ainda
+  grava em data futura. Decisão assumida, para não acrescentar mais uma recusa à
+  tela; se o caso aparecer na prática, a correção é uma guarda no botão "Registrar".
 - **Ausências oculta:** a seção está desligada por decisão de gestão (6.7). Enquanto
   isso, ninguém registra novos períodos, e o desconto na meta só alcança o que foi
   registrado antes.
