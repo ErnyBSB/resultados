@@ -45,6 +45,44 @@ enxerga a pasta da rede. A data seria justamente a informação que
 faltaria quando mais se precisa dela. Sendo manual, fica na linha
 seguinte à da versão: quem troca uma vê a outra.
 
+O calendário não oferece dia futuro (a sair na próxima versão)
+--------------------------------------------------------------
+O campo "Data do lançamento" aceitava qualquer dia, inclusive os que
+ainda não chegaram. Isso não tem uso: registra-se o que já foi feito. O
+que acontecia de verdade era engano de digitação no ano — quem digita a
+data em vez de escolhê-la no calendário troca 2026 por 2027 sem
+perceber, e o lançamento vai parar num mês que ninguém vai olhar tão
+cedo.
+
+Havia um segundo estrago, mais silencioso. O cartão do lado direito da
+tela mostra quanto já foi lançado NA DATA ESCOLHIDA e quanto falta para
+a meta do dia. Com uma data futura no campo, ele passava a anunciar meta
+cumprida por um trabalho que ainda não aconteceu.
+
+Agora o seletor tem teto: hoje é o último dia clicável, e os seguintes
+aparecem cinza. O teto é recalculado toda vez que o campo recebe o foco,
+e não só quando a página abre. O motivo é prosaico: aqui o programa fica
+aberto de um dia para o outro, e um teto carimbado uma única vez viraria
+"ontem" na manhã seguinte — barrando justamente o dia em que a pessoa
+chegou para lançar.
+
+A LIMITAÇÃO, dita com todas as letras: o teto vale para o CALENDÁRIO,
+não para o teclado. Quem digitar a data por cima do campo, em vez de
+escolhê-la, ainda consegue gravar em data futura. Dava para fechar essa
+porta recusando o lançamento no botão "Registrar", e a decisão foi não
+fazer isso: seria mais uma mensagem de erro numa tela que já tem três, e
+o caso que sobra — digitar por cima de um campo cujo calendário mostra o
+limite — é raro o bastante para não valer o incômodo de todo dia. Se
+aparecer na prática, a recusa no botão é a correção, e é pequena.
+
+Ausências continuam SEM teto, de propósito: férias e licenças são
+registradas com antecedência, e barrar o futuro ali quebraria o uso
+normal do campo.
+
+Lançamentos futuros que já estejam gravados na pasta da rede continuam
+carregando e aparecendo como sempre. Nada foi migrado nem reescrito —
+arquivo de usuário não se mexe.
+
 Console limpo em file:// (novidade da v1.6)
 -------------------------------------------
 Quem abre o programa por duplo clique — a forma mais comum aqui, a
