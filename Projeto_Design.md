@@ -397,7 +397,11 @@ papel; *rail* escuro como superfície), o HTML das telas e o `<script>` com a l�
 **Paleta e significado das cores.** As variáveis vivem em `:root` com nomes em
 pt-BR (`--tinta`, `--papel`, `--ficha`, `--verde`, `--dourado`, `--grafite`,
 `--linha`, `--raio`). **Verde é aprovado, dourado é pendente** — as cores carregam
-significado e não devem ser reaproveitadas decorativamente. As cores vieram de uma
+significado e não devem ser reaproveitadas decorativamente. Duas variáveis de linha
+dividem trabalho e não são intercambiáveis: `--linha` desenha **estrutura** (cartão,
+tabela, painel) e `--linha-campo` desenha **controle** (campo, chip, botão
+secundário), com o contraste que a WCAG pede para contorno de componente — ver 6.3.
+As cores vieram de uma
 maquete escrita em `oklch()` e foram convertidas para hexadecimal, para a folha
 continuar legível a quem nunca viu essa notação.
 
@@ -836,7 +840,11 @@ lista. Hoje:
   tem acento iria para o fim da lista, depois do "z". A ordem antiga era a de
   digitação no `catalogo.js`: fazia sentido para quem edita o arquivo e nenhum para
   quem lê a lista na tela.
-- **Filtro por processo** continua disponível, agora opcional.
+- **Filtro por processo** continua opcional e, desde a #19, está **sempre visível e
+  antes do campo de busca** — era revelado por um link e vinha depois. Fica fora do
+  painel cinza e mais estreito que ele, para que a hierarquia continue dizendo que a
+  busca é o caminho geral (ver a dívida declarada no LEIA-ME: a ordem na tela
+  reencena o "escolha o processo primeiro" que a v9 aboliu).
 - **"Suas mais registradas"**: três botões de um clique, derivados do histórico da
   própria pessoa. Eram cinco até a v13; cinco atalhos ocupavam mais tela que o
   próprio campo de busca. As atividades que saíram do catálogo são descartadas
@@ -854,6 +862,24 @@ um `<label>` fora da tela, só para leitor de tela) e recebeu, dentro do painel,
 texto de apoio que explica como ver a lista inteira — 4,87:1 de contraste sobre o
 cinza, acima do mínimo AA. A ordem inverteu porque o campo é o caminho do caso geral;
 o atalho vem depois dele.
+
+**Contraste e ênfase (issue #19).** Depois de alguns dias de uso, os servidores
+apontaram quatro coisas no cartão: pouco contraste entre as peças, o filtro escondido
+atrás de um link, a ordem do filtro e a falta de ênfase nos atalhos. O contorno dos
+campos era `--linha` (#D7DCD8), **1,39:1** sobre o branco, abaixo dos 3:1 que a WCAG
+1.4.11 pede para o contorno que identifica um controle. Passaram a existir **duas
+linhas com papéis distintos**: `--linha` para estrutura (cartão, tabela, painel) e
+`--linha-campo` (#7E8A83, **3,59:1** no branco e **3,19:1** no `--papel`) para
+controle — campo, chip e botão secundário, em todas as telas. Chip desabilitado é a
+exceção e volta ao fio de estrutura: continua legível, porque diz quais complexidades
+a atividade admite, mas não promete clique.
+
+A ênfase dos atalhos "Suas mais registradas" não podia vir de cor (verde é aprovado,
+dourado é pendente) nem de fundo `--papel`, que é o fundo de controle desabilitado e
+faria os três botões parecerem indisponíveis. Veio do contorno firme mais uma **régua
+de 3px à esquerda** em `--rail-ponto` (#4A564E, 7,69:1), o tom neutro da paleta; e o
+rótulo da seção subiu do `.rotulo` de 10,5px para o mesmo posto do rótulo da busca.
+Nenhum texto de tela mudou.
 
 ### 6.4. Recibo do lançamento (novidade da v11)
 

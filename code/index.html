@@ -21,6 +21,14 @@
 :root{
   --tinta:#1B211D; --papel:#F0F2F0; --ficha:#FFFFFF;
   --linha:#D7DCD8; --linha-suave:#E5E9E6;
+  /* Duas linhas com papéis diferentes, e a diferença agora significa algo:
+     --linha é ESTRUTURA (borda de cartão, de tabela, de painel) e some do
+     olho de propósito; --linha-campo é CONTORNO DE CONTROLE (campo, chip),
+     onde a pessoa clica ou digita. Aquela dava 1,39:1 no branco, abaixo do
+     mínimo de 3:1 que a WCAG pede para contorno de componente, e servia
+     para as duas coisas; esta dá 3,59:1 no branco e 3,19:1 no --papel, os
+     dois fundos sobre os quais um campo aparece aqui. */
+  --linha-campo:#7E8A83;
   --grafite:#646B65; --grafite-claro:#6D746E;
   --verde:#3D5840; --verde-fundo:#2A442E; --verde-suave:#EDF6EE;
   --verde-borda:#DBEEDD; --verde-vivo:#51BF68;
@@ -141,7 +149,7 @@ button{font-family:inherit}
 label.rotulo{cursor:default}
 select,input[type=date],input[type=month],input[type=text],input[type=password],textarea{
   width:100%; padding:9px 11px; font:inherit; font-size:13.5px; color:var(--tinta);
-  background:var(--ficha); border:1px solid var(--linha); border-radius:var(--raio-p)}
+  background:var(--ficha); border:1px solid var(--linha-campo); border-radius:var(--raio-p)}
 textarea{resize:vertical; min-height:64px}
 .campo{margin-bottom:14px}
 .campo:last-child{margin-bottom:0}
@@ -150,7 +158,10 @@ textarea{resize:vertical; min-height:64px}
 .acao{background:var(--verde); color:#fff; border:0; border-radius:var(--raio-p);
   padding:11px 20px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer}
 .acao:hover{background:var(--verde-fundo)}
-.acao.sec{background:var(--ficha); color:var(--tinta); border:1px solid var(--linha)}
+/* Botão secundário é controle, e o contorno é a única coisa que o desenha:
+   entra na mesma linha firme dos campos. O botão primário não precisa —
+   ele é uma superfície verde cheia. */
+.acao.sec{background:var(--ficha); color:var(--tinta); border:1px solid var(--linha-campo)}
 .acao.sec:hover{background:var(--papel)}
 .acao.mini{padding:7px 13px; font-size:12.5px}
 .acao:disabled{opacity:.45; cursor:not-allowed}
@@ -162,7 +173,7 @@ textarea{resize:vertical; min-height:64px}
 /* chips de complexidade e de carga */
 .chips{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
 .chips.duas{grid-template-columns:1fr 1fr}
-.chip{border:1px solid var(--linha); background:var(--ficha); border-radius:var(--raio-p);
+.chip{border:1px solid var(--linha-campo); background:var(--ficha); border-radius:var(--raio-p);
   padding:12px 14px; font:inherit; cursor:pointer; color:var(--grafite);
   display:flex; align-items:baseline; gap:7px; justify-content:center;
   transition:border-color .12s, background .12s}
@@ -173,7 +184,12 @@ textarea{resize:vertical; min-height:64px}
 /* Desabilitado com contraste suficiente para AINDA SER LIDO: o chip
    diz quais complexidades a atividade admite, o que é informação, não
    apenas um controle indisponível. */
-.chip:disabled{background:var(--papel); color:#8A918B; cursor:not-allowed}
+/* Contorno de volta ao fio de estrutura: --linha-campo passou a significar
+   "aqui se opera", e um chip desabilitado não se opera. Ele continua
+   legível — é informação sobre a atividade escolhida —, mas não promete
+   clique. */
+.chip:disabled{background:var(--papel); color:#8A918B; cursor:not-allowed;
+  border-color:var(--linha)}
 .chip:disabled b{color:#8A918B}
 
 /* ---------- avisos ---------- */
@@ -285,17 +301,30 @@ tr.pendente td{background:#FEFBF6}
    dentro — o contrário do que era. */
 .busca-bloco{background:var(--papel); border:1px solid var(--linha);
   border-radius:var(--raio); padding:14px; margin-bottom:16px}
-.busca-bloco .rot{display:block; font-size:12.5px; font-weight:600;
+/* Posto tipográfico próprio, acima do .rotulo minúsculo: quem o usa são os
+   dois blocos que a pessoa realmente opera dentro do cartão 1 — o campo de
+   busca e os atalhos. Saiu de dentro de .busca-bloco para poder servir aos
+   dois; antes o rótulo dos atalhos era um .rotulo de 10,5px em cinza, e a
+   seção inteira desaparecia da tela por falta de peso. */
+.rot{display:block; font-size:12.5px; font-weight:600;
   color:var(--tinta); margin:0 0 7px}
 /* A dica de apoio fica DENTRO do painel, como pede a issue: é ali que se
    explica como ver a lista inteira. Sobre o cinza ela dá 4,87:1 de
    contraste — acima do mínimo de 4,5 exigido para texto normal. */
 .busca-bloco .dica{margin-top:9px}
-.busca-bloco #campoProcesso{margin-top:10px}
+/* O filtro por processo subiu para FORA do recesso (issue #19): ele vem
+   antes da busca, mas continua sendo o caminho opcional, e deixá-lo aqui
+   dentro poria duas superfícies brancas no painel — desmanchando o
+   destaque da v1.4, que é o campo ser a única. */
+/* Mais estreito que o painel de busca, de propósito: a largura é o que
+   diz, sem palavra nenhuma, qual dos dois é o caminho geral. O filtro
+   vem primeiro porque foi pedido, mas continua sendo o atalho de quem já
+   sabe em que processo procurar. Em tela estreita volta a ocupar tudo. */
+#campoProcesso{margin-bottom:16px; max-width:70%}
 .busca{position:relative}
-/* Borda um ponto mais firme que a dos demais campos: dentro do recesso,
-   é o único elemento em que se digita. */
-.busca input{padding-right:34px; border-color:#C6CDC8}
+/* O caso especial de borda saiu daqui: o contorno firme virou o padrão de
+   todo campo do programa (--linha-campo), e não um remendo desta tela. */
+.busca input{padding-right:34px}
 .busca input:focus{border-color:var(--verde)}
 .busca .limpar{position:absolute; right:4px; top:50%; transform:translateY(-50%);
   background:none; border:0; color:var(--grafite); cursor:pointer; font-size:17px;
@@ -321,12 +350,26 @@ tr.pendente td{background:#FEFBF6}
 .escolhida .p{display:block; font-size:11px; color:var(--grafite); margin-top:3px}
 /* Agora é o ÚLTIMO bloco do cartão: o respiro de baixo passou a ser o
    próprio padding do cartão. */
+#campoFrequentes{margin-top:16px}
 .frequentes{display:flex; flex-direction:column; gap:8px}
-.freq{border:1px solid var(--linha); background:var(--ficha); border-radius:var(--raio-p);
+/* A ênfase que a issue #19 pede NÃO pode vir de cor de estado — verde é
+   aprovado, dourado é pendente —, e também não pode vir de fundo cinza:
+   --papel é o fundo de controle desabilitado (ver .chip:disabled), e três
+   botões cinza no meio do cartão seriam lidos como indisponíveis.
+   Vem do contorno: a mesma linha firme dos campos, mais uma régua de 3px
+   na borda esquerda em --rail-ponto — o tom neutro da paleta, o mesmo do
+   ponto do rail, que não carrega significado de estado. São 7,69:1 sobre
+   o branco: à distância, o olho encontra a pilha de atalhos antes de ler
+   qualquer palavra dela. */
+.freq{border:1px solid var(--linha-campo); border-left:3px solid var(--rail-ponto);
+  background:var(--ficha); border-radius:var(--raio-p);
   padding:9px 12px; font:inherit; font-size:12.5px; text-align:left; cursor:pointer;
   color:var(--tinta); line-height:1.4}
 .freq:hover{border-color:var(--verde); background:var(--verde-suave)}
-.freq small{display:block; color:var(--grafite); font-size:11px; margin-top:2px}
+/* Tabular: as contagens ficam alinhadas uma sob a outra, e a diferença
+   entre 12 e 4 registros vira coisa de ver, não de ler. */
+.freq small{display:block; color:var(--grafite); font-size:11px; margin-top:2px;
+  font-variant-numeric:tabular-nums}
 .freq .proc{font-size:10px; letter-spacing:.08em; text-transform:uppercase;
   font-weight:600; margin:0 0 3px}
 
@@ -434,6 +477,9 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
   .topo,.corpo{padding-left:20px; padding-right:20px}
   .colunas,.colunas.estreita{grid-template-columns:minmax(0,1fr)}
   .numeros{grid-template-columns:1fr}
+  /* Sem coluna ao lado, não há com quem competir: o filtro volta à
+     largura inteira, que é a mais confortável para tocar. */
+  #campoProcesso{max-width:none}
 }
 @media(max-width:560px){
   .topo{padding:18px 16px 14px}
@@ -603,6 +649,17 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
             </div>
           </div>
 
+          <!-- O filtro por processo era revelado por um link e vinha DEPOIS da
+               busca. Quem testou o programa pediu as duas coisas ao contrário
+               (issue #19): que ele esteja sempre à vista e que venha antes.
+               Fica FORA do painel cinza de propósito — dentro dele haveria
+               duas superfícies brancas, e o destaque da v1.4 é justamente o
+               campo de busca ser a única. -->
+          <div id="campoProcesso">
+            <label class="rotulo" for="selProcesso">Processo de trabalho</label>
+            <select id="selProcesso"></select>
+          </div>
+
           <!-- A busca vem ANTES dos atalhos, e não depois. A ordem da v9 punha
                "Suas mais registradas" primeiro porque os atalhos eram a
                novidade; na prática o campo é o caminho de quem NÃO está
@@ -624,20 +681,22 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
               <div class="lista" id="listaAtividades" role="listbox" data-aberta="false"></div>
             </div>
 
+            <!-- As mesmas palavras de antes, sem o botão: não há mais o que
+                 revelar, então a frase virou o que sempre foi na leitura —
+                 a descrição dos dois caminhos, o campo vazio e o filtro
+                 que agora está logo acima. Sublinhado e cor de link saíram
+                 com o botão: prometer clique onde não há ação é pior do
+                 que não prometer nada. -->
             <p class="dica">
               Deixe o campo vazio e clique para ver todas as <span id="qtdAtividades">…</span> atividades, ou
-              <button type="button" class="ligacao" id="btnFiltrarProc">filtrar por processo de trabalho</button>
+              filtrar por processo de trabalho
             </p>
-            <div id="campoProcesso" hidden>
-              <label class="rotulo" for="selProcesso">Processo de trabalho</label>
-              <select id="selProcesso"></select>
-            </div>
           </div>
 
           <div class="escolhida" id="atvEscolhida" data-tem="false" aria-live="polite"></div>
 
           <div id="campoFrequentes" hidden>
-            <span class="rotulo" style="margin-top:16px">Suas mais registradas</span>
+            <span class="rot">Suas mais registradas</span>
             <div class="frequentes" id="frequentes"></div>
           </div>
         </div>
@@ -1825,7 +1884,9 @@ function limparIdentidade() {
   complexidade = null;
   $("inpAtividade").value = "";
   $("busca").classList.remove("tem-texto");
-  $("selProcesso").value = ""; $("campoProcesso").hidden = true;
+  /* O filtro por processo volta a "Todos os processos", mas o campo não se
+     esconde mais: ele está sempre à vista desde a #19. */
+  $("selProcesso").value = "";
   $("campoFrequentes").hidden = true; $("frequentes").innerHTML = "";
   limparEscolha();
   $("inpAusDe").value = ""; $("inpAusAte").value = ""; $("inpAusObs").value = "";
@@ -2090,12 +2151,9 @@ $("btnLimparBusca").addEventListener("click", () => {
   limparEscolha();
   $("inpAtividade").focus();
 });
-$("btnFiltrarProc").addEventListener("click", () => {
-  const campo = $("campoProcesso");
-  campo.hidden = !campo.hidden;
-  if (campo.hidden) { $("selProcesso").value = ""; }
-  else $("selProcesso").focus();
-});
+/* O botão que revelava o filtro por processo saiu na #19: o campo está
+   sempre à vista, e não há mais o que mostrar ou esconder. Só resta o
+   filtro em si. */
 $("selProcesso").addEventListener("change", () => abrirLista(true));
 
 /* ---- Atividades frequentes: derivadas dos próprios lançamentos ---- */
