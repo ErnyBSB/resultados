@@ -1,6 +1,6 @@
 # Programa de Resultados — COBIB
 ## Relatório Técnico do Projeto
-### Versão 1.6 · Aplicação Web Progressiva (PWA) *client-side*
+### Versão 1.7 · Aplicação Web Progressiva (PWA) *client-side*
 
 > Documento de referência para manutenção e evolução do sistema.
 > Destinado a desenvolvedores humanos e a modelos de IA.
@@ -121,6 +121,7 @@ vive neste repositório.
 | **1.4** | O campo de busca de atividade ganha **destaque por superfície** (painel recuado, rótulo visível, texto de apoio dentro dele) e passa a vir **antes** dos atalhos de "Suas mais registradas". |
 | **1.5** | Dado interno sai do repositório: `catalogo.js` vira semente sem pessoas, exemplos da documentação passam a usar nomes inventados, o PDF das betas sai da árvore e um `.gitignore` barra `config.json` e pastas de teste. |
 | **1.6** | O `<link rel="manifest">` sai do `<head>` e passa a ser **criado por código**, sob a mesma condição de protocolo que já guardava o registro do service worker. Sob `file://` — o duplo clique — o Chrome tratava cada arquivo como origem única e negava a busca do manifesto, enchendo o console de erros que não quebravam nada. |
+| **1.7** | Duas respostas ao primeiro teste de uso com servidores. A **data do lançamento não passa do dia corrente** (o calendário cinza os dias futuros, e o teto é recalculado a cada foco no campo). E o cartão "Qual atividade?" ganha **contraste e ênfase**: `--linha-campo` separa contorno de controle de fio de estrutura em todas as telas, o **filtro por processo fica sempre visível e antes da busca**, e os atalhos "Suas mais registradas" ganham régua e rótulo de peso. Nenhum texto de tela mudou. |
 
 ### 1.3. Versionamento por *tags* (novidade da 1.0)
 
@@ -1327,7 +1328,7 @@ rede pode hospedar o app (ex.: `unidadeCentral\app`).
 torna a navegação no seletor de pastas bem mais simples para as pessoas.
 
 **Atualização de versão:** ver 1.3 — as duas coisas que precisam concordar. A
-versão atual é `1.6`, e o cache correspondente é `ra-1.6`. Na primeira carga após
+versão atual é `1.7`, e o cache correspondente é `ra-1.7`. Na primeira carga após
 atualizar, um recarregamento forçado (Ctrl+F5) ajuda a garantir a troca.
 
 **Compatibilidade:** Chrome e Edge apenas, por decisão de projeto — a File System
@@ -1688,6 +1689,6 @@ Progressive Web App
 
 ---
 
-*Programa de Resultados — COBIB · Relatório Técnico da versão 1.6 (ago/2026).
+*Programa de Resultados — COBIB · Relatório Técnico da versão 1.7 (ago/2026).
 Documento vivo: ao publicar uma versão nova, atualize as seções afetadas e o
 histórico de versões (1.2).*
