@@ -45,6 +45,67 @@ enxerga a pasta da rede. A data seria justamente a informação que
 faltaria quando mais se precisa dela. Sendo manual, fica na linha
 seguinte à da versão: quem troca uma vê a outra.
 
+O cartão "Qual atividade?" depois do teste de uso (a sair na próxima versão)
+----------------------------------------------------------------------------
+Um grupo de servidores usou o programa por alguns dias e trouxe quatro
+queixas, todas sobre o primeiro cartão da tela de lançamento. Elas vêm
+juntas aqui porque a resposta a uma mexia nas outras.
+
+FALTAVA CONTRASTE ENTRE AS PEÇAS. Os campos do programa inteiro tinham
+contorno --linha (#D7DCD8), que dá 1,39:1 sobre o branco. A regra de
+acessibilidade pede 3:1 para o contorno que identifica um controle, e
+esse contorno era a única coisa que desenhava o campo. Agora há duas
+linhas com papéis distintos, e a distinção significa alguma coisa:
+
+  --linha        estrutura — borda de cartão, de tabela, de painel;
+                 fina de propósito, para sumir do olho;
+  --linha-campo  contorno de controle — campo, chip, botão secundário;
+                 3,59:1 no branco e 3,19:1 no cinza da página.
+
+Isso valeu para o aplicativo todo, e não só para esta tela: era o mesmo
+defeito em toda parte, e consertar num lugar só deixaria o programa com
+dois padrões de campo. Chip desabilitado é a exceção: volta ao fio de
+estrutura, porque não se opera. Ele continua legível — diz quais
+complexidades a atividade admite, que é informação —, mas deixa de
+prometer clique.
+
+O FILTRO POR PROCESSO SÓ APARECIA DEPOIS DE CLICAR num link, e vinha
+depois do campo de busca. Agora está sempre à vista e vem antes. O
+botão que o revelava deixou de existir; as palavras "filtrar por
+processo de trabalho" continuam na frase de apoio, agora como texto
+comum, sem sublinhado nem cor de link — prometer clique onde não há
+mais ação é pior do que não prometer nada.
+
+O campo ficou FORA do painel cinza, e não dentro. Dentro haveria duas
+superfícies brancas no mesmo recesso, e o destaque da v1.4 é
+exatamente o campo de busca ser a única. Ele também é mais estreito que
+o painel: a largura é o que diz, sem precisar de palavra, qual dos dois
+é o caminho geral.
+
+Aqui há uma DÍVIDA a declarar. A v9 acabou com a obrigação de escolher
+o processo antes da atividade — era o defeito das duas listas suspensas.
+Pôr o filtro de volta na frente reencena essa ordem para o olho, ainda
+que ele siga opcional ("Todos os processos" é o padrão) e a hierarquia
+diga qual é o caminho principal. Foi o que os usuários pediram, e é o
+que está feito; se a busca começar a ser menos usada, é aqui que se
+procura o motivo.
+
+"SUAS MAIS REGISTRADAS" NÃO TINHA ÊNFASE: três botões brancos, de borda
+quase invisível, sobre um cartão branco. A ênfase não podia vir de cor
+de estado — verde é aprovado, dourado é pendente, e a convenção não se
+empresta para decoração. Também não podia vir de fundo cinza: --papel é
+o fundo de controle DESABILITADO, e três botões cinza no meio do cartão
+seriam lidos como indisponíveis. Veio do contorno: a linha firme dos
+campos mais uma régua de 3px na borda esquerda, em --rail-ponto, o tom
+neutro da paleta (o mesmo do ponto do rail), que não carrega estado. São
+7,69:1 sobre o branco — à distância o olho encontra a pilha de atalhos
+antes de ler qualquer palavra dela. O rótulo da seção subiu junto: era
+um .rotulo de 10,5px em cinza e passou ao mesmo posto do rótulo da
+busca, os dois blocos que a pessoa de fato opera no cartão.
+
+Nenhum texto da tela mudou, como pedia o enunciado. O que mudou foi o
+peso com que cada um chega ao olho.
+
 O calendário não oferece dia futuro (a sair na próxima versão)
 --------------------------------------------------------------
 O campo "Data do lançamento" aceitava qualquer dia, inclusive os que
