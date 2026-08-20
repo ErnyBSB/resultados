@@ -121,6 +121,8 @@ vive neste repositório.
 | **1.6** | O `<link rel="manifest">` sai do `<head>` e passa a ser **criado por código**, sob a mesma condição de protocolo que já guardava o registro do service worker. Sob `file://` — o duplo clique — o Chrome tratava cada arquivo como origem única e negava a busca do manifesto, enchendo o console de erros que não quebravam nada. |
 | **1.7** | Duas respostas ao primeiro teste de uso com servidores. A **data do lançamento não passa do dia corrente** (o calendário cinza os dias futuros, e o teto é recalculado a cada foco no campo). E o cartão "Qual atividade?" ganha **contraste e ênfase**: `--linha-campo` separa contorno de controle de fio de estrutura em todas as telas, o **filtro por processo fica sempre visível e antes da busca**, e os atalhos "Suas mais registradas" ganham régua e rótulo de peso. Nenhum texto de tela mudou. |
 
+| **1.8** | A janela "Sobre o programa" passa a exibir o **selo do catálogo** (`CATALOGO_ATUALIZADO`), a data da última edição do `catalogo.js`. O navegador decide sozinho quando reler esse arquivo, e um catálogo velho é indistinguível de um correto na tela; o selo não descongela o arquivo, apenas torna a defasagem verificável. Catálogo anterior à 1.8 não tem a constante, e a linha é omitida. |
+
 ### 1.3. Versionamento por *tags* (novidade da 1.0)
 
 Até a v14, cada versão nova era uma **cópia inteira** da pasta anterior
@@ -277,7 +279,7 @@ CLAUDE.md                     instruções para agentes de IA que editem o repo
 | `index.html` | ~2.900 | Interface (HTML + CSS) e toda a lógica da aplicação em um `<script>`. É o coração do sistema. |
 | `versao.js` | ~25 | Número da versão, etiqueta exibida, data da última atualização e endereço do repositório. Lido pelo `index.html` e pelo `sw.js`. |
 | `ajuda/*.webp` | 189 KB | Capturas usadas na tela de Ajuda. WebP em vez de PNG (671 KB) — o aplicativo é Chrome/Edge por decisão de projeto. |
-| `catalogo.js` | ~166 | Dados-semente: processos, atividades, pontuação, metas diárias, tipos de ausência, unidades, chefias, servidores, senhas iniciais e caminho da pasta. |
+| `catalogo.js` | ~183 | Dados-semente: processos, atividades, pontuação, metas diárias, tipos de ausência, unidades, chefias, servidores, senhas iniciais e caminho da pasta. Carrega também `CATALOGO_ATUALIZADO`, a data da própria edição. |
 | `rede.js` | ~205 | Camada de acesso à pasta de rede: IndexedDB para o handle, permissões, leitura/gravação de JSON, leitura estrita antes de gravar. |
 | `echarts.min.js` | 521 KB | Build próprio do ECharts, só com o que o aplicativo usa. |
 | `gerar-senha.html` | ~63 | Utilitário isolado para gerar o *hash* SHA-256 de uma senha, a ser colado em `SENHAS` no `catalogo.js` (ou usado pelo painel do adm). |
@@ -301,6 +303,12 @@ permanece autoritativo para `PROCESSOS`/`ATIVIDADES` (que mudam raramente), para
 tabelas de pontuação e meta, para os tipos de ausência e para `PASTA_REDE`.
 
 ```js
+/* NOVIDADE v1.8 — data desta edição do catálogo, exibida em "Sobre o
+   programa". Manual, como a do versao.js. Serve para responder QUAL
+   catálogo o navegador está usando: um catálogo velho é idêntico a um
+   certo na tela, e sem o selo não há como distingui-los. */
+const CATALOGO_ATUALIZADO = '20.08.2026';
+
 const PONTOS = { b: 5, m: 10, a: 15 };                    // baixa, média, alta
 const ROTULO_COMPLEXIDADE = { b: 'Baixa', m: 'Média', a: 'Alta' };
 

@@ -6,6 +6,22 @@
    "b" (baixa), "m" (média), "a" (alta).
    ========================================================= */
 
+/* Data desta edição do catálogo, no formato dd.mm.aaaa. TROQUE-A SEMPRE
+   que mexer neste arquivo — é o único jeito de a tela conseguir dizer
+   QUAL catálogo está em uso.
+
+   O motivo é que o navegador decide sozinho quando reler o catalogo.js,
+   e um catálogo velho é idêntico a um catálogo certo: os chips aparecem,
+   a busca acha as atividades, nada falha — só que as complexidades são
+   as de antes. Por duplo clique (file://), recarregar a página nem
+   sempre traz a edição nova; fechar e reabrir o navegador traz. Servido
+   por HTTP(S), o service worker congela o arquivo por conta própria.
+
+   Esta data não descongela nada. Ela só aparece em "Sobre o programa",
+   para que a pergunta "o navegador já está com a minha edição?" tenha
+   resposta num relance, em vez de virar meia tarde de adivinhação. */
+const CATALOGO_ATUALIZADO = "20.08.2026";
+
 const PONTOS = { b: 5, m: 10, a: 15 };
 const ROTULO_COMPLEXIDADE = { b: "Baixa", m: "Média", a: "Alta" };
 

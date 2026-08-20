@@ -45,6 +45,46 @@ enxerga a pasta da rede. A data seria justamente a informação que
 faltaria quando mais se precisa dela. Sendo manual, fica na linha
 seguinte à da versão: quem troca uma vê a outra.
 
+O selo do catálogo (novidade da v1.8)
+--------------------------------------
+A janela "Sobre o programa" passou a mostrar mais uma linha: "Catálogo de
+atividades", com a data da última edição do catalogo.js. A data é escrita
+à mão no próprio catálogo, na constante CATALOGO_ATUALIZADO, e quem mexe
+no arquivo troca a data junto.
+
+O motivo é um defeito de diagnóstico, e não de funcionamento. O navegador
+decide sozinho quando reler o catalogo.js, e um catálogo velho é
+IDÊNTICO a um catálogo certo: os chips de complexidade aparecem, a busca
+encontra as atividades, nada dá erro — só que as complexidades são as de
+antes da edição. Aberto por duplo clique (file://), recarregar a página,
+mesmo com Ctrl+Shift+R, nem sempre traz a edição nova; fechar e reabrir o
+navegador traz. Servido por HTTP(S), o service worker congela o arquivo
+por conta própria, porque serve primeiro o que está em cache.
+
+Nos dois casos a tela responde errado sem avisar, e foi isso que custou
+caro: sem uma forma de perguntar "qual catálogo você está usando?", não
+havia como separar "minha edição não foi aplicada" de "estou olhando um
+arquivo diferente do que editei". A resposta só apareceu depois de
+fechar o navegador inteiro e abrir de novo.
+
+O selo NÃO descongela nada — e é importante dizer isso com todas as
+letras. Ele não faz o navegador reler o arquivo, não corrige o cache e
+não muda uma vírgula do que a tela mostra. Ele conserta o SILÊNCIO: é a
+diferença entre uma tela que responde errado e uma tela que deixa
+perguntar. Está no mesmo espírito do resto do programa, que prefere
+explicar a recusa a falhar calado.
+
+A limitação assumida é que a data é manual, como a do versao.js e pelo
+mesmo motivo: buscá-la em outro lugar exigiria rede, e este aplicativo
+existe para funcionar sem ela. Quem editar o catálogo e esquecer de
+trocar a data terá um selo mentindo — e aí o selo é pior do que não ter
+selo, porque dá confiança falsa. Não há como o programa perceber isso
+sozinho; a data só pode ser tão honesta quanto quem a escreve.
+
+Catálogo escrito antes da v1.8 não tem a constante. A janela aceita a
+ausência e simplesmente omite a linha, como já faz com a chefia geral e
+com as senhas: nenhum arquivo de ninguém precisa ser reescrito.
+
 O cartão "Qual atividade?" depois do teste de uso (novidade da v1.7)
 ---------------------------------------------------------------------
 Um grupo de servidores usou o programa por alguns dias e trouxe quatro
