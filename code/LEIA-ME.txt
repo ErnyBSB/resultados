@@ -1326,6 +1326,50 @@ automaticamente a partir da semente do catalogo.js do aplicativo.
 Depois disso, o catalogo.js só continua valendo para PROCESSOS e
 ATIVIDADES; pessoas e senhas são administradas pelo perfil adm.
 
+Quando o acesso à pasta falha, a tela passa a dizer (novidade da v1.11)
+-----------------------------------------------------------------------
+Um servidor, no mesmo hardware e no mesmo Windows dos colegas, abria o
+programa da pasta da rede e NÃO recebia o pedido de permissão do
+navegador. Copiado para o disco local, funcionava. A causa é do
+ambiente — direitos NTFS, política do Chrome, configuração de conteúdo —
+e não se conserta aqui.
+
+O que se conserta é o programa ter ficado MUDO diante disso. Quem foi
+diagnosticar não teve nada da tela: nem o motivo, nem o reconhecimento
+de que algo tinha falhado. Eram duas cegueiras diferentes, no mesmo
+fluxo.
+
+A primeira: a verificação da pasta memorizada, que roda sozinha ao
+abrir, não tinha rede de proteção. Ela abre o IndexedDB e consulta a
+permissão do handle, e as duas coisas podem falhar quando o navegador
+está com os dados do site bloqueados. A falha virava uma rejeição
+perdida, e a tela ficava em "Pasta não conectada" — visualmente idêntica
+à de quem simplesmente ainda não tinha conectado. Não conseguir
+VERIFICAR é diferente de não ter o que verificar, e só a tela podia
+contar essa diferença.
+
+A segunda, e a que mais enganava: ao escolher a pasta no seletor, o
+programa adotava o que voltasse. Só que pedir "leitura e escrita" é
+PEDIDO, e não garantia — com a escrita barrada, o navegador pode
+devolver a pasta apenas para leitura, sem exibir prompt nenhum. O
+programa anunciava "Conectado", e a quebra só aparecia bem depois, na
+primeira gravação, com uma mensagem que não apontava para a causa.
+Prometer o que não vai acontecer é pior do que recusar na hora. Agora a
+permissão é conferida ali mesmo: sem escrita, a conexão não se completa,
+a tela explica que a pasta abriu somente para leitura e diz o que
+conferir. O caminho da pasta memorizada já fazia essa conferência; era o
+caminho do seletor que estava sem ela.
+
+Nesses dois casos a pasta escolhida não fica memorizada. Guardá-la faria
+a tela oferecer "Reconectar" para algo que não chegou a conectar.
+
+Junto veio uma mudança pequena nos avisos: eles somem sozinhos depois de
+seis segundos, o que serve bem ao "salvo com sucesso" e atrapalha quem
+está tentando entender por que a pasta não conectou. Os dois avisos
+desta seção ficam na tela até a próxima ação — quem precisa anotar o
+motivo, ou mostrá-lo a outra pessoa, não pode perdê-lo enquanto vira a
+cabeça. Os demais avisos continuam sumindo como antes.
+
 Pasta oficial (selo de instalação)
 ----------------------------------
 Somente o Administrador define a pasta central. Ao conectar-se a uma
