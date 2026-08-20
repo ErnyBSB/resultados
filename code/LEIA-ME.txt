@@ -1309,6 +1309,52 @@ registra atividades nem aprova; seu painel permite:
   geral, com validação, direto no config.json. Renomear uma pessoa
   desvincula a senha e o arquivo de lançamentos do nome antigo.
 
+Quando o Administrador esquece a própria senha
+-----------------------------------------------
+Não há "esqueci minha senha" na tela, e não é esquecimento de projeto: o
+programa não tem servidor, então não há para onde mandar um e-mail nem
+quem confira uma chave de recuperação. A saída é outra, e existe desde
+sempre.
+
+O programa só cobra o hash gravado enquanto ELE existir. Não havendo
+senha cadastrada para o "Administrador", ele volta a aceitar a senha
+inicial "adm". Recuperar é, portanto, apagar UMA entrada do config.json,
+na pasta central:
+
+  "senhas": {
+    "Administrador": "9f86d081884c7d65...",   <- apague só esta linha
+    "Fulana de Tal": "5e884898da2804..."
+  }
+
+Feito isso, entre como Administrador com a senha "adm" e defina uma
+senha nova no painel, na mesma sessão. Não é preciso calcular hash
+nenhum, nem usar o gerar-senha.html: essa ferramenta serve para escrever
+uma senha à mão, e aqui o que se quer é justamente NÃO ter senha por um
+minuto.
+
+NÃO apague o config.json inteiro. Junto com a senha esquecida iriam as
+unidades, as chefias, os servidores e todas as demais senhas — e a pasta
+passaria a ser vista como não oficializada, estado em que oficializar de
+novo grava o catálogo VAZIO da semente por cima do que restou. Os
+lançamentos e as aprovações não seriam afetados, porque vivem nos
+arquivos de cada unidade; a configuração, sim, teria de ser refeita à
+mão.
+
+O painel não faz isso sozinho de propósito: o botão "Remover" existe
+para todo mundo, menos para o Administrador. A senha dele pode ser
+trocada, nunca removida pela tela. Como a tela só se alcança com a
+senha, esquecê-la é um impasse por construção — e a edição do arquivo é
+a única porta.
+
+Vale dizer o outro lado com todas as letras: QUEM CONSEGUE APAGAR AQUELA
+LINHA VIRA ADMINISTRADOR, com uma senha que está escrita aqui e na tela
+do painel. Este recurso vale exatamente o que valer a permissão do
+config.json na rede. É por isso que a linha "administrador(es) com
+escrita em config.json, demais acessos somente leitura", lá na seção de
+segurança recomendada, não é higiene: é o que segura este mecanismo em
+pé. Sem ela, qualquer pessoa com acesso de escrita à pasta central se
+promove a administrador em dez segundos.
+
 Perfis (todos registram atividades, exceto o adm)
 -------------------------------------------------
 Cada lançamento carrega o papel de quem o criou (servidor, chefia ou
