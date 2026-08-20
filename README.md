@@ -45,6 +45,7 @@ code/                    o aplicativo
   ajuda/                 capturas usadas na tela de Ajuda
   LEIA-ME.txt            a documentação de verdade: o que faz, e por quê
 Projeto_Design.md             relatório técnico do projeto (acompanha a versão atual)
+FAQ.md                        perguntas frequentes de quem usa (arquivo vivo)
 .gitignore                    barra config.json, pastas de teste e *.local.js
 ```
 
@@ -57,6 +58,25 @@ código. Ele descreve sempre a versão em uso, sem número no nome: versão é t
 nome de arquivo. Substitui o relatório das versões beta, cujo PDF saiu da árvore na
 v1.5 por trazer nomes reais dentro do binário — recupere-o com
 `git show v1.4:Projeto_Design_until_v8.pdf > relatorio-v8.pdf`.
+
+[`FAQ.md`](FAQ.md) responde as dúvidas de quem **usa** o programa: esqueci de
+lançar ontem, a chefia está de férias e ninguém aprova, meu percentual caiu sem
+motivo aparente. Ele não substitui a **Ajuda embutida**, a que abre dentro do
+aplicativo — a diferença é o ciclo de vida:
+
+|  | Ajuda embutida | `FAQ.md` |
+|---|---|---|
+| Conteúdo | o que o programa é, papéis, como usar | dúvidas de rotina, casos particulares |
+| Muda | quando o aplicativo muda | quando alguém pergunta |
+| Custo de corrigir | publicar uma versão | um commit |
+| Funciona sem internet | sim | não |
+
+A Ajuda é embutida porque quem clica nela pode estar numa máquina sem internet,
+olhando só para a pasta da rede; o preço é que corrigir um texto dela exige
+publicar uma versão. Para a dúvida que aparece na segunda-feira esse preço é alto
+demais — daí este arquivo, que se corrige com um commit. Por decisão de projeto o
+aplicativo **não** aponta para ele em tela: um link que não abre na máquina
+isolada pareceria defeito.
 
 ## Dados internos
 
