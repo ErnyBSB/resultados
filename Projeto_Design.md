@@ -102,6 +102,7 @@ vive neste repositório.
 | **1.7** | Duas respostas ao primeiro teste de uso com servidores. A **data do lançamento não passa do dia corrente** (o calendário cinza os dias futuros, e o teto é recalculado a cada foco no campo). E o cartão "Qual atividade?" ganha **contraste e ênfase**: `--linha-campo` separa contorno de controle de fio de estrutura em todas as telas, o **filtro por processo fica sempre visível e antes da busca**, e os atalhos "Suas mais registradas" ganham régua e rótulo de peso. Nenhum texto de tela mudou. |
 
 | **1.8** | A janela "Sobre o programa" passa a exibir o **selo do catálogo** (`CATALOGO_ATUALIZADO`), a data da última edição do `catalogo.js`. O navegador decide sozinho quando reler esse arquivo, e um catálogo velho é indistinguível de um correto na tela; o selo não descongela o arquivo, apenas torna a defasagem verificável. Catálogo anterior à 1.8 não tem a constante, e a linha é omitida. |
+| **1.9** | `config.json` **ilegível deixa de ser confundido com pasta nova**. `lerConfig` passa a distinguir arquivo ausente de arquivo quebrado; a tela mostra o motivo e **recusa a entrada — a do Administrador inclusive — enquanto o arquivo estiver ilegível**, porque oficializar por cima gravava o catálogo vazio da semente sobre unidades, chefias, servidores e senhas. A tranca fica na tela e dentro da própria oficialização, e a confirmação passa a dizer que grava o `config.json`. |
 
 ### 1.3. Versionamento por *tags* (novidade da 1.0)
 
@@ -349,7 +350,7 @@ Isola toda a interação com a File System Access API e o IndexedDB.
 | `lerLancamentosDaUnidade` | Concatena os lançamentos de todos os arquivos de uma unidade. |
 | **`lerAusenciasDaUnidade`** | **(v11)** Idem para as ausências. |
 | `lerAprovacoes` / `gravarAprovacoes` | Mapa `{idLancamento: {por, em}}` de uma unidade (ou `GERAL`). |
-| `lerConfig` / `gravarConfig` | Configuração central `config.json` na raiz. |
+| `lerConfig` / `gravarConfig` | Configuração central `config.json` na raiz. Desde a 1.9, `lerConfig` devolve `{ estado, dados, motivo }` com `estado` em `"ausente"` / `"ilegivel"` / `"ok"`: arquivo inexistente e arquivo quebrado precisam ser respostas diferentes, porque oficializar por cima de um arquivo ilegível gravava a semente vazia sobre a configuração real. |
 
 **Detalhe de robustez (leitura em lote).** A leitura de lançamentos e ausências
 ignora silenciosamente arquivos malformados (`try/catch` por arquivo), para que um

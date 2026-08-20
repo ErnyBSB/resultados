@@ -1295,6 +1295,52 @@ cada pessoa faz o gesto de escolha uma única vez por computador
 (depois basta "Reconectar"); o caminho exibido como orientação na
 etapa 1 vem da constante PASTA_REDE no catalogo.js.
 
+Config.json ilegível não é pasta nova (novidade da v1.9)
+---------------------------------------------------------
+Até a v1.8, um config.json quebrado — uma vírgula fora do lugar numa
+edição à mão, um arquivo truncado por gravação interrompida, um zero
+byte — dava exatamente na mesma coisa que arquivo inexistente: o
+programa anunciava "esta pasta ainda não foi oficializada", ninguém
+aparecia na lista de nomes, e nada dizia que o problema era o arquivo.
+
+Isso era ruim por si só, mas o pior vinha depois. A reação natural de
+quem lê "não foi oficializada" é oficializar. E oficializar GRAVA o
+config.json a partir da configuração em vigor — que, não tendo sido
+possível ler o arquivo, era a semente vazia do catalogo.js. Unidades,
+chefias, servidores e todos os hashes de senha eram substituídos por um
+catálogo em branco, com uma confirmação que não avisava nada disso. Os
+lançamentos e as aprovações escapavam, porque moram nos arquivos de cada
+unidade; a configuração, não.
+
+Agora "não existe" e "existe e não dá para ler" são respostas
+diferentes. O programa distingue as duas, avisa qual é o caso, mostra o
+motivo (a mensagem do JSON, "o arquivo está vazio", 'falta a chave
+"unidades"') e RECUSA a entrada enquanto o arquivo estiver quebrado —
+inclusive a do Administrador. Recusar o adm é o ponto todo: a permissão
+de escrita no config.json é dele, então nenhuma regra do Windows
+impediria essa gravação. Só o programa pode.
+
+A tranca está em dois lugares de propósito: na tela, que barra antes, e
+dentro da própria oficialização, ao lado da linha que grava. É a
+gravação que destrói, então é junto dela que a recusa precisa morar —
+para o dia em que alguém abrir outro caminho até ali sem saber que
+precisava barrar.
+
+A confirmação de oficializar também passou a dizer o que faz: que ela
+GRAVA o config.json, e que uma pasta que já tinha configuração terá a
+configuração substituída.
+
+Uma consequência assumida: um config.json de zero byte, que antes era
+tratado como pasta nova, agora tranca o programa até ser corrigido ou
+apagado. É a troca certa — zero byte é o que sobra de uma gravação
+interrompida, e é exatamente a hora em que gravar por cima seria o pior
+a fazer —, mas quem tiver um arquivo vazio numa pasta de teste vai
+precisar apagá-lo em vez de seguir em frente.
+
+O que isto NÃO faz é impedir que o arquivo quebre. Para isso valem as
+permissões da seção "Segurança recomendada": administrador com escrita
+no config.json, todo o resto somente leitura.
+
 Perfil Administrador
 --------------------
 Na lista de identificação há a opção "Administrador" (senha inicial:

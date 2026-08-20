@@ -1385,7 +1385,11 @@ let complexidade = null;
 let cargaSel = null;   // 8 ou 6, marcada na etapa 2
 let dados = { registros: [], aprovU: {}, aprovG: {} };
 const CHAVE_INST = "ra.instalacao.v1";
-let situacaoPasta = null;  // "oficial" | "nao-oficializada" | "divergente"
+let situacaoPasta = null;  // "oficial" | "nao-oficializada" | "divergente" | "ilegivel"
+/* Motivo, quando o config.json existe mas não pôde ser lido. Fica fora
+   do CFG de propósito: o CFG é a configuração EM VIGOR, e neste caso o
+   que está em vigor é a semente do catalogo.js, não o arquivo. */
+let configIlegivel = null;
 /* Configuração em vigor: começa pela semente do catalogo.js e é
    substituída pelo config.json da pasta central ao conectar. */
 let CFG = {
@@ -1616,7 +1620,11 @@ async function aposConectar() {
   aplicarAusencias();
   // valida o selo de instalação da pasta
   const idLocal = localStorage.getItem(CHAVE_INST);
-  if (CFG.instalacao) {
+  /* O arquivo ilegível vem ANTES de tudo: sem esta primeira pergunta, a
+     falta de CFG.instalacao — que aqui só quer dizer "não deu para ler o
+     arquivo" — seria lida como pasta nunca oficializada. */
+  if (configIlegivel) situacaoPasta = "ilegivel";
+  else if (CFG.instalacao) {
     if (idLocal && idLocal !== CFG.instalacao.id) situacaoPasta = "divergente";
     else {
       situacaoPasta = "oficial";
@@ -1625,6 +1633,12 @@ async function aposConectar() {
   } else situacaoPasta = "nao-oficializada";
   montarPessoas();
   $("cardIdent").hidden = false;
+  if (situacaoPasta === "ilegivel")
+    avisar($("avisoIdent"),
+      "O config.json desta pasta EXISTE, mas não pôde ser lido (" + configIlegivel + "). " +
+      "Isto NÃO é uma pasta nova: não oficialize a pasta, porque isso gravaria um catálogo vazio " +
+      "por cima da configuração que ainda está no arquivo. Corrija o JSON — ou restaure uma cópia — " +
+      "e use “Atualizar dados da rede”.", true);
   if (situacaoPasta === "nao-oficializada")
     avisar($("avisoIdent"),
       "Esta pasta ainda não foi oficializada. Apenas o Administrador pode se identificar para configurá-la.", true);
@@ -1642,9 +1656,11 @@ async function aposConectar() {
 /* Lê o config.json central; NÃO cria mais automaticamente — a
    criação/oficialização é ato exclusivo do administrador. */
 async function carregarConfig() {
+  configIlegivel = null;
   try {
-    const cfg = await lerConfig(dirRaiz);
-    if (cfg && cfg.unidades) {
+    const r = await lerConfig(dirRaiz);
+    if (r.estado === "ok") {
+      const cfg = r.dados;
       CFG = {
         unidades: cfg.unidades,
         chefiaGeral: cfg.chefiaGeral ?? null,
@@ -1656,12 +1672,25 @@ async function carregarConfig() {
         mostrarAusencias: cfg.mostrarAusencias === true,
         instalacao: cfg.instalacao || null
       };
+    } else if (r.estado === "ilegivel") {
+      /* O arquivo existe e não pôde ser lido. Guardar o motivo é o que
+         impede a tela de anunciar pasta virgem — e a oficialização de
+         gravar a semente vazia por cima do que ainda está lá. */
+      configIlegivel = r.motivo || "conteúdo inválido";
+      CFG.instalacao = null;
     } else {
       CFG.instalacao = null; // sem config: pasta virgem
     }
   } catch { /* mantém a semente do catalogo.js */ }
 }
 async function oficializarPasta(pessoa) {
+  /* Segunda tranca, no lugar onde a gravação de fato acontece. A tela já
+     barra antes; esta linha é para o dia em que alguém acrescentar outro
+     caminho até aqui e não souber que precisava barrar. É a gravação que
+     destrói, então é ao lado dela que a recusa precisa morar. */
+  if (configIlegivel)
+    throw new Error("o config.json existe mas não pôde ser lido (" + configIlegivel +
+      "); oficializar agora apagaria a configuração gravada nele");
   CFG.instalacao = {
     id: crypto.randomUUID(),
     por: pessoa.nome,
@@ -1810,8 +1839,17 @@ $("btnIniciar").addEventListener("click", async () => {
   if (p.perfil !== "adm" && situacaoPasta !== "oficial")
     return avisar($("avisoIdent"),
       "Somente o Administrador pode entrar antes de a pasta ser validada.", true);
+  /* Barra TODO MUNDO, o administrador inclusive — e é justamente ele que
+     precisa ser barrado aqui. A permissão de escrita no config.json é
+     dele, então nenhuma regra do Windows impede esta gravação; só esta
+     linha impede. Entrar não resolveria nada enquanto o arquivo estiver
+     quebrado: o catálogo em vigor seria a semente vazia. */
+  if (situacaoPasta === "ilegivel")
+    return avisar($("avisoIdent"),
+      "O config.json existe e não pôde ser lido (" + configIlegivel + "). " +
+      "Corrija o arquivo antes de entrar: oficializar agora apagaria a configuração que está nele.", true);
   if (p.perfil === "adm" && situacaoPasta === "nao-oficializada") {
-    if (!confirm(`Oficializar a pasta conectada como a pasta central do sistema?\nTodas as pessoas passarão a entrar somente por ela.`)) return;
+    if (!confirm(`Oficializar a pasta conectada como a pasta central do sistema?\nTodas as pessoas passarão a entrar somente por ela.\n\nISTO GRAVA o config.json. Só confirme se a pasta for realmente nova: se ela já tinha configuração, ela será substituída.`)) return;
     try { await oficializarPasta(p); }
     catch (e) { return avisar($("avisoIdent"), "Não foi possível oficializar (sem escrita na pasta?): " + e.message, true); }
     avisar($("avisoIdent"), "Pasta oficializada com sucesso.");
