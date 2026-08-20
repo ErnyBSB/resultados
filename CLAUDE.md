@@ -42,7 +42,7 @@ from a cache-first service worker.
 
 ```
 code/                    the app — one copy, always the current version
-  index.html             UI + all app logic + inline CSS (~2.9k lines)
+  index.html             UI + all app logic + inline CSS, in one file
   versao.js              the ONE place the app version is written: number,
                          displayed label, last-update date, repository URL
   catalogo.js            editable catalog: units, staff, processes, activities,
@@ -52,12 +52,9 @@ code/                    the app — one copy, always the current version
   sw.js                  service worker; derives the cache key from versao.js
   manifest.webmanifest   PWA metadata (name shows on the installed icon)
   gerar-senha.html       standalone tool: sha256("nome|senha") for CFG.senhas
-  echarts.min.js         vendored charting lib
   icons/                 icon-192.png, icon-512.png — required for offline install
+  ajuda/                 screenshots used by the in-app help
   LEIA-ME.txt            the real documentation: what changed and WHY
-Projeto_Design.md             technical report for the current version: architecture,
-                              data model, roles, decisions, limitations
-.gitignore                    blocks config.json, test folders and *.local.js
 ```
 
 The beta-era report (`Projeto_Design_until_v8.pdf`) left the tree in v1.5 — it
