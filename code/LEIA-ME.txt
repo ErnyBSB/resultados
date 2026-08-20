@@ -492,6 +492,38 @@ qualquer forma. As dúvidas que aparecerem no dia a dia, essas mudam
 toda semana e não cabem aqui: vão para o repositório, em texto simples,
 onde se corrigem sem republicar nada.
 
+Esse texto simples agora existe: o FAQ.md, na raiz do repositório. A
+divisão de trabalho entre ele e esta Ajuda é a de CICLO DE VIDA, e não
+a de assunto:
+
+  Ajuda embutida        o que o programa é, os papéis, como lançar,
+                        como buscar, o que a meta mede. Muda quando o
+                        aplicativo muda. Corrigir custa uma versão.
+                        Funciona sem internet.
+
+  FAQ.md                "esqueci de lançar ontem", "a chefia está de
+                        férias, quem aprova", "meu percentual caiu e eu
+                        trabalhei normalmente". Muda quando alguém
+                        pergunta. Corrigir custa um commit. Não
+                        funciona sem internet.
+
+O aplicativo NÃO aponta para o FAQ em tela, e isso foi decidido, não
+esquecido. Um link para fora, numa máquina que só enxerga a pasta da
+rede, não abre — e um link que não abre parece defeito do programa, o
+que é pior do que não ter link. Quem precisa do FAQ chega a ele pelo
+endereço do repositório, que já está na janela "Sobre o programa".
+
+A limitação assumida é essa mesma: o FAQ só serve a quem tem internet.
+Ele é o complemento da Ajuda, e não o substituto — o que for essencial
+para usar o programa continua tendo de caber na Ajuda embutida, mesmo
+custando uma versão para ser corrigido.
+
+As perguntas chegam pelos canais de sempre — conversa, e-mail, a chefia
+da unidade — e o administrador escreve a resposta num commit. Ninguém
+precisa de conta no GitHub para perguntar. Uma regra ao responder:
+resposta que descreve comportamento do programa tem de bater com o
+código, e quando o comportamento mudar, o FAQ entra na mesma revisão.
+
 Tela, e não páginas HTML soltas
 -------------------------------
 A outra opção era um punhado de páginas na pasta, abertas em outra aba.
