@@ -104,6 +104,7 @@ vive neste repositório.
 | **1.8** | A janela "Sobre o programa" passa a exibir o **selo do catálogo** (`CATALOGO_ATUALIZADO`), a data da última edição do `catalogo.js`. O navegador decide sozinho quando reler esse arquivo, e um catálogo velho é indistinguível de um correto na tela; o selo não descongela o arquivo, apenas torna a defasagem verificável. Catálogo anterior à 1.8 não tem a constante, e a linha é omitida. |
 | **1.9** | `config.json` **ilegível deixa de ser confundido com pasta nova**. `lerConfig` passa a distinguir arquivo ausente de arquivo quebrado; a tela mostra o motivo e **recusa a entrada — a do Administrador inclusive — enquanto o arquivo estiver ilegível**, porque oficializar por cima gravava o catálogo vazio da semente sobre unidades, chefias, servidores e senhas. A tranca fica na tela e dentro da própria oficialização, e a confirmação passa a dizer que grava o `config.json`. |
 | **1.10** | O **`catalogo.js` passa a ser servido rede-first** pelo `sw.js`. Servido por HTTP(S), o service worker o entregava do cache como se fosse parte do programa, e uma edição no catálogo não chegava a quem já tinha aberto o aplicativo — em silêncio, porque catálogo velho é idêntico a catálogo certo na tela. Agora tenta a rede, guarda o que voltar e cai no cache quando a rede falta; um prazo de 2,5 s impede que a única requisição que toca a rede trave a abertura. Sob `file://` nada muda: ali não há service worker. |
+| **1.11** | **A tela passa a explicar as falhas de acesso à pasta.** A verificação automática da pasta memorizada ganha captura de erro — sem ela, uma falha ao abrir o IndexedDB virava rejeição perdida e a tela ficava idêntica à de quem ainda não conectou. E o caminho do seletor de pastas passa a conferir a permissão de **escrita** com `garantirPermissao()`: `mode: "readwrite"` é pedido, não garantia, e o navegador pode devolver a pasta só para leitura sem exibir prompt — o programa anunciava "Conectado" e só quebrava na primeira gravação. Sem escrita, a conexão não se completa e a tela diz o que conferir. |
 
 ### 1.3. Versionamento por *tags* (novidade da 1.0)
 
@@ -398,7 +399,7 @@ Funções-chave do script principal:
 
 | Função | Responsabilidade |
 |---|---|
-| `conectarSilencioso` / `aposConectar` | Reconecta a pasta memorizada; valida o selo de instalação e define `situacaoPasta`. |
+| `conectarSilencioso` / `aposConectar` | Reconecta a pasta memorizada; valida o selo de instalação e define `situacaoPasta`. Desde a 1.11 a chamada de `conectarSilencioso` carrega `.catch()`: ela abre o IndexedDB e consulta a permissão do handle, e a falha de qualquer um dos dois deixava a tela em estado indistinguível do normal. |
 | `carregarConfig` | Lê `config.json` e popula o objeto global `CFG` (ou mantém a semente). |
 | `oficializarPasta(pessoa)` | Grava o selo de instalação (UUID + autor + data) no `config.json`. Só o adm. |
 | `montarPessoas` | Constrói a lista do seletor de identidade a partir de `CFG`; restringe ao adm se a pasta não for oficial. |

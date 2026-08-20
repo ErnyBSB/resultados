@@ -1448,12 +1448,18 @@ function aplicarAusencias() {
   if (ident) ajustarRail();
 }
 
-function avisar(el, msg, erro = false) {
+/* "permanente" existe para os avisos de diagnóstico: sumir sozinho em
+   seis segundos serve ao "salvo com sucesso", e atrapalha quem está
+   justamente tentando entender por que a pasta não conectou. Quem
+   precisa anotar o motivo, ou mostrá-lo a outra pessoa, não pode
+   perdê-lo enquanto vira a cabeça. O padrão continua sendo sumir. */
+function avisar(el, msg, erro = false, permanente = false) {
   el.textContent = msg;
   el.className = "aviso" + (erro ? " erro" : "");
   el.style.display = "block";
   clearTimeout(el._t);
-  el._t = setTimeout(() => { el.style.display = "none"; }, 6000);
+  if (!permanente)
+    el._t = setTimeout(() => { el.style.display = "none"; }, 6000);
 }
 async function sha256hex(txt) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt));
@@ -1600,6 +1606,24 @@ $("btnPasta").addEventListener("click", async () => {
       handle = salvo;
     } else {
       handle = await showDirectoryPicker({ id: "unidadeCentral", mode: "readwrite" });
+      /* O mode:"readwrite" é PEDIDO, não garantia. Com a escrita barrada
+         — direitos NTFS, política do Chrome, configuração de conteúdo —,
+         o navegador pode devolver o handle só com leitura e sem exibir
+         prompt nenhum. Anunciar "Conectado" aí é prometer o que não vai
+         acontecer: a quebra só apareceria na primeira gravação, longe da
+         causa, e quem fosse diagnosticar não teria por onde começar.
+         O caminho da pasta memorizada já conferia; este ficou sem. */
+      if (!(await garantirPermissao(handle, "readwrite"))) {
+        estadoConexao(false, `Pasta “${handle.name}” aberta somente para leitura`);
+        /* Não memoriza o handle: a conexão não foi concluída, e guardar
+           a pasta faria a tela oferecer "Reconectar" para algo que não
+           chegou a conectar. */
+        return avisar($("avisoPasta"),
+          `A pasta “${handle.name}” abriu, mas o navegador NÃO concedeu permissão de escrita. ` +
+          "Lançamentos e aprovações não poderiam ser gravados, então a conexão não foi concluída. " +
+          "Confira os direitos da sua conta nessa pasta da rede e, no navegador, a permissão de " +
+          "edição de arquivos para este site.", true, true);
+      }
       await salvarHandleRaiz(handle);
     }
     dirRaiz = handle;
@@ -3433,7 +3457,22 @@ mudarMes(hoje().slice(0, 7));
 $("txtCaminho").textContent =
   (typeof PASTA_REDE !== "undefined" && PASTA_REDE) || "definida pelo administrador";
 ajustarConfig();   // começa na entrada, com o rail vazio
-conectarSilencioso();
+/* O .catch() não é zelo excessivo. A conectarSilencioso abre o
+   IndexedDB e consulta a permissão do handle, e as duas coisas podem
+   lançar quando o navegador está com os dados do site bloqueados ou o
+   perfil veio zerado. Sem captura, a rejeição some, e a tela fica em
+   "Pasta não conectada" — visualmente idêntica à de quem simplesmente
+   ainda não conectou. Não conseguir VERIFICAR é diferente de não ter o
+   que verificar, e só a tela pode contar essa diferença a quem for
+   diagnosticar. */
+conectarSilencioso().catch((e) => {
+  estadoConexao(false, "Não foi possível verificar a pasta memorizada");
+  avisar($("avisoPasta"),
+    "Não foi possível verificar se havia uma pasta memorizada neste computador (" +
+    ((e && e.message) || "motivo desconhecido") + "). " +
+    "Isso costuma vir de o navegador estar com os dados deste site bloqueados. " +
+    "Ainda é possível conectar a pasta à mão, em “Conectar pasta”.", true, true);
+});
 
 /* Manifesto e service worker só existem sob HTTP(S). Aberto por duplo
    clique a partir da pasta da rede — ou seja, em file:// —, o Chrome trata
