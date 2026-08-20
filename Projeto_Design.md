@@ -6,9 +6,7 @@
 > Destinado a desenvolvedores humanos e a modelos de IA.
 >
 > Este relatório substitui o *Relatório Técnico v8*, que descrevia o sistema quando
-> ele ainda se chamava **Registro de Atividades** e estava na versão beta 8. Aquele
-> PDF saiu da árvore na v1.5, por trazer nomes reais dentro do binário; recupere-o
-> pela tag com `git show v1.4:Projeto_Design_until_v8.pdf > relatorio-v8.pdf`. A estrutura das seções foi preservada para facilitar a
+> ele ainda se chamava **Registro de Atividades**. A estrutura das seções foi preservada para facilitar a
 > comparação; o conteúdo foi revisto de ponta a ponta e acrescido de tudo que
 > entrou entre a v9 e a versão atual.
 >
