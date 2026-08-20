@@ -103,6 +103,7 @@ vive neste repositório.
 
 | **1.8** | A janela "Sobre o programa" passa a exibir o **selo do catálogo** (`CATALOGO_ATUALIZADO`), a data da última edição do `catalogo.js`. O navegador decide sozinho quando reler esse arquivo, e um catálogo velho é indistinguível de um correto na tela; o selo não descongela o arquivo, apenas torna a defasagem verificável. Catálogo anterior à 1.8 não tem a constante, e a linha é omitida. |
 | **1.9** | `config.json` **ilegível deixa de ser confundido com pasta nova**. `lerConfig` passa a distinguir arquivo ausente de arquivo quebrado; a tela mostra o motivo e **recusa a entrada — a do Administrador inclusive — enquanto o arquivo estiver ilegível**, porque oficializar por cima gravava o catálogo vazio da semente sobre unidades, chefias, servidores e senhas. A tranca fica na tela e dentro da própria oficialização, e a confirmação passa a dizer que grava o `config.json`. |
+| **1.10** | O **`catalogo.js` passa a ser servido rede-first** pelo `sw.js`. Servido por HTTP(S), o service worker o entregava do cache como se fosse parte do programa, e uma edição no catálogo não chegava a quem já tinha aberto o aplicativo — em silêncio, porque catálogo velho é idêntico a catálogo certo na tela. Agora tenta a rede, guarda o que voltar e cai no cache quando a rede falta; um prazo de 2,5 s impede que a única requisição que toca a rede trave a abertura. Sob `file://` nada muda: ali não há service worker. |
 
 ### 1.3. Versionamento por *tags* (novidade da 1.0)
 
@@ -442,10 +443,21 @@ npm.
 
 ### 3.5. `sw.js` — service worker
 
-*Cache-first* puro: no `install`, abre um cache nomeado pela constante `VERSAO` e
-grava a lista `ARQUIVOS`; no `activate`, apaga todo cache cujo nome não seja o
-`VERSAO` atual; no `fetch`, responde com o cache e só vai à rede se não houver
-correspondência.
+*Cache-first* para o programa, **rede-first para o `catalogo.js`**: no `install`,
+abre um cache nomeado pela constante `VERSAO` e grava a lista `ARQUIVOS`; no
+`activate`, apaga todo cache cujo nome não seja o `VERSAO` atual; no `fetch`,
+responde com o cache e só vai à rede se não houver correspondência — exceto para
+o `catalogo.js`, que desde a 1.10 tenta a rede primeiro, guarda no cache o que
+voltar e cai no cache quando a rede falta.
+
+A exceção existe porque o `catalogo.js` é **dado editável**, e não parte do
+programa: servi-lo do cache congelava as edições até a publicação de uma versão
+nova, e congelava em silêncio, porque um catálogo velho é idêntico a um correto
+na tela. Um prazo de 2,5 s (`REDE_PRAZO`) impede que esta — a única requisição
+que toca a rede — trave a abertura quando o servidor aceita a conexão e não
+responde; esgotado o prazo, vale o cache. Só resposta `ok` é gravada, para que um
+404 ou 500 momentâneo não vire falha permanente. Nada disso afeta quem abre por
+`file://`, onde não há service worker registrado.
 
 ```js
 importScripts("./versao.js");
