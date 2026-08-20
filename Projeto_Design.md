@@ -49,12 +49,6 @@ em uma cadeia hierárquica, e um administrador gerencia a configuração do sist
 A partir da v11 o sistema também mede o **percentual da meta alcançada**, calculado
 sobre a carga horária diária de cada pessoa, e registra **ausências por período**.
 
-**Mudança de nome.** Até a v11 o programa chamava-se *Registro de Atividades*. Na
-v12 passou a chamar-se **Programa de Resultados**, nome que vale para o título da
-tela, para a aba do navegador e para o `manifest.webmanifest` — portanto também
-para o ícone de quem instala o PWA. A pasta de rede, os arquivos e o formato dos
-dados **não mudaram** com a troca de nome.
-
 **Restrição fundamental de arquitetura.** O projeto foi concebido para funcionar
 sem servidor de aplicação e sem banco de dados remoto. Todo o código executa no
 navegador (Chrome ou Edge) e os dados são persistidos em uma pasta de rede
@@ -63,7 +57,7 @@ restante do desenho e deve ser respeitada em melhorias futuras, salvo decisão
 explícita de migrar para uma arquitetura com *backend* (ver seção 14).
 
 Na prática, isso significa: **nenhum servidor, nenhum banco, nenhum npm, nenhuma
-etapa de build, nenhum CDN**. O aplicativo tem de rodar abrindo-se `code/index.html`
+etapa de build, nenhum CDN**. O aplicativo tem de rodar abrindo-se `index.html`
 a partir de uma pasta. Qualquer proposta que acrescente servidor, gerenciador de
 pacotes ou dependência de rede está fora de escopo e deve ser sinalizada como tal
 antes de ser implementada.
@@ -92,26 +86,12 @@ uma seção correspondente escrita naquela voz.
 ### 1.2. Histórico de versões
 
 O projeto evoluiu de forma incremental. Conhecer a trajetória ajuda a entender por
-que certas estruturas existem. As versões 1 a 14 foram betas, publicadas sob o nome
-*Registro de Atividades*, no repositório `actividades`; a partir da 1.0 o histórico
+que certas estruturas existem. As versões 1 a 14 foram betas, a partir da 1.0 o histórico
 vive neste repositório.
 
 | Versão | Marco introduzido |
 |---|---|
-| v1 | Formulário de lançamento com persistência em `localStorage` (dados isolados por navegador). |
-| v2 | Migração para pasta de rede compartilhada; perfis Servidor, Chefia da unidade e Chefia geral; painel de aprovação. |
-| v3 | Chefias passam a registrar atividades; cadeia de aprovação em três níveis (papel gravado em cada lançamento). |
-| v4 | Identificação por pessoa única derivada do catálogo (correção de dessincronia de perfil); travamento de identidade. |
-| v5 | Senhas opcionais por *hash* SHA-256; utilitário `gerar-senha.html`. |
-| v6 | Perfil Administrador; migração de pessoas/senhas para `config.json` central; edição de catálogo em tempo de execução. |
-| v7 | Selo de instalação: apenas o administrador oficializa a pasta; validação impede pastas divergentes. |
-| v8 | Correção do defeito de oficialização (leitura de identidade nula). |
-| **v9** | **Busca única de atividades** substituindo as duas listas suspensas; busca sem acentos e com radicalização (verbo encontra substantivo); atalhos de "atividades frequentes" derivados do próprio histórico. |
-| **v10** | **Visão gerencial**: quatro indicadores do mês e dois gráficos (barra empilhada por pessoa, mapa de calor por unidade), com ECharts embarcado. |
-| **v11** | **Carga horária diária** (8h/6h) e **percentual da meta alcançada**; **ausências por período** substituindo o *checkbox* de abono; **recibo** do lançamento em janela modal; recusa de gravar por cima de arquivo ilegível. |
-| **v12** | Renomeação para **Programa de Resultados**; faixa de configuração recolhível; painel em seções recolhíveis; indicadores e gráficos liberados para a chefia de unidade; **a chefia geral passa a aprovar qualquer lançamento**. |
-| **v13** | Três correções de interface: `[hidden]` que não escondia blocos com `display` próprio; **escapamento de texto de terceiros** antes de entrar em `innerHTML`; desalinhamento do total do dia em tela estreita. |
-| **v14** | **Redesenho da navegação**: rolagem única substituída por telas com *rail* fixo à esquerda; painel em abas; aprovar vira botão; total do dia vira cabeçalho de grupo. |
+
 | **1.0** | Saída do beta. Nenhuma mudança de tela, regra ou arquivo em relação à v14 — o que mudou foi o estado do programa (deixou de ser experimento) e a forma de guardar versões (ver 1.3). |
 | **1.1** | Janela **"Sobre o programa"**, alcançável pelo rail mesmo antes da identificação; e a versão do aplicativo passa a ser escrita em **um lugar só** (`versao.js`), de onde saem a etiqueta do rail, a janela e a chave do cache do service worker. |
 | **1.2** | Tela de **Ajuda** embutida, com quatro capturas: objetivo do programa, papéis, organização da tela, como lançar, como buscar, o que a meta mede e como a chefia aprova. Alcançável antes da identificação, como o "Sobre". |
@@ -348,7 +328,7 @@ legíveis de propósito — eles *informam* quais complexidades a atividade admi
 são apenas controles indisponíveis.
 
 Há 5 processos e 72 atividades cadastrados, comuns às 8 unidades (SEACE, SEARI,
-SECAQ, SEDIN, SENOV, SEORE, SEPERI, SEREN).
+SECAQ, SEDIN, SENOV, SEORE, SEBID, SEREN).
 
 > Os nomes `"Exemplo Chefia SEORE"` e `"Exemplo Chefia Geral"` no arquivo
 > distribuído são demonstrativos e precisam ser substituídos na implantação.
