@@ -1349,6 +1349,7 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
     <p>Licença livre: Creative Commons CC0 1.0 (domínio público).</p>
     <p>Elaborado no Centro de Documentação da Câmara dos Deputados.</p>
     <p id="sobreAtualizado"></p>
+    <p id="sobreCatalogo" hidden></p>
     <p>Disponível no GitHub:<br><a id="sobreLink" target="_blank" rel="noopener"></a></p>
   </div>
   <div class="recibo-rodape">
@@ -3348,6 +3349,18 @@ function montarSobre() {
   $("versaoApp").textContent = APP.rotulo;
   $("sobreVersao").textContent = "Versão " + APP.versao;
   $("sobreAtualizado").textContent = "Última atualização: " + APP.atualizado;
+  /* O selo do catálogo responde a uma pergunta que a tela não sabia
+     responder: QUAL catalogo.js o navegador está usando. Um catálogo
+     velho é idêntico a um certo, então sem esta linha não havia como
+     separar "minha edição não pegou" de "estou olhando outro arquivo".
+
+     typeof, e não acesso direto: catálogo escrito antes da v1.8 não tem
+     a constante, e a falta dela não pode derrubar a janela nem obrigar
+     ninguém a reescrever o seu arquivo. Sem selo, a linha some. */
+  const selo = $("sobreCatalogo");
+  const temSelo = typeof CATALOGO_ATUALIZADO !== "undefined" && CATALOGO_ATUALIZADO;
+  selo.hidden = !temSelo;
+  if (temSelo) selo.textContent = "Catálogo de atividades: " + CATALOGO_ATUALIZADO;
   const link = $("sobreLink");
   link.href = APP.repositorio;
   link.textContent = APP.repositorio;
