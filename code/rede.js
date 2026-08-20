@@ -195,8 +195,42 @@ async function gravarAprovacoes(raiz, unidade, aprovacoes, chefe) {
 }
 
 /* ---------- Configuração central (config.json na raiz) ---------- */
+/* O config.json é o ÚNICO arquivo em que "não existe" e "existe mas não
+   dá para ler" precisam ser respostas DIFERENTES. O lerJSONDe devolve
+   null para os dois, e isso é proposital lá: num arquivo de lançamentos,
+   um campo a menos não pode derrubar a tela. Aqui a mesma indulgência
+   custava caro — o programa anunciava pasta virgem, o administrador
+   acreditava e mandava oficializar, e a oficialização gravava o catálogo
+   VAZIO da semente por cima da configuração real.
+
+   Devolve { estado, dados, motivo }, com estado em:
+     "ausente"  — não há config.json; pasta nova, pode ser oficializada;
+     "ilegivel" — o arquivo está lá e não pôde ser lido ou entendido;
+     "ok"       — leu e tem a cara de uma configuração.
+
+   Arquivo vazio conta como ilegível, e não como ausente: zero byte é o
+   que sobra de uma gravação interrompida, justamente a hora em que
+   oficializar por cima seria o pior a fazer. */
 async function lerConfig(raiz) {
-  return lerJSONDe(raiz, "config.json");
+  let fh;
+  try {
+    fh = await raiz.getFileHandle("config.json");
+  } catch {
+    return { estado: "ausente", dados: null, motivo: null };
+  }
+  try {
+    const texto = await (await fh.getFile()).text();
+    if (!texto.trim())
+      return { estado: "ilegivel", dados: null, motivo: "o arquivo está vazio" };
+    const dados = JSON.parse(texto);
+    if (!dados || typeof dados !== "object" || Array.isArray(dados))
+      return { estado: "ilegivel", dados: null, motivo: "o conteúdo não é um objeto JSON" };
+    if (!dados.unidades)
+      return { estado: "ilegivel", dados: null, motivo: 'falta a chave "unidades"' };
+    return { estado: "ok", dados, motivo: null };
+  } catch (e) {
+    return { estado: "ilegivel", dados: null, motivo: e.message };
+  }
 }
 async function gravarConfig(raiz, cfg) {
   await gravarJSONEm(raiz, "config.json", {
