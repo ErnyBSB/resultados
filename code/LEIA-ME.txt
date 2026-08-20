@@ -85,6 +85,52 @@ Catálogo escrito antes da v1.8 não tem a constante. A janela aceita a
 ausência e simplesmente omite a linha, como já faz com a chefia geral e
 com as senhas: nenhum arquivo de ninguém precisa ser reescrito.
 
+O catálogo é dado, e não programa (novidade da v1.10)
+------------------------------------------------------
+Servido por HTTP(S) na intranet — o modo que o "Como usar" recomenda
+para instalar o PWA —, uma edição no catalogo.js NÃO chegava a quem já
+tinha aberto o aplicativo. A tela continuava com o catálogo anterior,
+sem erro nenhum, até que a versão do versao.js mudasse.
+
+A causa era o sw.js tratar o catalogo.js como parte do programa. Ele
+está na lista ARQUIVOS, e o fetch servia primeiro o cache, sem exceção.
+O cache só é preenchido no evento "install", e o "install" só dispara
+quando o navegador percebe que o PRÓPRIO sw.js mudou byte a byte —
+editar o catálogo não encosta nele. Não havia install, o cache
+continuava com os bytes velhos, e a rede nunca era alcançada. Pôr
+"catalogo.js?v=2" no <script> também não adiantava, porque o
+ignoreSearch do caches.match derruba justamente essa saída.
+
+Isso contrariava o que o próprio catalogo.js diz de si na primeira
+linha: "edite este arquivo para atualizar unidades, servidores,
+processos, atividades e complexidades". Acrescentar UMA atividade
+passava a custar o mesmo que publicar o aplicativo inteiro. E ficava a
+assimetria esquisita de o config.json — as pessoas — atualizar em vida,
+pela pasta da rede, enquanto o catalogo.js — os processos — ficava
+congelado até uma republicação.
+
+Agora a lógica se inverte só para ele: tenta a rede, guarda no cache o
+que voltar e cai no cache quando a rede falta. O uso offline continua
+inteiro, porque o cache É o plano B — não é um extra que se perdeu, é
+para onde a falha leva.
+
+O prazo de 2,5 segundos não é capricho. Sem ele, esta seria a ÚNICA
+requisição capaz de travar a abertura: todas as outras saem do cache
+sem tocar a rede, e um servidor que aceita a conexão e não responde —
+o caso clássico da rede corporativa meio caída — deixaria a tela em
+branco para sempre. Servir catálogo velho é ruim; não abrir é pior.
+Passado o prazo, vale o cache.
+
+Também só se guarda resposta boa. Gravar um 404 ou um 500 no cache
+transformaria uma falha de um instante em falha permanente, que é
+exatamente o defeito que esta seção conserta.
+
+Duas coisas que isto NÃO faz. Não muda nada para quem abre por duplo
+clique: sob file:// não há service worker registrado, então não havia
+esse congelamento e não há esta correção. E a correção só passa a valer
+DEPOIS que o sw.js novo estiver instalado — o cache velho ainda precisa
+ser trocado uma vez, o que é justamente o que a publicação da v1.10 faz.
+
 O cartão "Qual atividade?" depois do teste de uso (novidade da v1.7)
 ---------------------------------------------------------------------
 Um grupo de servidores usou o programa por alguns dias e trouxe quatro

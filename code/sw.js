@@ -1,4 +1,6 @@
-/* Service worker — funcionamento offline (cache-first).
+/* Service worker — funcionamento offline.
+   Cache-first para o programa; REDE-first para o catalogo.js, que é
+   dado editável e não parte do programa (ver o bloco antes do "fetch").
    A chave do cache vem do versao.js, o único lugar onde a versão do
    aplicativo é escrita: a versão "1.1" vira o cache "ra-1.1". Trocar a
    versão lá é o que faz os navegadores baixarem os arquivos novos —
@@ -40,8 +42,58 @@ self.addEventListener("activate", (e) => {
   );
 });
 
+/* ---------- O catalogo.js é dado, e não programa ---------- */
+/* O cabeçalho do próprio catalogo.js diz "edite este arquivo para
+   atualizar unidades, servidores, processos, atividades e
+   complexidades". Servi-lo primeiro do cache, como se fosse parte do
+   programa, congelava a edição até a publicação de uma versão nova:
+   acrescentar UMA atividade ao catálogo passava a custar o mesmo que
+   publicar o aplicativo inteiro. Pior, congelava calado — catálogo
+   velho é idêntico a catálogo certo na tela.
+
+   Aqui a lógica se inverte só para ele: tenta a rede, guarda no cache o
+   que voltar, e cai no cache quando a rede falta. O uso offline
+   continua inteiro, porque o cache É o plano B.
+
+   O prazo existe porque sem ele esta seria a ÚNICA requisição capaz de
+   travar a abertura: as demais saem do cache sem tocar a rede, e um
+   servidor que aceita a conexão e não responde deixaria a tela em
+   branco. Servir catálogo velho é ruim; não abrir é pior. */
+const REDE_PRAZO = 2500;
+
+function comPrazo(promessa, ms) {
+  return new Promise((ok, falha) => {
+    const t = setTimeout(() => falha(new Error("prazo esgotado")), ms);
+    promessa.then(
+      (v) => { clearTimeout(t); ok(v); },
+      (e) => { clearTimeout(t); falha(e); }
+    );
+  });
+}
+
+async function catalogoRedePrimeiro(req) {
+  try {
+    const r = await comPrazo(fetch(req), REDE_PRAZO);
+    /* Só guarda resposta boa. Gravar um 404 ou um 500 no cache
+       transformaria uma falha de um instante em falha permanente. */
+    if (r && r.ok) {
+      const copia = r.clone();
+      caches.open(VERSAO).then((c) => c.put(req, copia));
+    }
+    return r;
+  } catch {
+    const doCache = await caches.match(req, { ignoreSearch: true });
+    if (doCache) return doCache;
+    throw new Error("catalogo.js: sem rede e sem cópia no cache");
+  }
+}
+
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  if (new URL(e.request.url).pathname.endsWith("/catalogo.js")) {
+    e.respondWith(catalogoRedePrimeiro(e.request));
+    return;
+  }
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true }).then(
       (r) => r || fetch(e.request)
