@@ -4,7 +4,7 @@ Aplicativo web para o registro diário de processos de trabalho e atividades da
 COBIB. Cada servidor lança o que fez, com a complexidade correspondente, e a
 chefia aprova os lançamentos da sua unidade.
 
-**Versão 1.7** (ago/26). Até a 1.0 o programa se chamou *Registro de Atividades*
+**Versão 1.8** (ago/26). Até a 1.0 o programa se chamou *Registro de Atividades*
 e circulou como versão beta, numerada de 1 a 14.
 
 ## Como funciona
