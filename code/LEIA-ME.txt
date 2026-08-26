@@ -950,7 +950,9 @@ Não foi preciso filtrar nada para isso. O recarregar() já carregava
 apenas a unidade da chefia, então o recorte "exceto os dados de outras
 unidades" sai do escopo dos dados, não de uma regra de exibição. A
 chefia também continua sem o filtro de unidade nos filtros do topo —
-ela só tem uma.
+ela só tem uma. Pelo mesmo motivo ela não tem o filtro de PAPEL (ver a
+seção adiante): dentro de uma unidade, "somente chefias" devolveria ela
+mesma.
 
 O que ela vê a menos: o mapa de calor ATIVIDADES POR UNIDADE E
 COMPLEXIDADE some sozinho, porque com uma unidade só ele vira uma linha
@@ -1109,7 +1111,8 @@ Seção "Ausências" no painel
 Chefia de unidade, chefia geral e administrador têm uma seção própria
 de AUSÊNCIAS no painel (na v11 era uma aba; virou seção na v12). Mostra
 as ausências das pessoas sob a alçada de quem olha, obedecendo aos
-mesmos filtros de mês, unidade e pessoa, com exportação em CSV própria.
+mesmos filtros de mês, unidade, papel e pessoa, com exportação em CSV
+própria.
 
 As duas tabelas são separadas de propósito: uma tem pontos e aprovação,
 a outra não tem nem uma coisa nem outra. Misturá-las na mesma tabela
@@ -1248,7 +1251,8 @@ mês" e "Gráficos", quatro indicadores e dois gráficos:
   escura a célula, mais atividades; o número aparece dentro dela.
   Some quando há uma única unidade em tela (a barra acima já responde).
 
-Tudo obedece aos filtros logo acima (mês, unidade, pessoa, situação)
+Tudo obedece aos filtros logo acima (mês, unidade, papel, pessoa,
+situação)
 e sai dos MESMOS dados da tabela — se os números divergirem da tabela,
 é defeito. Os gráficos não substituem a tabela nem o CSV: quem precisa
 do número exato lê a tabela; os gráficos servem para achar onde olhar.
@@ -1266,6 +1270,73 @@ complexidade de cada atividade é fixada no catalogo.js,
 não pelo esforço real da pessoa. Duas unidades podem ter perfis
 opostos só porque o catálogo classificou assim. Use o gráfico para
 enxergar distribuição e carga, não para comparar desempenho.
+
+Filtro por papel: ver só as chefias (novidade da v1.12)
+-------------------------------------------------------
+No painel geral tudo aparecia junto: os lançamentos das chefias de
+unidade, os dos servidores e os da própria chefia geral. É o que a tela
+promete, e está certo — mas não é a leitura que a chefia geral faz com
+mais frequência. A via ordinária do servidor é a chefia da unidade dele;
+o que sobra sem outra instância são justamente os lançamentos DAS
+CHEFIAS, e eles ficavam diluídos no meio dos demais: na fila de
+aprovação, nos quatro indicadores e na barra por pessoa.
+
+Para chegar até eles só havia um caminho: abrir o filtro de pessoa e
+escolher uma chefia por vez, sabendo de cor quem é chefia. Com todas as
+unidades em tela, isso é procurar agulha em palheiro — e o total do mês
+continuava sendo o total de todo mundo.
+
+Agora há um campo PAPEL na barra de filtros, com três posições: todos os
+papéis, somente chefias e somente servidores. Ele fica ANTES do campo
+pessoa, porque estreita a lista de nomes que o campo seguinte oferece, e
+a barra passa a ser lida do geral para o particular: unidade, mês,
+papel, pessoa, situação.
+
+É um campo de seleção, e não uma caixa de marcação "somente chefias",
+por duas razões. Os outros quatro controles da barra são campos de
+seleção, e uma caixa isolada no meio deles se leria como outra coisa.
+E a leitura inversa — "como está a equipe, tirando as chefias" — sai de
+graça no mesmo campo, sem ocupar mais espaço na tela.
+
+"Somente chefias" INCLUI a chefia geral. O papel dela é uma chefia, e
+quem filtra por chefias está perguntando quem chefia produziu o quê;
+esconder as próprias linhas daria um total que não bate com o painel sem
+filtro, e um total que não fecha é pior do que um total que desagrada.
+Pela mesma razão, "somente servidores" confere o papel pelo nome exato,
+e não por negação: um lançamento com papel desconhecido não vira
+servidor só por não ser chefia.
+
+O campo NÃO aparece para a chefia de unidade. Ela vê os servidores da
+sua unidade e os próprios lançamentos; "somente chefias" devolveria
+apenas ela mesma, o que não é um filtro, é uma pegadinha. O critério é o
+mesmo do filtro de unidade — chefia geral e administrador têm, chefia de
+unidade não —, e o campo volta para "todos os papéis" a cada troca de
+identidade, para que a escolha de quem entrou antes não continue
+filtrando um painel onde o campo nem está na tela.
+
+Duas consequências que precisam ser ditas.
+
+A primeira: o filtro vale para o PAINEL INTEIRO, não só para a tabela.
+Os quatro indicadores, os gráficos, o resumo por pessoa, a seção de
+ausências e o CSV saem todos do mesmo conjunto — é o que evita que a
+tabela diga uma coisa e o indicador diga outra. Por isso o papel entra
+também no nome do arquivo exportado: dois CSVs do mesmo mês e da mesma
+unidade, um só com chefias e outro completo, sairiam com nomes idênticos
+na pasta de quem baixou.
+
+A segunda, e a que merece atenção: o botão APROVAR PENDENTES obedece aos
+filtros, como sempre obedeceu — o rótulo dele diz "desta visão". Com o
+papel em "somente chefias", ele aprova de uma vez todos os pendentes das
+chefias. É justamente a operação que faltava, mas é preciso saber que é
+isso que o botão passa a fazer. Pelo mesmo motivo o contador ao lado de
+"Painel geral", no rail, também acompanha o filtro: ele conta os
+pendentes DA VISÃO, e não os do mundo — comportamento que já era assim
+para mês, pessoa e situação, e que o papel apenas herda.
+
+Lançamentos antigos não precisaram de nada. O papel de quem escreveu já
+vinha carimbado em cada lançamento, e o papelDe() já tratava a ausência
+do campo devolvendo "servidor" — que é o que essas linhas eram. Nenhum
+arquivo da pasta da rede foi lido de outro jeito nem reescrito.
 
 Sobre pontos e complexidade
 ---------------------------
