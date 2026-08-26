@@ -903,6 +903,17 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
         <label class="rotulo" for="inpMes">Mês</label>
         <input type="month" id="inpMes" style="width:auto">
       </div>
+      <!-- Papel vem antes de Pessoa de propósito: ele estreita a lista de
+           nomes do campo seguinte, e a barra fica lendo do geral para o
+           particular (unidade, mês, papel, pessoa, situação). -->
+      <div id="fPapel" hidden>
+        <label class="rotulo" for="selPapel">Papel</label>
+        <select id="selPapel" style="width:auto">
+          <option value="*">Todos os papéis</option>
+          <option value="chefias">Somente chefias</option>
+          <option value="servidores">Somente servidores</option>
+        </select>
+      </div>
       <div id="fServidor" hidden>
         <label class="rotulo" for="selServidorVer">Pessoa</label>
         <select id="selServidorVer" style="width:auto"></select>
@@ -1415,6 +1426,20 @@ const ehGeral    = () => ident?.perfil === "geral";
 const ehAdm      = () => ident?.perfil === "adm";
 const servidoresDe = (u) => (CFG.unidades[u]?.servidores) || [];
 const papelDe = (r) => r.papel || "servidor";
+/* Para o filtro de papel do painel, "chefia" inclui a chefia geral: quem
+   filtra por chefias está perguntando quem CHEFIA produziu o quê, e deixar
+   as próprias linhas de fora daria um total que não bate com o painel sem
+   filtro. "Servidor" é conferido pelo nome exato, e não por negação, para
+   que um lançamento de papel desconhecido não seja contado como servidor
+   só por não ser chefia. */
+const ehLancChefia = (r) => papelDe(r) === "chefia" || papelDe(r) === "geral";
+/* O filtro só existe para a chefia geral e a administração; para quem não o
+   tem na tela o campo fica em "*" e esta função não estorva nada. */
+function casaPapel(r) {
+  const p = $("selPapel").value;
+  if (!p || p === "*") return true;
+  return p === "chefias" ? ehLancChefia(r) : papelDe(r) === "servidor";
+}
 /* Um lançamento de servidor pode estar aprovado em DOIS lugares desde a
    v12: no arquivo da unidade (chefia da unidade aprovou) ou no arquivo
    GERAL (chefia geral aprovou). Vale a que existir; se as duas
@@ -2291,6 +2316,9 @@ function ausenciasFiltradas() {
   return dados.ausencias
     .filter(a => a.de <= fim && a.ate >= ini)
     .filter(a => ehServidor() ? a.servidor === ident.nome : true)
+    /* A ausência também carrega o papel de quem a registrou, então o filtro
+       vale aqui igual: mudar de aba não deveria mudar quem está em cena. */
+    .filter(casaPapel)
     .filter(a => (!pessoa || pessoa === "*") ? true : a.servidor === pessoa)
     .sort((x, y) => x.de.localeCompare(y.de) || x.servidor.localeCompare(y.servidor));
 }
@@ -2625,6 +2653,14 @@ function prepararPainel() {
   $("fSituacao").hidden = false;
   $("fServidor").hidden = false;
   $("fUnidadeGeral").hidden = !amplo;
+  /* Mesmo critério do filtro de unidade. Para a chefia de unidade o campo
+     não teria sentido: ela vê os servidores da sua unidade e os próprios
+     lançamentos, e "somente chefias" devolveria apenas ela mesma. O valor
+     volta para "*" junto com a troca de identidade, para que uma escolha
+     de quem entrou antes não continue filtrando um painel onde o campo
+     nem aparece. */
+  $("fPapel").hidden = !amplo;
+  $("selPapel").value = "*";
   $("btnAprovarTodos").hidden = !(ehChefia() || ehGeral());
   if (amplo) {
     $("selUnidadeVer").innerHTML =
@@ -2670,6 +2706,7 @@ function registrosFiltrados() {
   return dados.registros
     .filter(r => r.data.startsWith(mes))
     .filter(r => ehServidor() ? ehMeu(r) : true)
+    .filter(casaPapel)
     .filter(r => (!pessoa || pessoa === "*") ? true : r.servidor === pessoa)
     .filter(r => !sit ? true : (sit === "ap") === Boolean(aprovacaoDe(r)))
     .sort((x, y) => x.data.localeCompare(y.data) ||
@@ -2702,9 +2739,13 @@ function render() {
   if (!ehAdm()) montarFrequentes();
   if (ehChefia() || ehGeral() || ehAdm()) {
     /* Inclui quem só tem ausência e nenhum lançamento — senão essa
-       pessoa some do filtro justamente na aba em que ela aparece. */
+       pessoa some do filtro justamente na aba em que ela aparece.
+       O filtro de papel estreita esta lista: oferecer um nome que o papel
+       escolhido já descarta só entregaria uma tela vazia. Quem estava
+       selecionado e não sobrevive ao novo papel volta a "Todas as pessoas",
+       porque o valor deixa de existir entre as opções. */
     const nomes = [...new Set([...dados.registros, ...dados.ausencias]
-      .map(r => r.servidor))].sort();
+      .filter(casaPapel).map(r => r.servidor))].sort();
     const sel = $("selServidorVer"); const antes = sel.value;
     sel.innerHTML = `<option value="*">Todas as pessoas</option>` +
       nomes.map(n => `<option value="${escapar(n)}">${escapar(n)}</option>`).join("");
@@ -3136,7 +3177,7 @@ window.addEventListener("resize", () => {
   }, 150);
 });
 
-["selServidorVer", "selSituacao"].forEach(id =>
+["selServidorVer", "selSituacao", "selPapel"].forEach(id =>
   $(id).addEventListener("change", render));
 $("selUnidadeVer").addEventListener("change", recarregar);
 $("inpData").addEventListener("change", render);
@@ -3371,7 +3412,12 @@ $("btnCSV").addEventListener("click", () => {
   const escopo = (ehGeral() || ehAdm())
     ? ($("selUnidadeVer").value === "*" ? "todas" : $("selUnidadeVer").value)
     : ident.unidade;
-  baixarCSV(`registro-${escopo}-${$("inpMes").value}.csv`,
+  /* O papel entra no nome do arquivo quando está filtrando: dois CSVs do
+     mesmo mês e da mesma unidade, um só com chefias e outro completo,
+     ficariam com nomes idênticos na pasta de quem baixou. */
+  const papel = $("selPapel").value;
+  const recorte = !papel || papel === "*" ? "" : `-${papel}`;
+  baixarCSV(`registro-${escopo}${recorte}-${$("inpMes").value}.csv`,
     CAB_LANC, linhasCSVLancamentos(regs));
 });
 
@@ -3389,11 +3435,13 @@ $("btnCSVAus").addEventListener("click", () => {
   const escopo = (ehGeral() || ehAdm())
     ? ($("selUnidadeVer").value === "*" ? "todas" : $("selUnidadeVer").value)
     : ident.unidade;
+  const papel = $("selPapel").value;
+  const recorte = !papel || papel === "*" ? "" : `-${papel}`;
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob(
     ["﻿" + cab.map(esc).join(";") + "\r\n" + linhas.join("\r\n")],
     { type: "text/csv;charset=utf-8" }));
-  a.download = `ausencias-${escopo}-${$("inpMes").value}.csv`;
+  a.download = `ausencias-${escopo}${recorte}-${$("inpMes").value}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
 });

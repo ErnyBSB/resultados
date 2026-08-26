@@ -413,6 +413,7 @@ Funções-chave do script principal:
 | **`escapar(s)`** | **(v13)** Escapa todo texto vindo de fora do código-fonte antes de entrar em `innerHTML`. |
 | **`desempenho(regs, ausencias)`** | **(v11)** Calcula dias, pontos, média e percentual da meta. |
 | **`diasCorridos` / `sobrepoe` / `ausenciasFiltradas`** | **(v11)** Aritmética e filtros de ausência. |
+| **`ehLancChefia(r)` / `casaPapel(r)`** | **(v1.12)** Filtro por papel do painel; `ehLancChefia` conta `chefia` e `geral` como chefia. |
 | **`mostrarRecibo` / `mostrarReciboAus`** | **(v11)** Recibo modal do lançamento e da ausência. |
 | `recarregar` | Relê os dados da rede conforme o perfil e chama `render()`. |
 | `render` | Monta as duas tabelas (painel e "Meu mês"), cabeçalhos de dia, totais, cartão "Hoje", resumo por pessoa e contadores. |
@@ -818,6 +819,34 @@ a coluna ATIVIDADE era espremida até sobrar uma palavra por linha no celular. A
 a tabela rola na horizontal **dentro do próprio quadro** — a página em si nunca rola
 para o lado.
 
+**Filtro por papel (novidade da v1.12).** A barra de filtros do painel ganhou um
+campo **Papel**, com três posições: *todos os papéis*, *somente chefias* e *somente
+servidores*. Ele existe porque o painel geral misturava as três origens de
+lançamento, e a leitura mais frequente da chefia geral — os lançamentos **das
+chefias**, que não têm outra instância de aprovação — exigia percorrer o filtro de
+pessoa um nome por vez.
+
+| Decisão | Razão |
+|---|---|
+| Campo de seleção, não caixa de marcação | Os outros quatro controles da barra são `<select>`; e a leitura inversa ("a equipe sem as chefias") sai do mesmo campo. |
+| Posicionado **antes** de Pessoa | Ele estreita a lista de nomes do campo seguinte; a barra passa a ler do geral para o particular: unidade, mês, papel, pessoa, situação. |
+| *Somente chefias* inclui a **chefia geral** | O papel `geral` é uma chefia. Excluí-la daria um total que não fecha com o painel sem filtro. |
+| *Somente servidores* testa `papelDe(r) === "servidor"` | Por nome exato, e não por negação: um papel desconhecido não vira servidor só por não ser chefia. |
+| Invisível para a **chefia de unidade** | Mesmo critério do filtro de unidade (`amplo = ehGeral() \|\| ehAdm()`). Dentro de uma unidade, "somente chefias" devolveria apenas quem está olhando. |
+| Volta a "*" a cada troca de identidade | Em `prepararPainel()`, para que a escolha de quem entrou antes não filtre um painel onde o campo nem aparece. |
+
+O filtro entra em `registrosFiltrados()` e em `ausenciasFiltradas()`, de onde
+alcança **todo o painel**: tabela, os quatro indicadores, os gráficos, o resumo por
+pessoa, os contadores das abas, o contador do rail, o CSV e o botão **Aprovar
+pendentes** — que já dizia "desta visão" e que, com o papel em *somente chefias*,
+aprova de uma vez os pendentes das chefias. O papel também entra no **nome do
+arquivo CSV** (`registro-todas-chefias-2026-08.csv`), senão dois recortes do mesmo
+mês sairiam com nomes idênticos.
+
+Nada mudou nos dados: o campo `papel` já era gravado em cada lançamento e em cada
+ausência, e `papelDe(r)` já devolvia `"servidor"` para os registros anteriores à
+v11, que não o têm (ver §4.6).
+
 ### 6.3. Escolha da atividade (novidade da v9)
 
 Até a v8 a atividade era escolhida em duas listas suspensas: primeiro o processo,
@@ -1082,7 +1111,7 @@ período de ausência, aquele dia sai da conta. Sábados e feriados nunca chegam
 problema porque, sem lançamento, o dia já não entrava no cálculo.
 
 **No painel:** chefia de unidade, chefia geral e administrador têm uma aba própria
-de Ausências, obedecendo aos mesmos filtros de mês, unidade e pessoa, com exportação
+de Ausências, obedecendo aos mesmos filtros de mês, unidade, papel e pessoa, com exportação
 CSV própria. As duas tabelas (lançamentos e ausências) são separadas de propósito:
 uma tem pontos e aprovação, a outra não tem nem uma coisa nem outra. Uma ausência
 entra no mês filtrado se **encosta** nele em qualquer dia — férias de 28/08 a 10/09
@@ -1106,7 +1135,7 @@ Na aba **Visão do mês** do painel aparecem quatro indicadores e dois gráficos
   tela**, porque viraria uma linha de três células e não diria nada que a barra
   acima já não tenha dito.
 
-Tudo obedece aos filtros do topo (mês, unidade, pessoa, situação) e sai dos
+Tudo obedece aos filtros do topo (mês, unidade, papel, pessoa, situação) e sai dos
 **mesmos dados da tabela** — se os números divergirem da tabela, é defeito. Os
 gráficos não substituem a tabela nem o CSV: quem precisa do número exato lê a
 tabela; os gráficos servem para achar onde olhar.
