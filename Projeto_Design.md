@@ -1,6 +1,6 @@
 # Programa de Resultados — COBIB
 ## Relatório Técnico do Projeto
-### Versão 1.11 · Aplicação Web Progressiva (PWA) *client-side*
+### Versão 1.12 · Aplicação Web Progressiva (PWA) *client-side*
 
 > Documento de referência para manutenção e evolução do sistema.
 > Destinado a desenvolvedores humanos e a modelos de IA.
@@ -105,6 +105,7 @@ vive neste repositório.
 | **1.9** | `config.json` **ilegível deixa de ser confundido com pasta nova**. `lerConfig` passa a distinguir arquivo ausente de arquivo quebrado; a tela mostra o motivo e **recusa a entrada — a do Administrador inclusive — enquanto o arquivo estiver ilegível**, porque oficializar por cima gravava o catálogo vazio da semente sobre unidades, chefias, servidores e senhas. A tranca fica na tela e dentro da própria oficialização, e a confirmação passa a dizer que grava o `config.json`. |
 | **1.10** | O **`catalogo.js` passa a ser servido rede-first** pelo `sw.js`. Servido por HTTP(S), o service worker o entregava do cache como se fosse parte do programa, e uma edição no catálogo não chegava a quem já tinha aberto o aplicativo — em silêncio, porque catálogo velho é idêntico a catálogo certo na tela. Agora tenta a rede, guarda o que voltar e cai no cache quando a rede falta; um prazo de 2,5 s impede que a única requisição que toca a rede trave a abertura. Sob `file://` nada muda: ali não há service worker. |
 | **1.11** | **A tela passa a explicar as falhas de acesso à pasta.** A verificação automática da pasta memorizada ganha captura de erro — sem ela, uma falha ao abrir o IndexedDB virava rejeição perdida e a tela ficava idêntica à de quem ainda não conectou. E o caminho do seletor de pastas passa a conferir a permissão de **escrita** com `garantirPermissao()`: `mode: "readwrite"` é pedido, não garantia, e o navegador pode devolver a pasta só para leitura sem exibir prompt — o programa anunciava "Conectado" e só quebrava na primeira gravação. Sem escrita, a conexão não se completa e a tela diz o que conferir. |
+| **1.12** | **Filtro por papel no painel geral.** A barra de filtros ganha o campo **Papel** (*todos os papéis*, *somente chefias*, *somente servidores*), visível para a chefia geral e o administrador. O painel misturava as três origens de lançamento, e a leitura mais frequente de quem chefia — os lançamentos **das chefias**, que não têm outra instância de aprovação — exigia percorrer o filtro de pessoa um nome por vez. *Somente chefias* inclui a chefia geral, porque o papel dela é uma chefia e esconder as próprias linhas daria um total que não fecha com o painel sem filtro. O filtro entra em `registrosFiltrados()` e `ausenciasFiltradas()`, de onde alcança tabela, indicadores, gráficos, contadores, CSV e o botão **Aprovar pendentes** — que já obedecia aos filtros. |
 
 ### 1.3. Versionamento por *tags* (novidade da 1.0)
 
@@ -1357,7 +1358,7 @@ rede pode hospedar o app (ex.: `unidadeCentral\app`).
 torna a navegação no seletor de pastas bem mais simples para as pessoas.
 
 **Atualização de versão:** ver 1.3 — as duas coisas que precisam concordar. A
-versão atual é `1.11`, e o cache correspondente é `ra-1.11`. Na primeira carga após
+versão atual é `1.12`, e o cache correspondente é `ra-1.12`. Na primeira carga após
 atualizar, um recarregamento forçado (Ctrl+F5) ajuda a garantir a troca.
 
 **Compatibilidade:** Chrome e Edge apenas, por decisão de projeto — a File System
@@ -1718,6 +1719,6 @@ Progressive Web App
 
 ---
 
-*Programa de Resultados — COBIB · Relatório Técnico da versão 1.11 (ago/2026).
+*Programa de Resultados — COBIB · Relatório Técnico da versão 1.12 (ago/2026).
 Documento vivo: ao publicar uma versão nova, atualize as seções afetadas e o
 histórico de versões (1.2).*
