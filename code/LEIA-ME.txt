@@ -45,6 +45,40 @@ enxerga a pasta da rede. A data seria justamente a informação que
 faltaria quando mais se precisa dela. Sendo manual, fica na linha
 seguinte à da versão: quem troca uma vê a outra.
 
+Receber material também pode ser média (novidade da v1.12)
+-----------------------------------------------------------
+A atividade "Receber, conferir e registrar materiais informacionais
+adquiridos, recebidos em doação ou disponibilizados por assinatura"
+aceitava uma complexidade só, a baixa. Agora aceita baixa e média.
+
+A lista de complexidades de cada atividade existe justamente porque o
+mesmo verbo cobre trabalhos de tamanhos diferentes: receber três
+exemplares encomendados e receber uma doação de caixas, que é preciso
+conferir peça a peça, cabem os dois nessa frase. Com uma opção única, a
+escolha virava formalidade — e empurrava quem estava lançando para uma
+de duas saídas ruins: aceitar cinco pontos por uma tarde inteira, ou
+procurar no catálogo outra atividade que pontuasse melhor e descrevesse
+pior o que foi feito. A segunda é a pior das duas, porque estraga o
+dado: o painel passa a contar atividade que não aconteceu.
+
+Isto NÃO mexe em nada já lançado. Os lançamentos antigos continuam com
+os cinco pontos que tinham, porque o catálogo diz o que PODE ser
+escolhido de agora em diante, não o que foi escolhido um dia. Nenhum
+percentual de mês fechado se move — coerente com a regra de nunca
+reescrever arquivo que já está na pasta da rede.
+
+A consequência aceita é que dois lançamentos da mesma atividade podem
+valer pontos diferentes, e o programa não tem como saber qual dos dois
+está certo: quem lança escolhe a complexidade, e a chefia aprova ou
+não. O critério é de quem conhece o serviço, não do aplicativo — que
+aqui só deixou de impedir a conversa.
+
+A data do catálogo passou para 31.08.2026. É por ela, em "Sobre o
+programa", que se confere se o navegador já está com esta edição:
+servido por HTTP(S), a busca pela rede da v1.10 traz o arquivo novo na
+abertura seguinte; aberto por duplo clique, pode ser preciso fechar e
+reabrir o navegador.
+
 O selo do catálogo (novidade da v1.8)
 --------------------------------------
 A janela "Sobre o programa" passou a mostrar mais uma linha: "Catálogo de
