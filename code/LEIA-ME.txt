@@ -1338,6 +1338,93 @@ vinha carimbado em cada lançamento, e o papelDe() já tratava a ausência
 do campo devolvendo "servidor" — que é o que essas linhas eram. Nenhum
 arquivo da pasta da rede foi lido de outro jeito nem reescrito.
 
+O mês em papel: o relatório impresso (novidade da v1.13)
+---------------------------------------------------------
+O painel é a leitura mais completa que o programa oferece: os quatro
+indicadores, a barra por pessoa, o mapa de calor por unidade e o resumo
+com o percentual de cada um. Tudo isso morria na tela. Quem precisasse
+levar o mês para uma reunião, arquivar o fechamento ou entregar a
+leitura à instância superior tinha duas saídas, e as duas ruins:
+exportar o CSV — que é DADO, não documento, e ainda precisa que alguém
+o formate antes de virar algo que se leia — ou tirar uma foto da tela,
+que sai cortada e sem dizer de que mês é.
+
+E não dava para simplesmente mandar imprimir. Não havia uma única regra
+de impressão no programa: o Ctrl+P levava para o papel o rail, os
+filtros, as abas e os botões, e cortava os gráficos no meio.
+
+Agora a aba "Visão do mês" tem o botão "Imprimir relatório", e o Ctrl+P
+também funciona. O botão aparece só para a chefia geral e para a
+administração — mesmo critério dos filtros de unidade e de papel, porque
+o relatório é a leitura de quem enxerga mais de uma unidade — e some
+quando o mês não tem lançamento: sairia uma folha com cabeçalho e nada
+embaixo.
+
+Imprimir pelo navegador, e não gerar PDF por biblioteca. "Salvar como
+PDF" já está no diálogo de impressão do Chrome e do Edge, os dois únicos
+navegadores que este programa aceita. Uma biblioteca de PDF custaria
+algumas centenas de KB embarcadas e cacheadas pelo service worker para
+repetir o que o sistema já faz — e a primeira regra deste projeto é não
+acrescentar dependência. O preço é real e fica dito: o controle do
+formato é só o que o CSS de impressão dá, e o tamanho do papel e as
+margens dependem do que a pessoa escolher no diálogo.
+
+O relatório OBEDECE aos filtros da tela — e é exatamente por isso que o
+cabeçalho os imprime. Um documento que não declara o próprio recorte é
+pior que documento nenhum, porque parece completo. Quem imprimir o
+painel filtrado por uma unidade leva no papel, escrito, que foi uma
+unidade só.
+
+O cabeçalho leva também a versão do programa e a data do catálogo. Não é
+enfeite: a pontuação de uma atividade depende da edição do catalogo.js
+em vigor, então duas folhas do mesmo mês PODEM discordar legitimamente,
+por terem sido tiradas antes e depois de uma edição. Sem esse par
+impresso, a divergência viraria uma discussão sem resposta possível.
+
+O rodapé carrega a ressalva do percentual, e o resumo de cada pessoa
+ganhou, no papel, a contagem dos dias sem carga horária registrada. As
+duas informações já existiam — na dica do próprio número, que aparece
+ao passar o mouse. Papel não tem dica. Sem elas, um percentual parcial
+sairia impresso com cara de exato, o que é PIOR que a tela, e não igual
+a ela.
+
+O mapa de calor foi repetido em tabela, embaixo dele. Impresso em preto
+e branco, o degradê de azuis vira uma escala de cinzas quase iguais e a
+comparação que o mapa existe para permitir desaparece. Os números da
+tabela saem do mesmo agrupamento que desenha o mapa: se um dia
+divergirem, é defeito.
+
+A numeração das páginas vem da caixa de margem da própria página, e não
+da opção "cabeçalhos e rodapés" do diálogo do navegador. Aquela opção
+imprimiria junto o endereço file:// da máquina — ilegível, inútil e
+estranho num documento que circula.
+
+O gráfico precisou ser redesenhado para o papel. Sem redimensioná-lo no
+momento da impressão, o quadro, a legenda, os nomes e os eixos saem e as
+BARRAS não. Redimensionar resolve e ainda melhora: forçado a repintar
+naquele instante, o Chrome grava o gráfico no PDF como vetor, em vez de
+embutir uma fotografia de 97 pontos por polegada — o texto do gráfico
+sai tão nítido quanto o resto da folha. A largura vai escrita à mão
+(os 182mm úteis do A4 retrato, a 96dpi) porque, na hora em que o aviso
+de impressão chega, o navegador ainda não trocou o layout: perguntar ao
+contêiner devolveria a largura da TELA, que é justamente o erro a
+corrigir. O renderizador SVG faria isso com mais elegância, mas não está
+disponível — o echarts.min.js embarcado é uma compilação só-canvas, e
+pedir "svg" devolve um canvas sem reclamar.
+
+O que este recurso NÃO faz. Não grava nada na pasta da rede: o relatório
+é gerado no navegador e salvo onde quem imprime decidir. Não muda
+nenhum número — tudo sai dos mesmos cálculos que alimentam a tela, e se
+o papel discordar do painel, é defeito. E não deixa de ser dado interno:
+o relatório sai com nome de pessoa, como o CSV já saía, e vale para ele
+o mesmo cuidado.
+
+Uma verificação que ficou por fazer, e que fica registrada aqui em vez
+de ser omitida: o relatório foi conferido imprimindo em PDF, inclusive
+por automação. Falta a prova numa impressora de verdade, em papel — é
+onde a rasterização e o vetor podem discordar do que a pré-visualização
+mostrou.
+
 Sobre pontos e complexidade
 ---------------------------
 PONTOS = { baixa 5, média 10, alta 15 } é função direta da
