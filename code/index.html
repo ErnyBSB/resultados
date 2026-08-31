@@ -390,6 +390,15 @@ tr.pendente td{background:#FEFBF6}
    direita como os das outras abas. Sem .quadro-topo porque aqui não há
    quadro — a aba começa direto nos indicadores. */
 .barra-visao{display:flex; justify-content:flex-end; margin-bottom:14px}
+
+/* SÓ NO PAPEL. O cabeçalho do relatório, o rodapé com a ressalva e a
+   tabela que repete o mapa de calor em números não têm função na tela:
+   ali o título já está na faixa do alto, a ressalva mora na dica do
+   percentual e a cor da célula basta para comparar. É o papel que
+   circula sem nada disso por perto.
+   display:revert (e não block) porque a regra vale para <div> e para
+   <span>: cada um volta ao display que já era seu. */
+.so-papel{display:none}
 .resumo{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px}
 .srv{background:var(--ficha); border:1px solid var(--linha); border-radius:var(--raio);
   padding:13px 15px; font-size:12.5px}
@@ -509,9 +518,18 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
   /* A4 retrato: 210mm menos duas margens de 14mm deixam 182mm úteis.
      É para essa largura que os gráficos são redimensionados antes de
      imprimir — ver o beforeprint, na visão gerencial. */
-  @page{size:A4 portrait; margin:16mm 14mm}
+  @page{size:A4 portrait; margin:16mm 14mm;
+    /* A numeração sai daqui, da caixa de margem da própria página
+       (Chrome 131 em diante). A alternativa seria depender de a pessoa
+       marcar "cabeçalhos e rodapés" no diálogo de impressão — que
+       imprime junto o endereço file:// da máquina, ilegível e inútil
+       num documento que circula. A cor vai literal: dentro de @page não
+       há elemento, e as variáveis do :root não chegam. */
+    @bottom-right{content:"página " counter(page) " de " counter(pages);
+      font-size:8.5pt; color:#5C6660}}
 
   body{background:#fff}
+  .so-papel{display:revert}
   .app{display:block; min-height:0}
   .palco{display:block}
 
@@ -557,6 +575,29 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
   .resumo{grid-template-columns:repeat(3,1fr); gap:8px}
   .srv{padding:9px 11px; font-size:11px}
   .srv .pts{font-size:15px}
+
+  /* A faixa do alto é mobília de tela: o título "Painel geral" e o
+     parágrafo que explica a cadeia de aprovação servem para operar, não
+     para documentar. No papel quem abre o documento é o cabeçalho do
+     relatório, que diz o mês, o recorte e a versão. A regra é presa ao
+     painel: as outras telas continuam levando o próprio título. */
+  #vPainel .topo{display:none}
+  #relCabecalho{border-bottom:2px solid var(--tinta);
+    padding-bottom:8px; margin-bottom:15px}
+  #relCabecalho h1{font-family:var(--serif); font-weight:400; font-size:20px;
+    margin:0 0 4px; line-height:1.2}
+  #relCabecalho p{margin:0; font-size:10px; color:var(--grafite); line-height:1.5}
+  #relRodape{border-top:1px solid var(--linha); padding-top:8px; margin-top:18px;
+    font-size:9.5px; color:var(--grafite); line-height:1.5}
+  #relRodape p{margin:0}
+
+  /* A tabela existe para a impressão em preto e branco, onde a escala
+     de azuis do mapa de calor vira uma escala de cinzas quase iguais. */
+  #tabUnidades{margin:0 0 16px}
+  #tabUnidades caption{text-align:left; font-weight:600; font-size:11.5px;
+    padding:0 0 6px}
+  #tabUnidades th{padding:5px 8px}
+  #tabUnidades td{padding:5px 8px}
 
   /* As cores DIZEM coisas aqui: verde é aprovado, dourado é pendente.
      O navegador descarta fundo ao imprimir, por economia de tinta, e
@@ -1049,6 +1090,16 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
       <div class="barra-visao">
         <button type="button" class="acao sec mini" id="btnImprimir" hidden>Imprimir relatório</button>
       </div>
+
+      <!-- Cabeçalho do relatório: existe só no papel. Um documento que
+           não declara o próprio recorte parece completo, e é pior que
+           documento nenhum — daí os filtros virem impressos. -->
+      <div id="relCabecalho" class="so-papel">
+        <h1>Programa de Resultados — COBIB</h1>
+        <p id="relMes"></p>
+        <p id="relFiltros"></p>
+        <p id="relEmissao"></p>
+      </div>
       <div id="secIndicadores">
         <div class="kpis">
           <div class="kpi"><span class="rotulo">Lançamentos no mês</span><div class="valor" id="kpiLanc">0</div></div>
@@ -1074,10 +1125,26 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
                aria-label="Mapa de calor: número de atividades por unidade e nível de complexidade."></div>
           <p class="nota">Quanto mais escura a célula, maior o número de atividades. O número aparece dentro de cada célula.</p>
         </figure>
+        <!-- Os mesmos números do mapa de calor, em tabela. Só no papel:
+             impresso em preto e branco, o degradê de azuis vira uma
+             escala de cinzas quase iguais, e a comparação some. -->
+        <div id="tabUnidades" class="so-papel"></div>
       </div>
 
       <h2 style="font-size:14px;margin:22px 0 12px">Resumo por pessoa</h2>
       <div class="resumo" id="resumo"></div>
+
+      <!-- Rodapé do relatório: a ressalva do percentual. Na tela ela
+           mora na dica do próprio número; no papel não há dica, e o
+           número circula sozinho. -->
+      <div id="relRodape" class="so-papel">
+        <p>O percentual da meta é a média <b>somente dos dias em que houve
+        lançamento</b>: dias sem lançamento e dias cobertos por ausência ficam
+        fora da conta, no numerador e no denominador. Quem lançou em 2 dias e
+        bateu a meta nos 2 aparece com 100%, igual a quem lançou em 20 — por
+        isso o percentual vem sempre ao lado do número de dias. As ausências
+        registradas não estão descontadas dos gráficos.</p>
+      </div>
     </div>
 
     <!-- aba: ausências da alçada -->
@@ -2986,12 +3053,20 @@ function render() {
           ? '<span class="info">meta não calculável</span>'
           : `<span class="meta-pct" data-abaixo="${d.pct < 100}"
                title="Média de ${fmtMedia(d.media)} pontos em ${d.dias} dia(s) com lançamento; dias vazios${mostraAusencias() ? " e de ausência" : ""} ficam fora da conta.">${d.pct}% da meta</span>`;
+        /* Dias sem carga horária gravada (lançamentos anteriores à v11)
+           ficam fora do percentual, e na tela isso está na dica do
+           número. No papel não há dica: sem esta linha, um percentual
+           parcial sairia impresso com cara de completo. */
+        const parcial = d.diasSemCarga
+          ? `<span class="info so-papel">${d.diasSemCarga} dia(s) sem carga
+             horária registrada ficam fora deste percentual</span>`
+          : "";
         return `<div class="srv">
           <span class="nome" title="${escapar(n)}">${escapar(n)}</span>
           <span class="pts">${v.pts}</span> pts
           <span class="info">· ${v.pend ? v.pend + " pendente(s)" : "tudo aprovado"}</span>
           <div style="margin-top:7px">${etiqueta}
-            <span class="info"> em ${d.dias} dia(s)</span></div></div>`;
+            <span class="info"> em ${d.dias} dia(s)</span>${parcial}</div></div>`;
       })
       .join("");
     $("btnAprovarTodos").disabled = !regs.some(r => podeAprovar(r) && !aprovacaoDe(r));
@@ -3040,6 +3115,48 @@ const VIS_PAPEL  = "#FFFFFF";  /* --ficha: a superfície dos gráficos */
 let gPessoas = null, gUnidades = null;
 let visOrdem = "alfa";         /* "alfa" | "volume" — ver btnOrdem */
 
+/* Cabeçalho do relatório impresso. Nada disto aparece na tela: quem
+   está olhando o painel escolheu o mês e os filtros há um instante e
+   não precisa que lhe digam. O papel é o contrário — circula depois,
+   longe de quem o gerou, e um relatório que não declara o próprio
+   recorte parece completo quando não é.
+
+   Vai também a versão do aplicativo e a data do catálogo: a pontuação
+   de uma atividade depende da edição do catálogo em uso, então duas
+   folhas do mesmo mês podem discordar legitimamente. Sem esse par, a
+   divergência viraria discussão sem resposta. */
+function montarCabecalhoRelatorio(regs) {
+  const m = $("inpMes").value;
+  /* Dia 02 e não 01: em fuso a oeste de Greenwich, "2026-08-01" lido
+     como UTC volta para julho e o relatório sairia com o mês errado. */
+  const mes = m
+    ? new Date(m + "-02T00:00:00").toLocaleDateString("pt-BR",
+        { month: "long", year: "numeric" })
+    : "mês não informado";
+  $("relMes").textContent = "Relatório mensal · " + mes;
+
+  /* O texto da opção escolhida, e não o valor: "Todas as unidades" se
+     lê, "*" não. Campos que estão ocultos para este papel não entram —
+     dizer "Papel: todos" a quem não tem esse filtro seria inventar um
+     recorte que ninguém escolheu. */
+  const escolhido = (id) => {
+    const s = $(id);
+    return s.options[s.selectedIndex] ? s.options[s.selectedIndex].text : "—";
+  };
+  const filtros = [];
+  if (!$("fUnidadeGeral").hidden) filtros.push("Unidade: " + escolhido("selUnidadeVer"));
+  if (!$("fPapel").hidden)        filtros.push("Papel: " + escolhido("selPapel"));
+  filtros.push("Pessoa: " + escolhido("selServidorVer"));
+  filtros.push("Situação: " + escolhido("selSituacao"));
+  $("relFiltros").textContent = filtros.join(" · ");
+
+  $("relEmissao").textContent =
+    "Emitido em " + new Date().toLocaleDateString("pt-BR") +
+    " · versão " + APP.versao +
+    " · catálogo de " + CATALOGO_ATUALIZADO +
+    " · " + regs.length + " lançamento(s) nesta leitura";
+}
+
 /* Conta atividades por chave (pessoa ou unidade) e complexidade. */
 function agrupar(regs, chave) {
   const m = new Map();
@@ -3070,6 +3187,7 @@ function renderVis(regs) {
      Dado: mês sem lançamento não tem relatório a imprimir — sairia uma
      folha com cabeçalho e nada embaixo. */
   $("btnImprimir").hidden = !((ehGeral() || ehAdm()) && regs.length > 0);
+  montarCabecalhoRelatorio(regs);
   if (!mostrar) { visPendente = null; return; }
 
   /* ---------- KPIs (seção "Indicadores do mês") ---------- */
@@ -3182,6 +3300,22 @@ function desenharGraficos(regs) {
   /* Com uma unidade só na tela o mapa vira uma linha de três células e
      não diz nada que a barra acima já não tenha dito. */
   $("figUnidades").hidden = unidades.length < 2;
+  /* A tabela acompanha o mapa: some junto quando há uma unidade só, pela
+     mesma razão — três células não comparam nada. É montada aqui, e não
+     na impressão, porque sai dos mesmos números do gráfico; se um dia
+     divergirem, é bug. */
+  $("tabUnidades").innerHTML = unidades.length < 2 ? "" :
+    `<table><caption>Atividades por unidade e complexidade</caption>
+      <thead><tr><th>Unidade</th>` +
+      COMPL.map(c => `<th class="num">${c.rotulo}</th>`).join("") +
+      `<th class="num">Total</th><th class="num">Pontos</th></tr></thead><tbody>` +
+      unidades.map(u => {
+        const v = porUnidade.get(u);
+        return `<tr><td>${escapar(u)}</td>` +
+          COMPL.map(c => `<td class="num">${v[c.k]}</td>`).join("") +
+          `<td class="num">${v.total}</td><td class="num">${v.pontos}</td></tr>`;
+      }).join("") +
+      `</tbody></table>`;
   if (unidades.length < 2) { gUnidades?.dispose(); gUnidades = null; return; }
 
   const linhas = unidades.slice().reverse();
