@@ -848,6 +848,29 @@ Nada mudou nos dados: o campo `papel` já era gravado em cada lançamento e em c
 ausência, e `papelDe(r)` já devolvia `"servidor"` para os registros anteriores à
 v11, que não o têm (ver §4.6).
 
+**Relatório impresso (novidade da v1.13).** A aba *Visão do mês* ganhou o botão
+**Imprimir relatório**, que prepara a página e chama `window.print()`. O bloco
+`@media print` esconde o rail, a faixa de filtros, as abas e os botões, e deixa a
+leitura ocupar a folha; o cabeçalho e o rodapé do relatório, invisíveis na tela,
+aparecem. Em Chrome e Edge, *Salvar como PDF* é uma opção do próprio diálogo.
+
+| Decisão | Razão |
+|---|---|
+| Imprimir pelo navegador, não gerar PDF por biblioteca | *Salvar como PDF* já existe no diálogo dos dois navegadores aceitos. Uma biblioteca custaria centenas de KB no cache do service worker para repetir o que o sistema faz. O preço, assumido: o controle de formato é o que o CSS de impressão dá, e papel e margens dependem do que a pessoa escolher. |
+| O relatório **obedece aos filtros** da tela | E por isso os imprime no cabeçalho. Um documento que não declara o próprio recorte parece completo quando não é. |
+| Cabeçalho leva `APP.versao` e `CATALOGO_ATUALIZADO` | A pontuação depende da edição do catálogo em vigor: duas folhas do mesmo mês podem divergir legitimamente. Sem o par impresso, a divergência não tem resposta. |
+| Rodapé leva a ressalva do percentual; o resumo leva os dias sem carga | Ambas já existiam na dica do número, e papel não tem dica. Sem elas, um percentual parcial imprime com cara de exato — pior que a tela, não igual. |
+| Mapa de calor **repetido em tabela** | Em preto e branco a escala de azuis vira cinzas quase iguais. Os números saem do mesmo agrupamento do gráfico; divergir é defeito. |
+| Numeração pela caixa de margem do `@page` | A opção *cabeçalhos e rodapés* do diálogo imprimiria junto o endereço `file://` da máquina. |
+| Botão só para chefia geral e administração, e só com lançamentos no mês | Mesmo critério `amplo` dos filtros de unidade e papel. Mês vazio produziria uma folha com cabeçalho e nada embaixo. |
+| A figura do gráfico por pessoa é isenta de `break-inside: avoid` | Mais alta que a folha, a regra deixa de proteger: o navegador empurra a figura inteira e abandona uma página quase em branco (4 páginas em vez de 3, com 40 pessoas). |
+| `print-color-adjust: exact` nas etiquetas de situação e de meta | Verde é aprovado, dourado é pendente: o navegador descarta fundo ao imprimir e levaria junto o significado. |
+
+O relatório **não grava nada** na pasta da rede — é gerado no navegador e salvo
+onde quem imprime decidir — e **não calcula nada novo**: sai de
+`registrosFiltrados()` e de `desempenho()`, os mesmos que alimentam a tela. Como o
+CSV, ele leva nome de pessoa e é dado interno.
+
 ### 6.3. Escolha da atividade (novidade da v9)
 
 Até a v8 a atividade era escolhida em duas listas suspensas: primeiro o processo,
@@ -1171,6 +1194,28 @@ dados em `visPendente` e para; ao entrar no painel ou na aba, `desenhoPendente()
 executa o desenho. Quem nunca abre os gráficos nunca paga o custo de desenhá-los, o
 que também deixa o painel mais leve em máquina fraca.
 
+**Os gráficos na impressão (novidade da v1.13).** Um canvas desenhado para a tela
+não vai ao papel como está: sem tratamento, o quadro, a legenda, os nomes e os
+eixos saem impressos e as **barras não**. Por isso `beforeprint` redimensiona as
+duas instâncias para a largura útil do A4 retrato, e `afterprint` as devolve à
+largura da tela.
+
+A largura vai **explícita** — 182mm a 96dpi, ou seja `LARGURA_PAPEL ≈ 688px` —, e
+não lida do contêiner: quando `beforeprint` dispara, o navegador ainda não aplicou o
+layout de impressão, e `clientWidth` devolveria a largura da tela, que é exatamente
+o erro a corrigir.
+
+O efeito colateral é bom: forçado a repintar naquele instante, o Chrome grava o
+gráfico no PDF como **vetor**, em vez de embutir um bitmap de 97 ppi. O texto do
+gráfico sai com a mesma nitidez do resto da folha, e o arquivo fica menor.
+
+O renderizador **SVG** resolveria o mesmo com mais elegância, e não está disponível:
+o `echarts.min.js` embarcado é uma compilação **só-canvas** — não há `SVGPainter`
+nem o namespace SVG no arquivo —, e `echarts.init(el, null, {renderer: "svg"})`
+devolve um canvas **em silêncio**. Trocar por um pacote com o renderizador SVG
+mexeria na lista `ARQUIVOS` do `sw.js` e no tamanho do cache offline; não se
+justifica para um problema que o redimensionamento já resolve.
+
 ---
 
 ## 9. Selo de instalação e controle da pasta oficial
@@ -1404,6 +1449,9 @@ ser simulada com qualquer diretório local que tenha a estrutura
 
 **De operação**
 
+- **O relatório impresso depende do diálogo do navegador:** o tamanho do papel e as
+  margens são escolha de quem imprime, e o programa não tem como fixá-los. A
+  conferência foi feita imprimindo em PDF; falta a prova em impressora física.
 - **Escrita administrativa ampla:** a exclusão de registros por engano é possível; a
   confirmação reforçada mitiga, mas não impede.
 - **Cache pegajoso:** publicar sem trocar a versão no `versao.js` faz o navegador
@@ -1494,7 +1542,10 @@ quando possível.
 
 - **Exportar no layout oficial (.xlsx):** gerar a planilha no formato que a chefia já
   conhece, além do CSV atual. Exigiria uma biblioteca embarcada (como o ECharts já
-  é) — não um CDN.
+  é) — não um CDN. Deixou de ser o único caminho para "tirar o mês da tela": a
+  v1.13 resolveu a necessidade vizinha com o **relatório impresso** (§6.2), que não
+  acrescenta dependência nenhuma. O .xlsx continua fazendo sentido para quem precisa
+  dos números em planilha, e não de um documento — e os dois convivem.
 - **Cache local dos dados da rede:** reduzir releituras mantendo um cache em
   IndexedDB com invalidação por `atualizadoEm`.
 - **Verificação de identidade por escrita:** se o NTFS estiver configurado, provar a
