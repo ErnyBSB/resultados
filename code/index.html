@@ -386,6 +386,10 @@ tr.pendente td{background:#FEFBF6}
 .gfx .plot{width:100%}
 .gfx .nota{margin:0; padding:0 16px 14px; font-size:11.5px; color:var(--grafite)}
 .ordenar{margin-left:auto}
+/* Barra da aba "Visão do mês": só o botão de imprimir, alinhado à
+   direita como os das outras abas. Sem .quadro-topo porque aqui não há
+   quadro — a aba começa direto nos indicadores. */
+.barra-visao{display:flex; justify-content:flex-end; margin-bottom:14px}
 .resumo{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px}
 .srv{background:var(--ficha); border:1px solid var(--linha); border-radius:var(--raio);
   padding:13px 15px; font-size:12.5px}
@@ -489,6 +493,79 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
   .kpis{grid-template-columns:1fr}
   .topo h1,.entrada h1{font-size:23px}
 }
+/* ===================== IMPRESSÃO =====================
+   O relatório mensal não é uma tela nova: é esta mesma, sem o que só
+   serve para operar. O rail, os filtros, as abas e os botões existem
+   para ESCOLHER o que ver; no papel a escolha já foi feita, e o que
+   resta dela é o cabeçalho, que declara o recorte impresso.
+
+   Por que imprimir pelo navegador em vez de gerar o PDF por
+   biblioteca: "Salvar como PDF" já está no diálogo de impressão do
+   Chrome e do Edge, os dois únicos navegadores que este aplicativo
+   aceita. Uma biblioteca de PDF custaria algumas centenas de KB no
+   cache do service worker para repetir o que o sistema já faz — e a
+   primeira regra deste projeto é não acrescentar dependência. */
+@media print{
+  /* A4 retrato: 210mm menos duas margens de 14mm deixam 182mm úteis.
+     É para essa largura que os gráficos são redimensionados antes de
+     imprimir — ver o beforeprint, na visão gerencial. */
+  @page{size:A4 portrait; margin:16mm 14mm}
+
+  body{background:#fff}
+  .app{display:block; min-height:0}
+  .palco{display:block}
+
+  /* ---------- o que não vai ao papel ---------- */
+  /* Some tudo que serve para operar a tela. As telas que não estão em
+     uso já saem sozinhas: são [hidden], e o bloco de reset garante que
+     [hidden] vença qualquer display. */
+  .rail,
+  .topo .controles,
+  .abas,
+  .acao,
+  .ligacao,
+  .aviso,
+  .vazio{display:none !important}
+
+  /* ---------- o que sobra ocupa a folha ---------- */
+  .topo{padding:0 0 10px; margin-bottom:14px; background:none;
+    display:block; border-bottom:1px solid var(--tinta)}
+  .topo h1{font-size:19px}
+  .topo .sub{font-size:10.5px; max-width:none}
+  .corpo{padding:0}
+  .colunas,.colunas.estreita{display:block}
+  .quadro{border:1px solid var(--linha); overflow:visible}
+  .rolagem{overflow:visible}
+  table{min-width:0; font-size:10.5px}
+  /* Tabela que atravessa a folha repete o cabeçalho na página seguinte;
+     sem isto, a segunda página é uma grade de colunas sem nome. */
+  thead{display:table-header-group}
+  tr,.kpi,.srv,figure.gfx{break-inside:avoid; page-break-inside:avoid}
+  h2{break-after:avoid; page-break-after:avoid}
+
+  /* A figura do gráfico por pessoa é MAIS ALTA que a folha quando há
+     muita gente, e aí "não quebre no meio" deixa de proteger: o
+     navegador empurra a figura inteira para a página seguinte e
+     abandona uma página quase em branco. Para ela, quebrar é o certo. */
+  #figPessoas{break-inside:auto; page-break-inside:auto}
+
+  /* Quatro indicadores lado a lado passam a caber; o resumo por pessoa
+     vira três colunas, que é o que 182mm comportam sem apertar o nome. */
+  .kpis{grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px}
+  .kpi{padding:8px 10px}
+  .kpi .valor{font-size:19px}
+  .resumo{grid-template-columns:repeat(3,1fr); gap:8px}
+  .srv{padding:9px 11px; font-size:11px}
+  .srv .pts{font-size:15px}
+
+  /* As cores DIZEM coisas aqui: verde é aprovado, dourado é pendente.
+     O navegador descarta fundo ao imprimir, por economia de tinta, e
+     levaria junto o significado — estas quatro marcas pedem exceção
+     explícita, e só elas. */
+  .st,.meta-pct,.tag-abono{
+    -webkit-print-color-adjust:exact; print-color-adjust:exact}
+}
+
 @media (prefers-reduced-motion: reduce){*{transition:none !important}}
 </style>
 </head>
@@ -969,6 +1046,9 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
 
     <!-- aba: visão do mês -->
     <div id="painelVisao" role="tabpanel" aria-labelledby="abaVisao" hidden>
+      <div class="barra-visao">
+        <button type="button" class="acao sec mini" id="btnImprimir" hidden>Imprimir relatório</button>
+      </div>
       <div id="secIndicadores">
         <div class="kpis">
           <div class="kpi"><span class="rotulo">Lançamentos no mês</span><div class="valor" id="kpiLanc">0</div></div>
@@ -979,7 +1059,7 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
       </div>
 
       <div id="secGraficos" class="vis">
-        <figure class="gfx">
+        <figure class="gfx" id="figPessoas">
           <figcaption>
             <span>Atividades por pessoa e complexidade</span>
             <button type="button" class="ligacao ordenar" id="btnOrdem">ordenar por volume</button>
@@ -2984,6 +3064,12 @@ function renderVis(regs) {
   const mostrar = (ehChefia() || ehGeral() || ehAdm()) && regs.length > 0;
   $("secIndicadores").hidden = !mostrar;
   $("secGraficos").hidden = !mostrar;
+  /* O botão de imprimir é mais restrito que os gráficos, e por dois
+     motivos somados. Papel: o relatório é a leitura de quem enxerga mais
+     de uma unidade, o mesmo critério dos filtros de unidade e de papel.
+     Dado: mês sem lançamento não tem relatório a imprimir — sairia uma
+     folha com cabeçalho e nada embaixo. */
+  $("btnImprimir").hidden = !((ehGeral() || ehAdm()) && regs.length > 0);
   if (!mostrar) { visPendente = null; return; }
 
   /* ---------- KPIs (seção "Indicadores do mês") ---------- */
@@ -3161,11 +3247,50 @@ function desenhar(id, instancia, altura, opcao) {
   return instancia;
 }
 
+/* Imprimir é só pedir a impressão: quem monta a folha é o bloco
+   @media print, e quem transforma em PDF é o próprio diálogo do
+   navegador ("Salvar como PDF", em Chrome e Edge). Ctrl+P leva ao mesmo
+   lugar — o botão existe para quem não sabe que leva. */
+$("btnImprimir").addEventListener("click", () => window.print());
+
 $("btnOrdem").addEventListener("click", () => {
   visOrdem = visOrdem === "alfa" ? "volume" : "alfa";
   $("btnOrdem").textContent =
     visOrdem === "alfa" ? "ordenar por volume" : "ordem alfabética";
   render();
+});
+
+/* ---------------------------- IMPRESSÃO ----------------------------
+   Sem isto os gráficos saem VAZIOS no papel: o quadro, a legenda, os
+   nomes e os eixos aparecem, e as barras não. O canvas que está na tela
+   não é redesenhado para a folha, e o que a impressão captura dele não
+   chega ao papel.
+
+   Redimensionar o canvas dentro do beforeprint resolve, e de quebra
+   melhora o resultado: forçado a repintar naquele instante, o Chrome
+   grava o gráfico no PDF como VETOR, em vez de embutir uma fotografia
+   de 97 ppi. O texto do gráfico sai tão nítido quanto o resto da folha.
+
+   A largura vai EXPLÍCITA, e não por clientWidth, porque no beforeprint
+   o navegador ainda não aplicou o layout de impressão: perguntar ao
+   contêiner devolveria a largura da TELA, que é justamente o erro que
+   esta função existe para corrigir. São os 182mm úteis do A4 retrato
+   (210mm menos as duas margens de 14mm do @page), a 96dpi.
+
+   O renderizador SVG resolveria o mesmo problema com mais elegância,
+   mas não está disponível: o echarts.min.js embarcado é uma compilação
+   só-canvas, e pedir renderer:"svg" devolve um canvas em silêncio. */
+const LARGURA_PAPEL = Math.round(182 / 25.4 * 96);   /* ≈ 688px */
+
+window.addEventListener("beforeprint", () => {
+  gPessoas?.resize({ width: LARGURA_PAPEL });
+  gUnidades?.resize({ width: LARGURA_PAPEL });
+});
+
+/* Devolve os gráficos à largura da tela. Sem isto eles ficariam presos
+   nos 688px depois de imprimir, estreitos numa tela larga. */
+window.addEventListener("afterprint", () => {
+  gPessoas?.resize(); gUnidades?.resize();
 });
 
 let visTimerResize;
