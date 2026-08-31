@@ -20,7 +20,7 @@
    Esta data não descongela nada. Ela só aparece em "Sobre o programa",
    para que a pergunta "o navegador já está com a minha edição?" tenha
    resposta num relance, em vez de virar meia tarde de adivinhação. */
-const CATALOGO_ATUALIZADO = "20.08.2026";
+const CATALOGO_ATUALIZADO = "31.08.2026";
 
 const PONTOS = { b: 5, m: 10, a: 15 };
 const ROTULO_COMPLEXIDADE = { b: "Baixa", m: "Média", a: "Alta" };
@@ -92,7 +92,7 @@ const PROCESSOS = [
       { t: "Prospectar, selecionar e avaliar material informacional para composição e atualização do acervo físico e digital.", c: ["m", "a"] },
       { t: "Realizar atividades relacionadas à aquisição, incorporação e controle de materiais informacionais físicos e digitais.", c: ["m"] },
       { t: "Realizar intercâmbio de material informacional com outras instituições.", c: ["m"] },
-      { t: "Receber, conferir e registrar materiais informacionais adquiridos, recebidos em doação ou disponibilizados por assinatura.", c: ["b"] }
+      { t: "Receber, conferir e registrar materiais informacionais adquiridos, recebidos em doação ou disponibilizados por assinatura.", c: ["b", "m"] }
     ]
   },
   {
