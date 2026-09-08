@@ -158,12 +158,31 @@ nenhuma chave anterior mudou de nome nem de significado. Arquivo escrito
 antes desta versão não tem a chave "horarios", é lido como lista vazia e
 NÃO é reescrito enquanto a pessoa não declarar um horário.
 
-A seção entra DESLIGADA
------------------------
-Como as ausências, e pelo mesmo motivo: unidade que não trabalha por
-escala não tem o que declarar. Quem liga é o administrador, no painel, e
-vale para todos assim que recarregarem os dados da rede. Desligar
-esconde as telas; os horários já gravados continuam nos arquivos.
+A seção entra LIGADA (mudou na v1.15)
+-------------------------------------
+Ela entra ligada, e as ausências não — apesar de as duas dividirem o
+mesmo tipo de interruptor no painel de Administração. A diferença não é
+de importância, é de assunto: as ausências ficaram ocultas na v1.3
+enquanto a gestão discutia SE deviam existir, e sobre os horários não
+pesa discussão nenhuma.
+
+Na 1.14 os horários entraram ocultos, por espelhar as ausências sem
+perguntar se o espelho cabia. Coube mal, e o custo apareceu no primeiro
+uso: quem abria o programa procurava a tela e não achava; o item do
+rail, a aba do painel e a própria tela só existiam depois de alguém
+entrar como administrador e ligar a chave. Quem mais precisava da seção
+era justamente quem não tinha como revelá-la.
+
+A 1.15 inverteu o padrão. Quem não quiser a seção continua podendo
+desligá-la, e desligar continua valendo para todos assim que
+recarregarem os dados da rede — o que mudou é qual dos dois lados
+precisa agir. Desligar esconde as telas; os horários já gravados
+continuam nos arquivos das pessoas.
+
+A leitura do config.json acompanha a inversão: a falta da chave passou a
+significar VISÍVEL. Instalação que nunca tratou do assunto — inclusive
+toda instalação anterior à 1.14 — mostra a seção; só quem gravou "false"
+de propósito continua sem ela.
 
 Limitações assumidas
 --------------------

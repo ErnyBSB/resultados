@@ -791,7 +791,7 @@ nela.
 | **Meu mês** | quem registra | A meta em tamanho grande, com a explicação do que ela mede logo abaixo do número; pontos no mês; aguardando chefia; e a tabela dos próprios lançamentos, com exportação CSV. |
 | **Ausências** | quem registra | Formulário de período à esquerda, lista à direita. |
 | **Horários** | quem registra | *(v1.14)* Formulário de período + dias da semana + faixa de horas à esquerda, com o total calculado enquanto se digita; lista à direita. Some com a seção desligada, como a de Ausências. |
-| **Painel** | chefia, chefia geral, adm | Até quatro abas: Aprovações, Visão do mês, Ausências e Horários — as duas últimas conforme os interruptores do administrador. |
+| **Painel** | chefia, chefia geral, adm | Até quatro abas: Aprovações, Visão do mês, Ausências e Horários. As duas últimas dependem dos interruptores do administrador, com padrões opostos: Ausências **oculta** por omissão, Horários **visível** (invertido na v1.15). |
 | **Administração** | adm | Selo da pasta, senhas e catálogo. |
 
 **Origem do desenho.** De uma maquete feita em React, com fontes e bibliotecas
@@ -1184,7 +1184,7 @@ da meta**.
 | A `carga` vai **gravada dentro do horário** | Retrato do momento. Buscá-la no cadastro na hora de ler faria um horário de março ser conferido pela jornada de outubro, e uma troca de jornada faria linhas antigas divergirem sozinhas. |
 | Divergência entre faixa e jornada é **exibida, nunca corrigida** | 8h de jornada com faixa de 6h pode ser jornada reduzida ou erro de digitação, e o programa não distingue. Escolher um dos dois números seria inventar uma resposta que só quem chefia tem. |
 | Mora no arquivo **da própria pessoa** | Um `horarios.json` por unidade teria dois ou mais escritores. Ver 3.3 — o princípio do escritor único não abre exceção. |
-| Seção **desligada por omissão** (`CFG.mostrarHorarios`) | Mesmo interruptor das ausências, no painel de Administração, pelo mesmo motivo: unidade que não trabalha por escala não tem o que declarar. |
+| Seção **visível por omissão** (`CFG.mostrarHorarios`), invertida na v1.15 | Mesmo interruptor das ausências, no painel de Administração, e padrão oposto. As ausências ficaram ocultas na v1.3 enquanto a gestão discutia **se** deviam existir; sobre horários não pesa discussão equivalente. Oculta por omissão (v1.14) o custo caía sobre quem não podia pagá-lo: a pessoa procurava a tela e não a encontrava, e só o administrador podia revelá-la. Desligar continua possível — mudou qual lado precisa agir. |
 
 **No painel** (aba *Horários*): quatro indicadores, dois gráficos e a tabela. Ela
 segue o precedente da aba de Ausências, e **não** o critério `amplo` dos filtros de

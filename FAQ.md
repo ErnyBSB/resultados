@@ -169,15 +169,33 @@ seja mesmo reduzida, e pode ser que você tenha errado a hora ao digitar. O
 programa não sabe qual das duas é, então mostra as duas e deixa a conversa com a
 chefia. Se a faixa estiver errada, exclua o horário e declare de novo.
 
+### Onde declaro o meu horário?
+
+No rail à esquerda, no grupo **Meu trabalho**, logo abaixo de "Ausências": o item
+**Horários**. Não é dentro do formulário de lançar atividade — é uma tela própria,
+com o formulário à esquerda e a lista dos seus horários à direita.
+
+O administrador é a única exceção: ele não registra atividades, portanto não tem
+jornada a declarar e não vê essa tela. No painel dele a aba **Horários** aparece
+normalmente.
+
 ### Não vejo a tela "Horários". Sumiu?
 
-A seção pode estar desligada. Ela é ligada pelo administrador, no painel de
-Administração, e vale para todo mundo assim que os dados da rede forem
-recarregados — como acontece com "Ausências".
+Desde a **1.15** a seção vem ligada. Se ela não está aparecendo, uma destas três
+coisas explica:
 
-Se ela foi desligada depois de você declarar horários, nada se perdeu: os
-horários continuam gravados no seu arquivo e voltam a aparecer quando a seção for
-religada.
+- **O administrador a desligou.** O interruptor fica no painel de Administração e
+  vale para todos assim que os dados da rede forem recarregados. Até a 1.14 o
+  padrão era o contrário — a seção vinha desligada e alguém precisava ligá-la.
+- **Você ainda não se identificou, ou a pasta da rede não está conectada.** Sem as
+  duas coisas resolvidas, o programa fica na tela de entrada e nenhum item do rail
+  aparece.
+- **O navegador está servindo uma versão anterior.** Confira a etiqueta ao lado do
+  título: precisa dizer 1.15 ou mais. Se disser menos, um recarregamento forçado
+  (Ctrl+F5) resolve.
+
+Se a seção foi desligada depois de você declarar horários, nada se perdeu: eles
+continuam gravados no seu arquivo e voltam a aparecer quando ela for religada.
 
 ## Cadastro e nomes
 
