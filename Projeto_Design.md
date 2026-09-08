@@ -1,6 +1,6 @@
 # Programa de Resultados — COBIB
 ## Relatório Técnico do Projeto
-### Versão 1.13 · Aplicação Web Progressiva (PWA) *client-side*
+### Versão 1.14 · Aplicação Web Progressiva (PWA) *client-side*
 
 > Documento de referência para manutenção e evolução do sistema.
 > Destinado a desenvolvedores humanos e a modelos de IA.
@@ -107,6 +107,7 @@ vive neste repositório.
 | **1.11** | **A tela passa a explicar as falhas de acesso à pasta.** A verificação automática da pasta memorizada ganha captura de erro — sem ela, uma falha ao abrir o IndexedDB virava rejeição perdida e a tela ficava idêntica à de quem ainda não conectou. E o caminho do seletor de pastas passa a conferir a permissão de **escrita** com `garantirPermissao()`: `mode: "readwrite"` é pedido, não garantia, e o navegador pode devolver a pasta só para leitura sem exibir prompt — o programa anunciava "Conectado" e só quebrava na primeira gravação. Sem escrita, a conexão não se completa e a tela diz o que conferir. |
 | **1.12** | **Filtro por papel no painel geral.** A barra de filtros ganha o campo **Papel** (*todos os papéis*, *somente chefias*, *somente servidores*), visível para a chefia geral e o administrador. O painel misturava as três origens de lançamento, e a leitura mais frequente de quem chefia — os lançamentos **das chefias**, que não têm outra instância de aprovação — exigia percorrer o filtro de pessoa um nome por vez. *Somente chefias* inclui a chefia geral, porque o papel dela é uma chefia e esconder as próprias linhas daria um total que não fecha com o painel sem filtro. O filtro entra em `registrosFiltrados()` e `ausenciasFiltradas()`, de onde alcança tabela, indicadores, gráficos, contadores, CSV e o botão **Aprovar pendentes** — que já obedecia aos filtros. |
 | **1.13** | **O mês em papel, e uma complexidade a mais no recebimento.** A aba *Visão do mês* ganha o botão **Imprimir relatório**: o `Ctrl+P` levava para o papel o rail, a faixa de filtros e os botões, e agora o `@media print` esconde a interface, abre o acordeão e faz aparecer um cabeçalho e um rodapé que só existem impressos. O cabeçalho declara o recorte — os filtros em vigor, `APP.versao` e `CATALOGO_ATUALIZADO` —, porque a pontuação depende da edição do catálogo e duas folhas do mesmo mês podem divergir com razão; o rodapé leva a ressalva do percentual, que na tela mora numa dica e papel não tem dica. `beforeprint` redimensiona os gráficos: um canvas dimensionado para a tela sai com os eixos e **sem as barras**. Imprimir é pelo diálogo do navegador, não por biblioteca — *Salvar como PDF* já está lá, e a dependência custaria centenas de KB no cache. O relatório não grava nada na pasta e não calcula nada novo. No catálogo, **"Receber, conferir e registrar materiais informacionais"** passa a aceitar **baixa e média** (`c: ["b", "m"]`): o mesmo verbo cobre receber três exemplares encomendados e conferir uma doação peça a peça, e a opção única empurrava quem lançava a escolher outra atividade que pontuasse melhor e descrevesse pior. Nada já lançado se move, e `CATALOGO_ATUALIZADO` vai para 31.08.2026. |
+| **1.14** | **Horários de trabalho.** Quem registra atividade ganha a tela **Horários**, onde declara em que horas estará disponível: um período, os dias da semana e **uma faixa de horas**, com o total ("6h por dia · 30h por semana") somado enquanto se digita. Jornada partida se declara como dois horários — e por isso a colisão só é recusada quando **período, dia da semana e hora** se cruzam; recusar por período apenas, como as ausências fazem, tornaria "uma faixa por dia" inútil no dia seguinte. É **previsão de disponibilidade, não registro de ponto**: não vale pontos, não passa por aprovação e **não entra em cálculo algum da meta** — se alimentasse o percentual, uma previsão viraria promessa de produtividade que o programa não observa. No painel, uma aba lê o conjunto: quatro indicadores (incluindo **quantas pessoas não declararam**, tirado do cadastro e não dos horários), o **mapa de cobertura** hora × dia da semana e a barra de horas por semana. Os dois divergem de propósito — o mapa desconta ausências, a barra não —, porque um fala de dias reais e a outra do padrão semanal. O horário mora no arquivo da própria pessoa, como quarta chave (`horarios`), e o arquivo sobe para `versao: 4`: rótulo, e não formato, com arquivo antigo lido como lista vazia e nunca reescrito. A seção inteira entra **desligada**, atrás do mesmo interruptor de administrador das ausências. |
 
 ### 1.3. Versionamento por *tags* (novidade da 1.0)
 
@@ -1478,7 +1479,7 @@ rede pode hospedar o app (ex.: `unidadeCentral\app`).
 torna a navegação no seletor de pastas bem mais simples para as pessoas.
 
 **Atualização de versão:** ver 1.3 — as duas coisas que precisam concordar. A
-versão atual é `1.13`, e o cache correspondente é `ra-1.13`. Na primeira carga após
+versão atual é `1.14`, e o cache correspondente é `ra-1.14`. Na primeira carga após
 atualizar, um recarregamento forçado (Ctrl+F5) ajuda a garantir a troca.
 
 **Compatibilidade:** Chrome e Edge apenas, por decisão de projeto — a File System
@@ -1858,6 +1859,6 @@ Progressive Web App
 
 ---
 
-*Programa de Resultados — COBIB · Relatório Técnico da versão 1.13 (set/2026).
+*Programa de Resultados — COBIB · Relatório Técnico da versão 1.14 (set/2026).
 Documento vivo: ao publicar uma versão nova, atualize as seções afetadas e o
 histórico de versões (1.2).*
