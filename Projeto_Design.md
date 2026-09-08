@@ -1675,6 +1675,12 @@ de fazer sentido), a estratégia *cache-first* do service worker (viraria
 *network-first* para dados) e o princípio do escritor único (substituído por
 transações no servidor).
 
+O estudo de decisão correspondente está em [`Backend.md`](Backend.md): o que exatamente
+seria acrescentado (não é "um banco", é um servidor a ser operado), quais limitações
+desta seção 12 ele resolveria, o que se perde, por que SQLite na pasta da rede é a
+armadilha a evitar, e o meio-termo recomendado — um banco **só de leitura**, alimentado
+a partir dos arquivos, que não toca no caminho de escrita.
+
 ---
 
 ## 15. Glossário

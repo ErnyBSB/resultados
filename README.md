@@ -46,6 +46,7 @@ code/                    o aplicativo
   LEIA-ME.txt            a documentação de verdade: o que faz, e por quê
 Projeto_Design.md             relatório técnico do projeto (acompanha a versão atual)
 Hospedagem.md                 estudo: servir o aplicativo num servidor da intranet
+Backend.md                    estudo: vale a pena acrescentar um banco de dados?
 FAQ.md                        perguntas frequentes de quem usa (arquivo vivo)
 .gitignore                    barra config.json, pastas de teste e *.local.js
 ```
@@ -66,6 +67,14 @@ servir isto num servidor da intranet?** A conclusão curta é que o gargalo não
 — o aplicativo cabe em qualquer VM —, e sim o **HTTPS**: a API que dá acesso à pasta da
 rede só existe em contexto seguro, então publicar por HTTP simples entrega uma tela que
 abre e não conecta em pasta nenhuma.
+
+[`Backend.md`](Backend.md) responde à ideia que sempre volta — "e se isso virasse um
+sistema com banco de dados?". A resposta curta é que não se acrescenta um banco a este
+aplicativo: acrescenta-se um **servidor que alguém passa a operar**, porque navegador
+não conversa com PostgreSQL. As vantagens são reais e estão todas listadas como
+limitação conhecida no relatório técnico; o custo é o objetivo 1 do projeto. O documento
+recomenda um meio-termo — banco só de leitura, alimentado pelos arquivos — e diz em que
+condições valeria ir até o fim.
 
 [`FAQ.md`](FAQ.md) responde as dúvidas de quem **usa** o programa: esqueci de
 lançar ontem, a chefia está de férias e ninguém aprova, meu percentual caiu sem
