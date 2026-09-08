@@ -45,6 +45,141 @@ enxerga a pasta da rede. A data seria justamente a informação que
 faltaria quando mais se precisa dela. Sendo manual, fica na linha
 seguinte à da versão: quem troca uma vê a outra.
 
+Horários de trabalho (novidade da v1.14)
+----------------------------------------
+Até aqui o programa sabia QUANTO cada pessoa trabalha por dia — a
+jornada de 8 ou 6 horas, marcada uma vez na identificação —, e não
+QUANDO. São perguntas diferentes, e a segunda é a do atendimento ao
+público: saber se as 14h de terça têm três pessoas ou nenhuma não se
+responde com um número de horas por dia.
+
+Essa informação existia fora do programa: planilha de uma unidade,
+mensagem, papel colado na parede. Agora há uma tela "Horários", onde
+cada pessoa declara em que horas estará disponível, e uma aba no painel
+onde a chefia lê a semana inteira de uma vez.
+
+O que se declara é um PERÍODO com dias da semana e uma faixa de horas:
+"de 01/09 a 31/12, de segunda a sexta, das 9h às 15h". Não é uma linha
+por dia — quem trabalha no mesmo horário o semestre inteiro declara isso
+uma vez, e não cento e tantas vezes. O total aparece enquanto se digita
+("6h por dia · 30h por semana"), porque somar as próprias horas para
+conferir se acertou não é trabalho de quem preenche.
+
+Uma faixa por dia, e não várias
+-------------------------------
+A jornada partida — 9h às 12h e 14h às 17h — existe, e o modelo
+escolhido não a representa numa linha só. Quem a cumpre declara dois
+horários: um para a manhã, outro para a tarde. Foi escolha deliberada
+entre um formulário simples para o caso comum e um modelo de lista de
+faixas que pesaria em todo mundo para servir a alguns.
+
+A recusa por colisão foi calibrada para isso. Dois horários só colidem
+quando as TRÊS coisas se cruzam: o período, o dia da semana E a hora.
+Declarar segunda e quarta das 9h às 15h e terça e quinta das 13h às 19h
+no mesmo semestre é aceito, porque não há dia em que os dois valham ao
+mesmo tempo. Barrar por período apenas — como as ausências fazem — teria
+tornado "uma faixa por dia" inútil no dia seguinte à publicação.
+
+Turno que atravessa a meia-noite é recusado, e a tela diz por quê: a
+faixa vive dentro de um dia, e aceitar 22h às 06h daria um total
+negativo em silêncio. Quem trabalha assim declara dois horários.
+
+Isto NÃO é ponto, e NÃO mexe na meta
+------------------------------------
+Precisa estar dito com todas as letras, porque a confusão é a primeira
+que aparece: ninguém marca entrada nem saída, e o programa não confere
+se o que foi declarado foi cumprido. É previsão de disponibilidade.
+
+E o horário não entra em conta nenhuma da meta. A tentação de ligar as
+duas coisas é grande e foi recusada de propósito: se a disponibilidade
+declarada alimentasse o percentual, uma previsão viraria promessa de
+produtividade, e o programa passaria a cobrar o cumprimento de algo que
+não observa. O percentual continua sendo o que sempre foi — pontos por
+dia trabalhado, medidos só nos dias em que houve lançamento.
+
+Pela mesma razão, horário não passa por aprovação. A chefia que precisar
+contestar um horário faz isso conversando, não clicando.
+
+Quando a faixa não fecha com a jornada
+--------------------------------------
+Alguém com jornada de 8h que declara das 8h às 14h está declarando 6h.
+Pode estar certo — jornada reduzida naquele período — ou pode ter errado
+a digitação, e o programa não tem como distinguir uma coisa da outra.
+
+Então ele mostra as duas e não corrige nenhuma: a tela avisa na hora da
+digitação, e o painel põe a jornada ao lado das horas declaradas, com um
+sinal (≠) na linha em que as duas discordam. Escolher automaticamente
+qual dos dois números vale seria inventar uma resposta que só quem
+chefia tem.
+
+A jornada vai gravada dentro do horário, e não buscada no cadastro na
+hora de ler: sem isso, um horário de março seria conferido pela jornada
+de outubro, e uma mudança de jornada faria linhas antigas passarem a
+divergir sozinhas.
+
+O que a chefia vê
+-----------------
+Uma aba "Horários" no painel, com quatro indicadores, dois gráficos e a
+tabela. Ela aparece para quem tem painel — chefia de unidade, chefia
+geral e administração —, como já acontece com a aba de Ausências. A
+chefia de unidade vê a sua unidade e a chefia geral vê o conjunto, e não
+é a tela que separa uma da outra: é a leitura da pasta, que para a
+chefia de unidade só traz os arquivos da unidade dela.
+
+Os indicadores incluem um que não é óbvio e é o mais importante: QUANTAS
+PESSOAS NÃO DECLARARAM. Ele vem do cadastro, e não dos horários — uma
+lista montada só com quem declarou pareceria completa exatamente onde
+falta gente, que é o que a chefia precisa enxergar.
+
+O mapa de calor cruza hora do dia com dia da semana e diz quantas
+pessoas estão disponíveis em cada cruzamento. É a leitura que não
+existia em lugar nenhum: onde a semana fica descoberta. A barra ao lado
+mostra o total de horas por semana de cada pessoa.
+
+Uma assimetria entre os dois precisa ser dita, porque de fora parece
+divergência: o mapa de calor DESCONTA as ausências e a barra NÃO. O mapa
+responde por dias reais do mês filtrado, e quem está de férias na terça
+não cobre o balcão da terça. A barra responde pelo padrão semanal
+declarado, que é o mesmo com ou sem férias no meio — descontar ali daria
+uma "semana média" que não corresponde a semana nenhuma. As duas notas
+dizem isso na tela, embaixo de cada gráfico.
+
+Onde fica gravado
+-----------------
+No arquivo da própria pessoa, em "horarios", ao lado da carga horária,
+dos lançamentos e das ausências. A razão é a de sempre: a pessoa já é a
+única escritora dele. Um horarios.json por unidade teria duas ou mais
+pessoas gravando no mesmo arquivo, e é exatamente o que este projeto não
+faz — a escala montada pela chefia, se um dia for o que se quiser,
+continuará precisando de cada um dono do seu próprio arquivo.
+
+O arquivo subiu para "versao": 4. O número é rótulo, e não formato:
+nenhuma chave anterior mudou de nome nem de significado. Arquivo escrito
+antes desta versão não tem a chave "horarios", é lido como lista vazia e
+NÃO é reescrito enquanto a pessoa não declarar um horário.
+
+A seção entra DESLIGADA
+-----------------------
+Como as ausências, e pelo mesmo motivo: unidade que não trabalha por
+escala não tem o que declarar. Quem liga é o administrador, no painel, e
+vale para todos assim que recarregarem os dados da rede. Desligar
+esconde as telas; os horários já gravados continuam nos arquivos.
+
+Limitações assumidas
+--------------------
+- O programa não confere nada. Horário declarado e não cumprido é
+  idêntico, para ele, a horário cumprido — e continuará sendo, porque
+  conferir exigiria registro de ponto, que este programa não é.
+- Feriado não existe aqui. Uma segunda-feira feriada aparece no mapa de
+  calor como qualquer outra segunda do mês, porque o programa não tem
+  tabela de feriados (a mesma limitação já anotada nas ausências).
+- O mapa conta a hora inteira. Quem sai às 12h30 conta na hora das 12h,
+  como quem sai às 13h. A pergunta que o mapa responde é "há alguém
+  neste pedaço do dia?", e para ela o minuto exato não muda a resposta.
+- O relatório impresso da v1.13 não inclui os horários. A impressão foi
+  desenhada em cima da "Visão do mês", e levar a aba nova para o papel é
+  trabalho próprio, com as suas próprias quebras de página.
+
 Receber material também pode ser média (novidade da v1.13)
 -----------------------------------------------------------
 A atividade "Receber, conferir e registrar materiais informacionais
@@ -1208,15 +1343,23 @@ Onde o dado fica gravado
 No CABEÇALHO do arquivo de lançamentos da PRÓPRIA pessoa:
 
   SEORE/lancamentos/ana-beatriz-nunes.json
-  { "versao": 3, "unidade": "SEORE", "servidor": "Ana Beatriz Nunes",
+  { "versao": 4, "unidade": "SEORE", "servidor": "Ana Beatriz Nunes",
     "cargaHoraria": 6, "atualizadoEm": "...",
-    "registros": [ ... ], "ausencias": [ ... ] }
+    "registros": [ ... ], "ausencias": [ ... ], "horarios": [ ... ] }
 
-O arquivo passou a guardar TRÊS coisas: carga horária, lançamentos e
-ausências. Gravar só uma delas apagaria as outras duas, então no código
-toda escrita passa por atualizarArquivoPessoa(), que lê o estado atual,
-aplica a mudança e regrava o conjunto. Não chame gravarMeuArquivo()
-direto ao acrescentar uma quarta coisa no futuro.
+O arquivo passou a guardar TRÊS coisas na v11 — carga horária,
+lançamentos e ausências — e QUATRO desde a v1.14, com os horários.
+Gravar só uma delas apagaria as outras, então no código toda escrita
+passa por atualizarArquivoPessoa(), que lê o estado atual, aplica a
+mudança e regrava o conjunto. Não chame gravarMeuArquivo() direto.
+
+A quarta coisa mostrou por que o aviso acima está escrito: ao entrar,
+os horários foram acrescentados ao formulário e à gravação, e não à
+montagem do estado em atualizarArquivoPessoa(). O defeito não seria
+"horário não salva" — seria pior e mais silencioso: QUALQUER gravação
+posterior, a de um lançamento inclusive, apagaria os horários da pessoa.
+Foi pego antes de publicar, e quem for acrescentar uma quinta coisa
+precisa mexer nas três linhas: a leitura, a montagem e a gravação.
 
 Recusa de gravar por cima de arquivo ilegível
 ---------------------------------------------

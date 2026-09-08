@@ -554,19 +554,27 @@ mudarem retroativamente. O passado é calculado com a jornada que valia então.
 
 ```js
 {
-  versao: 3,
+  versao: 4,                             // 3 até a v1.13; 4 desde a v1.14
   unidade: 'SEORE',
   servidor: 'Ana Beatriz Nunes',
   cargaHoraria: 6,                       // NOVIDADE v11 — jornada atual (8|6|null)
   atualizadoEm: '2026-08-03T12:00:00.000Z',
   registros: [ { ...lançamento... }, ... ],
-  ausencias: [ { ...ausência... }, ... ]  // NOVIDADE v11
+  ausencias: [ { ...ausência... }, ... ], // NOVIDADE v11
+  horarios:  [ { ...horário... },  ... ]  // NOVIDADE v1.14
 }
 ```
 
-O arquivo passou a guardar **três coisas**: carga horária, lançamentos e ausências.
-Gravar só uma delas apagaria as outras duas. Por isso **toda escrita passa por
-`atualizarArquivoPessoa()`**, que lê o estado atual (com a leitura estrita de 3.2),
+A subida para `versao: 4` é **rótulo, não formato**: nenhuma chave anterior mudou de
+nome nem de significado, e uma versão do programa anterior à v1.14 lendo este arquivo
+continua achando `registros`, `ausencias` e `cargaHoraria` onde sempre estiveram — ela
+apenas não enxerga os horários. Arquivo escrito antes da v1.14 não tem a chave
+`horarios`: é lido como lista vazia e **não é reescrito** enquanto a pessoa não
+declarar um horário.
+
+O arquivo passou a guardar **quatro coisas**: carga horária, lançamentos, ausências e
+horários. Gravar só uma delas apagaria as outras três. Por isso **toda escrita passa
+por `atualizarArquivoPessoa()`**, que lê o estado atual (com a leitura estrita de 3.2),
 aplica a mudança e regrava o conjunto:
 
 ```js
@@ -575,18 +583,23 @@ async function atualizarArquivoPessoa(unidade, nome, mudar) {
   const estado = {
     registros: (atual && atual.registros) || [],
     ausencias: (atual && atual.ausencias) || [],
+    horarios:  (atual && atual.horarios)  || [],
     carga:     (atual && atual.cargaHoraria) || null
   };
   mudar(estado);
-  await gravarMeuArquivo(dirRaiz, unidade, nome,
-                         estado.registros, estado.carga, estado.ausencias);
+  await gravarMeuArquivo(dirRaiz, unidade, nome, estado.registros,
+                         estado.carga, estado.ausencias, estado.horarios);
   return estado;
 }
 ```
 
-> **Não chame `gravarMeuArquivo()` direto** ao acrescentar uma quarta coisa no
-> futuro. O ponto único de escrita é o que impede que uma funcionalidade nova apague
-> silenciosamente as antigas.
+> **Não chame `gravarMeuArquivo()` direto.** O ponto único de escrita é o que impede
+> que uma funcionalidade nova apague silenciosamente as antigas — e a quarta coisa
+> mostrou como isso acontece. Ao entrar, os horários foram ligados ao formulário e à
+> gravação, mas **não** à montagem do `estado` acima. O sintoma não seria "horário não
+> salva": seria qualquer gravação posterior — a de um lançamento inclusive — apagando
+> os horários da pessoa em silêncio. Uma quinta coisa exige mexer nas **três** linhas:
+> a leitura, a montagem e a chamada de gravação.
 
 **Por que a carga não foi para o `config.json`:** aquele arquivo é gravado somente
 pelo administrador. Se cada servidor precisasse escrever nele para marcar a própria
@@ -776,7 +789,8 @@ nela.
 | **Lançar atividade** | quem registra (não-adm) | Formulário em três passos numerados (atividade, complexidade, observações) e, à direita, o efeito imediato: quanto já foi lançado na data, quanto falta para a meta do dia e a lista do que entrou. Abaixo do botão, o arquivo em que aquilo será gravado. A data do lançamento não passa do dia corrente: o calendário cinza os dias futuros, e o teto é recalculado a cada foco no campo, para não envelhecer numa aba deixada aberta de um dia para o outro. |
 | **Meu mês** | quem registra | A meta em tamanho grande, com a explicação do que ela mede logo abaixo do número; pontos no mês; aguardando chefia; e a tabela dos próprios lançamentos, com exportação CSV. |
 | **Ausências** | quem registra | Formulário de período à esquerda, lista à direita. |
-| **Painel** | chefia, chefia geral, adm | Três abas: Aprovações, Visão do mês e Ausências. |
+| **Horários** | quem registra | *(v1.14)* Formulário de período + dias da semana + faixa de horas à esquerda, com o total calculado enquanto se digita; lista à direita. Some com a seção desligada, como a de Ausências. |
+| **Painel** | chefia, chefia geral, adm | Até quatro abas: Aprovações, Visão do mês, Ausências e Horários — as duas últimas conforme os interruptores do administrador. |
 | **Administração** | adm | Selo da pasta, senhas e catálogo. |
 
 **Origem do desenho.** De uma maquete feita em React, com fontes e bibliotecas
@@ -1142,6 +1156,43 @@ uma tem pontos e aprovação, a outra não tem nem uma coisa nem outra. Uma aus�
 entra no mês filtrado se **encosta** nele em qualquer dia — férias de 28/08 a 10/09
 aparecem em agosto e em setembro.
 
+### 7.5. Horários de trabalho (novidade da v1.14)
+
+**Previsão de disponibilidade, não registro de ponto.** A pessoa declara em que horas
+estará disponível; o aplicativo não observa nem confere o cumprimento — não teria
+como. O dado não vale pontos, não passa por aprovação e **não entra em cálculo algum
+da meta**.
+
+```js
+{
+  id: 'hor-1757000000000-x3k9a',
+  unidade: 'SEORE', servidor: 'Ana Beatriz Nunes', papel: 'servidor',
+  carga: 6,                    // jornada no momento da declaração (retrato)
+  de: '2026-09-01', ate: '2026-12-31',
+  dias: [1, 2, 3, 4, 5],       // 0 = domingo, como Date.getUTCDay()
+  inicio: '09:00', fim: '15:00',
+  obs: ''
+}
+```
+
+| Decisão | Razão |
+|---|---|
+| **Uma faixa por dia**, e não uma lista de faixas | Jornada partida (9h–12h + 14h–17h) se declara como dois horários. A alternativa pesaria o formulário de todo mundo para servir a alguns. É a chave gravada, e chave gravada não se renomeia — por isso a decisão veio antes da primeira linha de código. |
+| Colisão exige **período + dia da semana + hora** | Só o período — o critério das ausências — tornaria "uma faixa por dia" inútil: segunda e quarta das 9h às 15h mais terça e quinta das 13h às 19h no mesmo semestre é o uso normal, não erro. |
+| Virada de meia-noite **recusada** | A faixa vive dentro de um dia. Aceitar 22h–06h daria total negativo em silêncio; a tela recusa e explica que se declara como dois horários. |
+| A `carga` vai **gravada dentro do horário** | Retrato do momento. Buscá-la no cadastro na hora de ler faria um horário de março ser conferido pela jornada de outubro, e uma troca de jornada faria linhas antigas divergirem sozinhas. |
+| Divergência entre faixa e jornada é **exibida, nunca corrigida** | 8h de jornada com faixa de 6h pode ser jornada reduzida ou erro de digitação, e o programa não distingue. Escolher um dos dois números seria inventar uma resposta que só quem chefia tem. |
+| Mora no arquivo **da própria pessoa** | Um `horarios.json` por unidade teria dois ou mais escritores. Ver 3.3 — o princípio do escritor único não abre exceção. |
+| Seção **desligada por omissão** (`CFG.mostrarHorarios`) | Mesmo interruptor das ausências, no painel de Administração, pelo mesmo motivo: unidade que não trabalha por escala não tem o que declarar. |
+
+**No painel** (aba *Horários*): quatro indicadores, dois gráficos e a tabela. Ela
+segue o precedente da aba de Ausências, e **não** o critério `amplo` dos filtros de
+unidade e papel: quem tem painel a tem — chefia de unidade, chefia geral e
+administração. A chefia de unidade enxerga apenas a própria unidade, e não por
+esconder-se nada na tela: `recarregar()` só lê os horários da unidade dela, do mesmo
+modo que já faz com lançamentos e ausências. O indicador **"Sem horário"** vem do **catálogo**, e não dos horários: uma
+lista montada só com quem declarou pareceria completa exatamente onde falta gente.
+
 ---
 
 ## 8. Visão gerencial: indicadores e gráficos
@@ -1209,6 +1260,29 @@ o erro a corrigir.
 O efeito colateral é bom: forçado a repintar naquele instante, o Chrome grava o
 gráfico no PDF como **vetor**, em vez de embutir um bitmap de 97 ppi. O texto do
 gráfico sai com a mesma nitidez do resto da folha, e o arquivo fica menor.
+
+**Os gráficos dos horários (novidade da v1.14).** A aba *Horários* traz outros dois,
+com o mesmo mecanismo de desenho adiado (`horPendente`/`desenhoPendenteHor()`) e a
+mesma escala sequencial do mapa de calor por unidade:
+
+- **Cobertura por hora e dia da semana** — mapa de calor. Conta **pessoas**, não
+  registros: quem declarou dois horários que encostam na mesma hora continua sendo
+  uma pessoa disponível. Só entram as horas que alguém usa, contíguas entre a
+  primeira e a última — um eixo das 0h às 23h seria feito quase só de células vazias.
+  Sábado e domingo aparecem apenas se alguém trabalhar neles. O zero é escrito dentro
+  da célula, como no outro mapa: aqui ele significa **hora descoberta**, que é
+  justamente o que se foi procurar.
+- **Horas por semana, por pessoa** — barra horizontal, mesma convenção de ordenação
+  do gráfico de atividades (alfabética por padrão; o botão *ordenar por volume* vale
+  para os dois).
+
+**Uma assimetria deliberada entre os dois, que de fora parece divergência:** o mapa
+de calor **desconta as ausências** e a barra **não**. O mapa responde por dias reais
+do mês filtrado, e quem está de férias na terça não cobre o balcão da terça. A barra
+responde pelo **padrão semanal declarado**, que é o mesmo com ou sem afastamento no
+meio do período — descontar ali produziria uma "semana média" que não corresponde a
+semana nenhuma. As notas embaixo de cada gráfico dizem isso na tela; se um dia os
+dois números forem lidos como se medissem a mesma coisa, o defeito é da nota.
 
 O renderizador **SVG** resolveria o mesmo com mais elegância, e não está disponível:
 o `echarts.min.js` embarcado é uma compilação **só-canvas** — não há `SVGPainter`
@@ -1442,7 +1516,17 @@ ser simulada com qualquer diretório local que tenha a estrutura
 - **Complexidade fixada no catálogo:** não reflete o esforço real de cada ocorrência.
 - **Dias corridos nas ausências:** não há tabela de feriados; a contagem exibida
   inclui fins de semana.
-- **Gráficos não descontam ausências** nem normalizam por jornada (ver seção 8).
+- **Gráficos não descontam ausências** nem normalizam por jornada (ver seção 8). A
+  exceção é o mapa de cobertura dos horários, que desconta — e a barra ao lado dele,
+  que não; a assimetria é deliberada e está explicada na seção 8.
+- **Horário declarado não é conferido:** o aplicativo não sabe se foi cumprido, e
+  não vai saber — conferir exigiria registro de ponto, que este programa não é.
+- **Feriado não existe no mapa de cobertura:** uma segunda-feira feriada aparece como
+  qualquer outra segunda do mês, pela mesma falta de tabela de feriados já anotada
+  nas ausências.
+- **O mapa de cobertura conta a hora inteira:** quem sai às 12h30 conta na hora das
+  12h, como quem sai às 13h. A pergunta que o mapa responde é "há alguém neste pedaço
+  do dia?", e para ela o minuto exato não muda a resposta.
 - **Lançamentos de abono anteriores à v11** continuam contando como atividade nos
   gráficos e indicadores.
 - **Renomear pessoa desvincula dados:** mudar um nome no catálogo desliga a senha e o
@@ -1450,6 +1534,9 @@ ser simulada com qualquer diretório local que tenha a estrutura
 
 **De operação**
 
+- **O relatório impresso não inclui os horários:** a impressão da v1.13 foi desenhada
+  em cima da *Visão do mês*; levar a aba de Horários ao papel é trabalho próprio, com
+  as suas próprias quebras de página.
 - **O relatório impresso depende do diálogo do navegador:** o tamanho do papel e as
   margens são escolha de quem imprime, e o programa não tem como fixá-los. A
   conferência foi feita imprimindo em PDF; falta a prova em impressora física.
