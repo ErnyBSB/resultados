@@ -73,8 +73,9 @@ sistema com banco de dados?". A resposta curta é que não se acrescenta um banc
 aplicativo: acrescenta-se um **servidor que alguém passa a operar**, porque navegador
 não conversa com PostgreSQL. As vantagens são reais e estão todas listadas como
 limitação conhecida no relatório técnico; o custo é o objetivo 1 do projeto. O documento
-recomenda um meio-termo — banco só de leitura, alimentado pelos arquivos — e diz em que
-condições valeria ir até o fim.
+recomenda um meio-termo — um **SQLite só de leitura**, alimentado pelos arquivos, que não
+toca no caminho de escrita — e diz em que condições valeria ir até o fim, e por que
+começar por SQLite em vez de PostgreSQL.
 
 [`FAQ.md`](FAQ.md) responde as dúvidas de quem **usa** o programa: esqueci de
 lançar ontem, a chefia está de férias e ninguém aprova, meu percentual caiu sem
