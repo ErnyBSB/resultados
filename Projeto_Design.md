@@ -1677,9 +1677,10 @@ transações no servidor).
 
 O estudo de decisão correspondente está em [`Backend.md`](Backend.md): o que exatamente
 seria acrescentado (não é "um banco", é um servidor a ser operado), quais limitações
-desta seção 12 ele resolveria, o que se perde, por que SQLite na pasta da rede é a
-armadilha a evitar, e o meio-termo recomendado — um banco **só de leitura**, alimentado
-a partir dos arquivos, que não toca no caminho de escrita.
+desta seção 12 ele resolveria, o que se perde, e por que "SQLite" nomeia duas propostas
+opostas: na pasta da rede é a armadilha a evitar, e no servidor é provavelmente o banco
+por onde começar. O meio-termo recomendado é um SQLite **só de leitura**, alimentado a
+partir dos arquivos, que não toca no caminho de escrita.
 
 ---
 
