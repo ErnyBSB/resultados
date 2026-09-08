@@ -134,6 +134,51 @@ tabelas e saem na exportação como todos os outros. Só não entram no percentu
 
 ---
 
+## Horários
+
+### Declarei meu horário e meu percentual não mudou. Está errado?
+
+Está certo. Horário e percentual não se falam, de propósito.
+
+O percentual mede **pontos por dia trabalhado**, e sai só dos dias em que você
+lançou atividade. O horário diz **em que horas você estará disponível** — é uma
+previsão, e o programa não tem como saber se ela foi cumprida. Se a previsão
+alimentasse o percentual, o programa estaria cobrando de você o cumprimento de
+algo que ele não observa.
+
+Declarar horário não sobe nem desce nota nenhuma. Serve para a chefia enxergar a
+cobertura da semana: quem está no balcão às 14h de terça.
+
+### Meu horário é 9h às 12h e 14h às 17h. Como declaro?
+
+Como **dois horários**: um para a manhã, outro para a tarde, nos mesmos dias da
+semana e no mesmo período. O programa aceita — dois horários só são recusados
+quando colidem de verdade, ou seja, quando coincidem período, dia da semana **e**
+hora.
+
+Turno que atravessa a meia-noite (22h às 6h) também se declara como dois: um até
+as 23h59 de um dia, outro a partir das 0h do seguinte.
+
+### Apareceu um "≠" ao lado da minha jornada no painel. O que é?
+
+É um aviso de que a faixa que você declarou não fecha com a sua jornada
+registrada — por exemplo, jornada de 8h e faixa das 8h às 14h, que dá 6h.
+
+Não é erro do programa nem bloqueio: pode ser que a sua jornada naquele período
+seja mesmo reduzida, e pode ser que você tenha errado a hora ao digitar. O
+programa não sabe qual das duas é, então mostra as duas e deixa a conversa com a
+chefia. Se a faixa estiver errada, exclua o horário e declare de novo.
+
+### Não vejo a tela "Horários". Sumiu?
+
+A seção pode estar desligada. Ela é ligada pelo administrador, no painel de
+Administração, e vale para todo mundo assim que os dados da rede forem
+recarregados — como acontece com "Ausências".
+
+Se ela foi desligada depois de você declarar horários, nada se perdeu: os
+horários continuam gravados no seu arquivo e voltam a aparecer quando a seção for
+religada.
+
 ## Cadastro e nomes
 
 ### O nome de uma pessoa mudou. E os lançamentos antigos?
