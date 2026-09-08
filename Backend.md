@@ -1,6 +1,7 @@
 # Programa de Resultados — COBIB
 ## Vale a pena acrescentar um banco de dados?
 ### Estudo de decisão · escrito sobre a versão 1.15
+#### Válido para a 1.16, que mudou documentação e o carimbo da versão, nada mais
 
 > Documento de decisão, para quando a ideia de "botar isso num servidor com um banco"
 > voltar à mesa — e ela volta. Responde a quatro perguntas: **o que exatamente estaria

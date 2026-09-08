@@ -1,6 +1,6 @@
 # Programa de Resultados — COBIB
 ## Relatório Técnico do Projeto
-### Versão 1.15 · Aplicação Web Progressiva (PWA) *client-side*
+### Versão 1.16 · Aplicação Web Progressiva (PWA) *client-side*
 
 > Documento de referência para manutenção e evolução do sistema.
 > Destinado a desenvolvedores humanos e a modelos de IA.
@@ -109,6 +109,7 @@ vive neste repositório.
 | **1.13** | **O mês em papel, e uma complexidade a mais no recebimento.** A aba *Visão do mês* ganha o botão **Imprimir relatório**: o `Ctrl+P` levava para o papel o rail, a faixa de filtros e os botões, e agora o `@media print` esconde a interface, abre o acordeão e faz aparecer um cabeçalho e um rodapé que só existem impressos. O cabeçalho declara o recorte — os filtros em vigor, `APP.versao` e `CATALOGO_ATUALIZADO` —, porque a pontuação depende da edição do catálogo e duas folhas do mesmo mês podem divergir com razão; o rodapé leva a ressalva do percentual, que na tela mora numa dica e papel não tem dica. `beforeprint` redimensiona os gráficos: um canvas dimensionado para a tela sai com os eixos e **sem as barras**. Imprimir é pelo diálogo do navegador, não por biblioteca — *Salvar como PDF* já está lá, e a dependência custaria centenas de KB no cache. O relatório não grava nada na pasta e não calcula nada novo. No catálogo, **"Receber, conferir e registrar materiais informacionais"** passa a aceitar **baixa e média** (`c: ["b", "m"]`): o mesmo verbo cobre receber três exemplares encomendados e conferir uma doação peça a peça, e a opção única empurrava quem lançava a escolher outra atividade que pontuasse melhor e descrevesse pior. Nada já lançado se move, e `CATALOGO_ATUALIZADO` vai para 31.08.2026. |
 | **1.14** | **Horários de trabalho.** Quem registra atividade ganha a tela **Horários**, onde declara em que horas estará disponível: um período, os dias da semana e **uma faixa de horas**, com o total ("6h por dia · 30h por semana") somado enquanto se digita. Jornada partida se declara como dois horários — e por isso a colisão só é recusada quando **período, dia da semana e hora** se cruzam; recusar por período apenas, como as ausências fazem, tornaria "uma faixa por dia" inútil no dia seguinte. É **previsão de disponibilidade, não registro de ponto**: não vale pontos, não passa por aprovação e **não entra em cálculo algum da meta** — se alimentasse o percentual, uma previsão viraria promessa de produtividade que o programa não observa. No painel, uma aba lê o conjunto: quatro indicadores (incluindo **quantas pessoas não declararam**, tirado do cadastro e não dos horários), o **mapa de cobertura** hora × dia da semana e a barra de horas por semana. Os dois divergem de propósito — o mapa desconta ausências, a barra não —, porque um fala de dias reais e a outra do padrão semanal. O horário mora no arquivo da própria pessoa, como quarta chave (`horarios`), e o arquivo sobe para `versao: 4`: rótulo, e não formato, com arquivo antigo lido como lista vazia e nunca reescrito. A seção inteira entra **desligada**, atrás do mesmo interruptor de administrador das ausências. |
 | **1.15** | **A seção Horários passa a vir ligada.** Ela entrou oculta na 1.14, por espelhar as ausências, e o espelho não cabia: as ausências ficaram ocultas na v1.3 enquanto a gestão discutia **se** deviam existir, e sobre horários não pesa discussão equivalente — copiou-se o interruptor, não o motivo. O custo caía sobre quem menos podia pagá-lo: quem abria o programa procurava a tela e não achava, porque o item do rail, a aba do painel e a própria tela só existiam depois de um administrador entrar e ligar a chave. A semente do `CFG` passa a `true` e a leitura do `config.json` passa de `=== true` para **`!== false`**: a falta da chave passa a significar VISÍVEL, de modo que toda instalação que nunca tratou do assunto — inclusive todo `config.json` anterior à 1.14 — mostra a seção, e só quem gravou `false` de propósito continua sem ela. Desligar continua possível; mudou qual dos dois lados precisa agir. **Ausências não muda** e segue oculta por omissão: a razão que a pôs ali não desapareceu. |
+| **1.16** | **Dois estudos de decisão entram no repositório; o aplicativo não muda.** Esta versão é de documentação: no `code/` mexem-se **apenas os carimbos de versão** — o `versao.js` e as menções à versão no LEIA-ME —, e nenhuma tela, cálculo ou arquivo de dado se comporta de forma diferente da 1.15. O que entra é [`Hospedagem.md`](Hospedagem.md) — o que é preciso para servir o aplicativo num servidor da intranet, com a conclusão medida de que o gargalo não é hardware e sim o **HTTPS**, porque a File System Access API só existe em contexto seguro e sob `http://` simples o programa abre sem conseguir conectar pasta nenhuma — e [`Backend.md`](Backend.md), sobre acrescentar banco de dados: o que de fato se estaria acrescentando (um servidor a ser operado, já que navegador não executa banco), quais limitações da seção 12 isso resolveria, por que "SQLite" nomeia duas propostas opostas (armadilha na pasta da rede, provavelmente a escolha certa no servidor) e o meio-termo recomendado, um SQLite só de leitura alimentado pelos arquivos. A seção 11 passa a avisar que servir pela intranet exige HTTPS, e a 14.2 aponta para o estudo que pesa a decisão que ela só sabia descrever. As medições dos dois estudos foram feitas sobre a 1.15 e **continuam valendo**, precisamente porque o código não mudou. A troca da chave do cache (`ra-1.16`) é o único efeito visível para quem já usava a 1.15. |
 
 ### 1.3. Versionamento por *tags* (novidade da 1.0)
 
@@ -1487,7 +1488,7 @@ hospedar não resolve estão em [`Hospedagem.md`](Hospedagem.md).
 torna a navegação no seletor de pastas bem mais simples para as pessoas.
 
 **Atualização de versão:** ver 1.3 — as duas coisas que precisam concordar. A
-versão atual é `1.15`, e o cache correspondente é `ra-1.15`. Na primeira carga após
+versão atual é `1.16`, e o cache correspondente é `ra-1.16`. Na primeira carga após
 atualizar, um recarregamento forçado (Ctrl+F5) ajuda a garantir a troca.
 
 **Compatibilidade:** Chrome e Edge apenas, por decisão de projeto — a File System
@@ -1874,6 +1875,6 @@ Progressive Web App
 
 ---
 
-*Programa de Resultados — COBIB · Relatório Técnico da versão 1.15 (set/2026).
+*Programa de Resultados — COBIB · Relatório Técnico da versão 1.16 (set/2026).
 Documento vivo: ao publicar uma versão nova, atualize as seções afetadas e o
 histórico de versões (1.2).*
