@@ -1476,6 +1476,13 @@ chega a existir.
 ou publicar a pasta em um servidor de arquivos da intranet. O próprio diretório de
 rede pode hospedar o app (ex.: `unidadeCentral\app`).
 
+**Servir pela intranet exige HTTPS, e não é detalhe de segurança:** a File System Access
+API só existe em **contexto seguro**, de modo que numa origem `http://` que não seja
+`localhost` a `showDirectoryPicker` simplesmente não existe e o aplicativo não conecta
+pasta nenhuma. `file://` **é** contexto seguro — por isso o duplo clique funciona hoje.
+O dimensionamento da máquina, os cabeçalhos de cache que a publicação exige e o que
+hospedar não resolve estão em [`Hospedagem.md`](Hospedagem.md).
+
 **Dica de implantação:** mapear a pasta de rede como unidade de disco (ex.: `R:`)
 torna a navegação no seletor de pastas bem mais simples para as pessoas.
 
