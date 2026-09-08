@@ -45,6 +45,7 @@ code/                    o aplicativo
   ajuda/                 capturas usadas na tela de Ajuda
   LEIA-ME.txt            a documentação de verdade: o que faz, e por quê
 Projeto_Design.md             relatório técnico do projeto (acompanha a versão atual)
+Hospedagem.md                 estudo: servir o aplicativo num servidor da intranet
 FAQ.md                        perguntas frequentes de quem usa (arquivo vivo)
 .gitignore                    barra config.json, pastas de teste e *.local.js
 ```
@@ -58,6 +59,13 @@ código. Ele descreve sempre a versão em uso, sem número no nome: versão é t
 nome de arquivo. Substitui o relatório das versões beta, cujo PDF saiu da árvore na
 v1.5 por trazer nomes reais dentro do binário — recupere-o com
 `git show v1.4:Projeto_Design_until_v8.pdf > relatorio-v8.pdf`.
+
+[`Hospedagem.md`](Hospedagem.md) responde a uma pergunta que não é de quem usa nem de
+quem programa, e sim de quem tem de aprovar uma máquina virtual: **o que é preciso para
+servir isto num servidor da intranet?** A conclusão curta é que o gargalo não é hardware
+— o aplicativo cabe em qualquer VM —, e sim o **HTTPS**: a API que dá acesso à pasta da
+rede só existe em contexto seguro, então publicar por HTTP simples entrega uma tela que
+abre e não conecta em pasta nenhuma.
 
 [`FAQ.md`](FAQ.md) responde as dúvidas de quem **usa** o programa: esqueci de
 lançar ontem, a chefia está de férias e ninguém aprova, meu percentual caiu sem
