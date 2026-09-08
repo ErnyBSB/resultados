@@ -1,6 +1,7 @@
 # Programa de Resultados — COBIB
 ## Hospedar o aplicativo num servidor da intranet
 ### Estudo de dimensionamento · medições sobre a versão 1.15
+#### Válido para a 1.16, que mudou documentação e o carimbo da versão, nada mais
 
 > Documento de decisão, para quem for pedir uma máquina virtual à infraestrutura da
 > corporação. Responde a três perguntas: **é possível?**, **quanto custa em hardware?**
