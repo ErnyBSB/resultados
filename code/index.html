@@ -639,6 +639,8 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
       <span class="ponto"></span>Meu mês<span class="rail-num" id="navMesPct"></span></button>
     <button type="button" class="rail-item" data-vista="aus" id="navAus">
       <span class="ponto"></span>Ausências</button>
+    <button type="button" class="rail-item" data-vista="hor" id="navHor">
+      <span class="ponto"></span>Horários</button>
 
     <p class="rail-grupo" id="grupoGestao">Gestão</p>
     <button type="button" class="rail-item" data-vista="painel" id="navPainel">
@@ -1005,6 +1007,80 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
   </div>
 </section>
 
+<!-- ====================== HORÁRIOS ====================== -->
+<section class="vista" id="vHor" hidden>
+  <div class="topo">
+    <div class="titulo">
+      <h1>Horários</h1>
+      <p class="sub">Em que horas você estará disponível. Não é registro de ponto e não
+        vale pontos: serve para a chefia enxergar a cobertura da equipe na semana.</p>
+    </div>
+  </div>
+
+  <div class="corpo">
+    <div class="colunas estreita">
+      <div class="cartao">
+        <h2>Declarar horário</h2>
+        <div class="grade2" style="margin-top:14px">
+          <div class="campo">
+            <label class="rotulo" for="inpHorDe">Primeiro dia</label>
+            <input type="date" id="inpHorDe">
+          </div>
+          <div class="campo">
+            <label class="rotulo" for="inpHorAte">Último dia</label>
+            <input type="date" id="inpHorAte">
+          </div>
+        </div>
+        <div class="campo">
+          <span class="rotulo" id="rotDiasHor">Dias da semana</span>
+          <div id="diasHor" role="group" aria-labelledby="rotDiasHor"
+               style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        </div>
+        <div class="grade2">
+          <div class="campo">
+            <label class="rotulo" for="inpHorInicio">Entrada</label>
+            <input type="time" id="inpHorInicio" step="300">
+          </div>
+          <div class="campo">
+            <label class="rotulo" for="inpHorFim">Saída</label>
+            <input type="time" id="inpHorFim" step="300">
+          </div>
+        </div>
+        <!-- O total é conta, não digitação: quem declara não deve ter de
+             somar as próprias horas para conferir se acertou a jornada. -->
+        <p class="dica" id="totalHor" style="margin-top:2px"></p>
+        <div class="campo">
+          <label class="rotulo" for="inpHorObs">Observações (opcional)</label>
+          <textarea id="inpHorObs" placeholder="Ex.: atendimento ao público, escala de balcão"></textarea>
+        </div>
+        <button type="button" class="acao" id="btnRegistrarHor" style="width:100%">Declarar horário</button>
+        <p class="dica" style="margin-top:10px">Uma faixa por dia. Para trabalhar em horas
+          diferentes conforme o dia, declare um horário para cada grupo de dias — segunda e
+          quarta num, terça e quinta noutro. Só é recusado o que colide de verdade: mesmo
+          período, mesmo dia da semana e horas que se cruzam.</p>
+        <div class="aviso" id="avisoHor" role="status"></div>
+      </div>
+
+      <div class="quadro">
+        <div class="quadro-topo">
+          <h2>Meus horários <span class="cont" id="contMeusHor"></span></h2>
+        </div>
+        <div class="rolagem">
+          <table>
+            <thead>
+              <tr><th>Período</th><th>Dias</th><th>Faixa</th><th class="num">h/dia</th>
+                  <th class="num">h/semana</th><th>Observações</th>
+                  <th><span class="rotulo" style="margin:0">Ações</span></th></tr>
+            </thead>
+            <tbody id="tbodyMeusHor"></tbody>
+          </table>
+        </div>
+        <p class="vazio" id="vazioMeusHor">Nenhum horário declarado.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ====================== PAINEL ====================== -->
 <section class="vista" id="vPainel" hidden>
   <div class="topo">
@@ -1059,6 +1135,9 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
       <!-- oculta enquanto a seção estiver em avaliação; ver aplicarAusencias() -->
       <button type="button" class="aba" role="tab" id="abaAus" data-aba="aus" hidden
               aria-selected="false" aria-controls="painelAus">Ausências<span class="cont" id="contAus"></span></button>
+      <!-- oculta pela mesma chave das ausências; ver aplicarHorarios() -->
+      <button type="button" class="aba" role="tab" id="abaHor" data-aba="hor" hidden
+              aria-selected="false" aria-controls="painelHor">Horários<span class="cont" id="contHor"></span></button>
     </div>
 
     <!-- aba: aprovações -->
@@ -1170,6 +1249,52 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
       </div>
       <div id="resumoAus" style="margin-top:14px;font-size:12.5px;color:var(--grafite)"></div>
     </div>
+
+    <!-- aba: horários da alçada -->
+    <div id="painelHor" role="tabpanel" aria-labelledby="abaHor" hidden>
+      <div class="kpis">
+        <div class="kpi"><span class="rotulo">Horas por semana</span><div class="valor" id="kpiHorTotal">0</div></div>
+        <div class="kpi"><span class="rotulo">Pessoas com horário</span><div class="valor" id="kpiHorPessoas">0</div></div>
+        <div class="kpi"><span class="rotulo">Média por pessoa</span><div class="valor" id="kpiHorMedia">0<span class="un">h</span></div></div>
+        <div class="kpi"><span class="rotulo">Sem horário</span><div class="valor" id="kpiHorSem">0</div></div>
+      </div>
+
+      <div>
+        <figure class="gfx" id="figCobertura">
+          <figcaption><span>Cobertura por hora e dia da semana</span></figcaption>
+          <div class="plot" id="chartCobertura" role="img"
+               aria-label="Mapa de calor: quantas pessoas estão disponíveis em cada hora de cada dia da semana. Os mesmos horários estão na tabela abaixo."></div>
+          <p class="nota">Quantas pessoas declararam estar disponíveis em cada hora. A hora
+            conta quando a pessoa está disponível em qualquer parte dela. Dias cobertos por
+            ausência registrada não entram.</p>
+        </figure>
+        <figure class="gfx" id="figHorasPessoa">
+          <figcaption><span>Horas por semana, por pessoa</span></figcaption>
+          <div class="plot" id="chartHorasPessoa" role="img"
+               aria-label="Gráfico de barras: total de horas declaradas por semana para cada pessoa."></div>
+          <p class="nota" id="notaHorasPessoa"></p>
+        </figure>
+      </div>
+
+      <div class="quadro" style="margin-top:16px">
+        <div class="quadro-topo">
+          <h2>Horários no período</h2>
+        </div>
+        <div class="rolagem">
+          <table class="larga">
+            <thead>
+              <tr><th>Pessoa</th><th>Unidade</th><th>Período</th><th>Dias</th><th>Faixa</th>
+                  <th class="num">h/dia</th><th class="num">h/semana</th>
+                  <th class="num">Jornada</th><th>Observações</th>
+                  <th><span class="rotulo" style="margin:0">Ações</span></th></tr>
+            </thead>
+            <tbody id="tbodyHor"></tbody>
+          </table>
+        </div>
+        <p class="vazio" id="vazioHor">Nenhum horário com os filtros atuais.</p>
+      </div>
+      <div id="resumoHor" style="margin-top:14px;font-size:12.5px;color:var(--grafite)"></div>
+    </div>
   </div>
 </section>
 
@@ -1205,6 +1330,14 @@ dialog h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0 0 
       <p class="dica" style="margin-top:8px">Com a seção desligada, ninguém registra nem
         consulta ausências pela tela. As ausências já gravadas continuam saindo da conta do
         percentual da meta — o cálculo não mudou.</p>
+      <label style="display:flex;gap:8px;align-items:center;margin:14px 0 0;font-size:13px">
+        <input type="checkbox" id="chkMostrarHorarios" style="width:auto">
+        Mostrar a seção <b>Horários</b> (tela de quem registra e aba do painel)
+      </label>
+      <p class="dica" style="margin-top:8px">Horário declarado é previsão de
+        disponibilidade, não registro de ponto: o programa não confere se foi cumprido e
+        não usa esse dado em conta nenhuma da meta. Desligar a seção esconde as telas; os
+        horários já gravados continuam nos arquivos das pessoas.</p>
     </div>
 
     <div class="cartao">
@@ -1541,7 +1674,7 @@ let ident = null;
 let dirRaiz = null;
 let complexidade = null;
 let cargaSel = null;   // 8 ou 6, marcada na etapa 2
-let dados = { registros: [], aprovU: {}, aprovG: {} };
+let dados = { registros: [], ausencias: [], horarios: [], aprovU: {}, aprovG: {} };
 const CHAVE_INST = "ra.instalacao.v1";
 let situacaoPasta = null;  // "oficial" | "nao-oficializada" | "divergente" | "ilegivel"
 /* Motivo, quando o config.json existe mas não pôde ser lido. Fica fora
@@ -1560,7 +1693,11 @@ let CFG = {
      quem ligou a seção de propósito, no painel do administrador.
      Nada foi apagado — nem o código, nem as ausências já gravadas nos
      arquivos das pessoas, que continuam saindo da conta da meta. */
-  mostrarAusencias: false
+  mostrarAusencias: false,
+  /* Horários entram OCULTOS pelo mesmo motivo das ausências: unidade que
+     não trabalha por escala não tem o que declarar, e ligar a seção para
+     todos é decisão de quem administra — não um fato consumado da versão. */
+  mostrarHorarios: false
 };
 
 const $ = (id) => document.getElementById(id);
@@ -1620,6 +1757,19 @@ function aplicarAusencias() {
   if (ident) ajustarRail();
 }
 
+/* Seção "Horários" (v1.14): mesma chave de liga/desliga das ausências,
+   pelos mesmos motivos e com o mesmo cuidado — esconder o botão do rail
+   não é controle de acesso, então a regra vale para qualquer caminho
+   que chame irPara("hor") ou irAba("hor"). */
+const mostraHorarios = () => CFG.mostrarHorarios === true;
+function aplicarHorarios() {
+  const ver = mostraHorarios();
+  $("abaHor").hidden = !ver;
+  if (!ver && abaAtual === "hor") irAba("aprov");
+  if (!ver && vistaAtual === "hor") irPara(ehAdm() ? "adm" : "lancar");
+  if (ident) ajustarRail();
+}
+
 /* "permanente" existe para os avisos de diagnóstico: sumir sozinho em
    seis segundos serve ao "salvo com sucesso", e atrapalha quem está
    justamente tentando entender por que a pasta não conectou. Quem
@@ -1656,7 +1806,7 @@ function estadoConexao(ok, txt) {
    Quem pode ver o quê continua vindo do PAPEL, nunca da tela: o rail
    apenas esconde o que não é da alçada da pessoa. */
 const VISTAS = {
-  lancar: "vLancar", mes: "vMes", aus: "vAus",
+  lancar: "vLancar", mes: "vMes", aus: "vAus", hor: "vHor",
   painel: "vPainel", adm: "vAdm", ajuda: "vAjuda", entrada: "vEntrada"
 };
 let vistaAtual = "entrada";
@@ -1676,6 +1826,9 @@ function podeVer(v) {
   /* Seção em avaliação: esconder o botão no rail não bastaria — a regra
      tem de valer para qualquer caminho que chame irPara("aus"). */
   if (v === "aus") return !ehAdm() && mostraAusencias();
+  /* O administrador não declara horário porque não registra atividade:
+     ele não tem jornada no programa. */
+  if (v === "hor") return !ehAdm() && mostraHorarios();
   if (v === "adm") return ehAdm();
   if (v === "painel") return ehChefia() || ehGeral() || ehAdm();
   return !ehAdm();   // lancar, mes, aus: quem registra atividade
@@ -1698,7 +1851,7 @@ function irPara(v) {
   window.scrollTo(0, 0);
   /* O gráfico só mede o contêiner quando ele está visível: ao entrar no
      painel, resgata o desenho que ficou pendente. */
-  if (v === "painel") desenhoPendente();
+  if (v === "painel") { desenhoPendente(); desenhoPendenteHor(); }
 }
 const railItens = () => [...document.querySelectorAll(".rail-item")];
 document.getElementById("railNav").addEventListener("click", (e) => {
@@ -1717,6 +1870,7 @@ function ajustarRail() {
   $("grupoMeu").hidden = !lanca;
   for (const id of ["navLancar", "navMes"]) $(id).hidden = !lanca;
   $("navAus").hidden = !lanca || !mostraAusencias();
+  $("navHor").hidden = !lanca || !mostraHorarios();
   $("grupoGestao").hidden = !gere;
   $("navPainel").hidden = !gere;
   $("navAdm").hidden = !ehAdm();
@@ -1814,6 +1968,7 @@ async function aposConectar() {
      avaliação foi o administrador, e o efeito chega aqui a cada leitura
      da pasta — inclusive no "Atualizar dados da rede". */
   aplicarAusencias();
+  aplicarHorarios();
   // valida o selo de instalação da pasta
   const idLocal = localStorage.getItem(CHAVE_INST);
   /* O arquivo ilegível vem ANTES de tudo: sem esta primeira pergunta, a
@@ -1866,6 +2021,9 @@ async function carregarConfig() {
            anterior à 1.3 não tem a chave, e a falta dela significa
            OCULTO — o estado em que a seção entrou em avaliação. */
         mostrarAusencias: cfg.mostrarAusencias === true,
+        /* Mesma leitura estrita: config.json anterior à 1.14 não tem a
+           chave, e a falta dela significa OCULTO. */
+        mostrarHorarios: cfg.mostrarHorarios === true,
         instalacao: cfg.instalacao || null
       };
     } else if (r.estado === "ilegivel") {
@@ -1974,10 +2132,12 @@ async function aoTrocarPessoa() {
 $("selPessoa").addEventListener("change", aoTrocarPessoa);
 
 /* -------------------- ESCRITA DO ARQUIVO DA PESSOA --------------------
-   O arquivo guarda TRÊS coisas: carga horária, lançamentos e ausências.
-   Gravar só uma delas apagaria as outras duas, então toda escrita passa
-   por aqui: lê o estado atual, aplica a mudança e regrava o conjunto.
-   Ponto único de escrita — não chame gravarMeuArquivo direto. */
+   O arquivo guarda QUATRO coisas: carga horária, lançamentos, ausências
+   e horários (v1.14). Gravar só uma delas apagaria as outras três, então
+   toda escrita passa por aqui: lê o estado atual, aplica a mudança e
+   regrava o conjunto. Ponto único de escrita — não chame gravarMeuArquivo
+   direto, e ao acrescentar uma quinta coisa lembre-se de que ela precisa
+   entrar nas TRÊS linhas abaixo: a leitura, a montagem e a gravação. */
 async function atualizarArquivoPessoa(unidade, nome, mudar) {
   /* Leitura estrita: se o arquivo existir e não for decifrável, isto
      lança em vez de devolver null — sem isso, gravaríamos um arquivo
@@ -1986,11 +2146,12 @@ async function atualizarArquivoPessoa(unidade, nome, mudar) {
   const estado = {
     registros: (atual && atual.registros) || [],
     ausencias: (atual && atual.ausencias) || [],
+    horarios: (atual && atual.horarios) || [],
     carga: (atual && atual.cargaHoraria) || null
   };
   mudar(estado);
   await gravarMeuArquivo(dirRaiz, unidade, nome,
-    estado.registros, estado.carga, estado.ausencias);
+    estado.registros, estado.carga, estado.ausencias, estado.horarios);
   return estado;
 }
 /* A recusa por arquivo ilegível já explica tudo e não é falha de
@@ -1998,7 +2159,7 @@ async function atualizarArquivoPessoa(unidade, nome, mudar) {
    sobre o que aconteceu. */
 const msgErro = (e, prefixo) => e.arquivoIlegivel ? e.message : prefixo + e.message;
 
-/* Grava a carga preservando lançamentos e ausências já existentes. */
+/* Grava a carga preservando lançamentos, ausências e horários. */
 async function salvarCarga(pessoa, carga) {
   await atualizarArquivoPessoa(pessoa.unidade, pessoa.nome, (e) => { e.carga = carga; });
 }
@@ -2153,16 +2314,20 @@ $("btnTrocarEntrada").addEventListener("click", pedirTroca);
 async function recarregar() {
   if (!dirRaiz || !ident) return;
   try {
-    dados = { registros: [], ausencias: [], aprovU: {}, aprovG: {} };
+    dados = { registros: [], ausencias: [], horarios: [], aprovU: {}, aprovG: {} };
     dados.aprovG = await lerAprovacoes(dirRaiz, GERAL);
     if (ehServidor()) {
       const meu = await lerMeuArquivo(dirRaiz, ident.unidade, ident.nome);
       dados.registros = (meu && meu.registros) || [];
       dados.ausencias = (meu && meu.ausencias) || [];
+      /* Arquivo anterior à 1.14 não tem a chave: lista vazia, e nada é
+         reescrito enquanto a pessoa não declarar um horário. */
+      dados.horarios = (meu && meu.horarios) || [];
       dados.aprovU = await lerAprovacoes(dirRaiz, ident.unidade);
     } else if (ehChefia()) {
       dados.registros = await lerLancamentosDaUnidade(dirRaiz, ident.unidade);
       dados.ausencias = await lerAusenciasDaUnidade(dirRaiz, ident.unidade);
+      dados.horarios = await lerHorariosDaUnidade(dirRaiz, ident.unidade);
       dados.aprovU = await lerAprovacoes(dirRaiz, ident.unidade);
     } else { // chefia geral e administrador: visão ampla
       const sel = $("selUnidadeVer").value || "*";
@@ -2170,6 +2335,7 @@ async function recarregar() {
       for (const un of unidades) {
         dados.registros.push(...await lerLancamentosDaUnidade(dirRaiz, un));
         dados.ausencias.push(...await lerAusenciasDaUnidade(dirRaiz, un));
+        dados.horarios.push(...await lerHorariosDaUnidade(dirRaiz, un));
         if (un !== GERAL)
           Object.assign(dados.aprovU, await lerAprovacoes(dirRaiz, un));
       }
@@ -2575,6 +2741,282 @@ function renderAusencias() {
   $("resumoAus").hidden = !lista.length;
 }
 
+/* ================================ HORÁRIOS ================================
+   Em que horas a pessoa estará disponível. É PREVISÃO DE DISPONIBILIDADE,
+   e não registro de ponto: ninguém marca entrada nem saída, e o programa
+   não confere se o que foi declarado foi cumprido — não teria como.
+
+   Não vale pontos, não passa por aprovação e NÃO entra em conta nenhuma
+   da meta. A tentação de ligar as duas coisas é grande e foi recusada de
+   propósito: se o horário alimentasse o percentual, uma declaração de
+   disponibilidade viraria promessa de produtividade, e o programa
+   cobraria o cumprimento de algo que não observa.
+
+   Uma faixa por dia (inicio/fim). Quem trabalha em horas diferentes
+   conforme o dia declara um horário para cada grupo de dias — foi a
+   escolha entre um formulário simples para o caso comum e um modelo de
+   lista de faixas que pesaria em todos os casos para servir a alguns.
+   Mora no arquivo da própria pessoa, em "horarios". */
+const DIAS_SEMANA = [
+  { n: 0, curto: "Dom", rotulo: "domingo" },
+  { n: 1, curto: "Seg", rotulo: "segunda" },
+  { n: 2, curto: "Ter", rotulo: "terça" },
+  { n: 3, curto: "Qua", rotulo: "quarta" },
+  { n: 4, curto: "Qui", rotulo: "quinta" },
+  { n: 5, curto: "Sex", rotulo: "sexta" },
+  { n: 6, curto: "Sáb", rotulo: "sábado" }
+];
+/* "09:30" -> 570. Sem Date: o horário é um relógio de parede, não um
+   instante — passá-lo por fuso só criaria oportunidade de errar. */
+const emMinutos = (hhmm) => {
+  const [h, m] = String(hhmm || "").split(":").map(Number);
+  return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : NaN;
+};
+const horasDe = (h) => (emMinutos(h.fim) - emMinutos(h.inicio)) / 60;
+const horasSemana = (h) => horasDe(h) * (h.dias || []).length;
+/* Uma casa decimal só quando existe: "6h" é mais legível que "6,0h", e
+   "6,5h" não pode virar "7h". */
+const fmtHoras = (n) => (Math.round(n * 10) / 10).toString().replace(".", ",");
+const faixaTxt = (h) => `${h.inicio} às ${h.fim}`;
+const diasTxt = (h) => (h.dias || []).slice().sort((a, b) => a - b)
+  .map(n => (DIAS_SEMANA[n] || {}).curto || n).join(", ");
+/* As horas do relógio que a faixa encosta: das 9h30 às 12h ela ocupa 9,
+   10 e 11. A hora conta inteira porque a pergunta do mapa de calor é
+   "há alguém neste pedaço do dia?", e não "quantos minutos exatos". */
+function horasDaFaixa(h) {
+  const ini = Math.floor(emMinutos(h.inicio) / 60);
+  const fim = Math.ceil(emMinutos(h.fim) / 60);
+  const out = [];
+  for (let x = ini; x < fim; x++) out.push(x);
+  return out;
+}
+/* Dia da semana de uma data ISO, em UTC — pelo mesmo motivo de
+   diasCorridos: o fuso do computador não pode mover o dia. */
+const diaDaSemanaDe = (iso) => new Date(iso + "T00:00:00Z").getUTCDay();
+/* As datas de um mês "AAAA-MM", uma a uma. */
+function diasDoMes(mes) {
+  const [a, m] = mes.split("-").map(Number);
+  const fim = new Date(Date.UTC(a, m, 0)).getUTCDate();
+  const out = [];
+  for (let d = 1; d <= fim; d++)
+    out.push(`${mes}-${String(d).padStart(2, "0")}`);
+  return out;
+}
+const temAusenciaEm = (nome, data) => dados.ausencias
+  .some(a => a.servidor === nome && a.de <= data && a.ate >= data);
+
+/* Dois horários colidem quando as TRÊS coisas se cruzam: o período, o
+   dia da semana e a hora. Só o período não basta — declarar segunda e
+   quarta das 9h às 15h e terça e quinta das 13h às 19h no mesmo semestre
+   é justamente o que "uma faixa por dia" exige que se possa fazer. */
+function colidem(a, b) {
+  if (!sobrepoe(a, b)) return false;
+  if (!a.dias.some(d => b.dias.includes(d))) return false;
+  return emMinutos(a.inicio) < emMinutos(b.fim) && emMinutos(b.inicio) < emMinutos(a.fim);
+}
+
+const meusHorarios = () => dados.horarios
+  .filter(h => h.servidor === ident.nome)
+  .sort((x, y) => y.de.localeCompare(x.de));
+
+/* Mesma regra das ausências: entra no mês filtrado o horário que ENCOSTA
+   nele em algum dia, e não só o que começa nele. */
+function horariosFiltrados() {
+  const mes = $("inpMes").value;
+  const pessoa = $("selServidorVer").value;
+  if (!mes) return [];
+  const ini = mes + "-01", fim = mes + "-31";
+  return dados.horarios
+    .filter(h => h.de <= fim && h.ate >= ini)
+    .filter(h => ehServidor() ? h.servidor === ident.nome : true)
+    .filter(casaPapel)
+    .filter(h => (!pessoa || pessoa === "*") ? true : h.servidor === pessoa)
+    .sort((x, y) => x.servidor.localeCompare(y.servidor) || x.de.localeCompare(y.de));
+}
+
+/* Quem o recorte alcança, vindo do CATÁLOGO e não dos horários. Um
+   relatório de horários montado só com quem declarou parece completo
+   exatamente onde falta gente — e é a falta que a chefia precisa ver. */
+function pessoasDoEscopo() {
+  const un = (ehGeral() || ehAdm()) ? ($("selUnidadeVer").value || "*") : ident.unidade;
+  const papel = $("selPapel").value || "*";
+  const cabe = (p) => papel === "*" ? true :
+    papel === "chefias" ? (p === "chefia" || p === "geral") : p === "servidor";
+  const out = [];
+  for (const [u, v] of Object.entries(CFG.unidades)) {
+    if (un !== "*" && un !== u) continue;
+    if (v.chefia && cabe("chefia")) out.push(v.chefia);
+    for (const nome of (v.servidores || [])) if (cabe("servidor")) out.push(nome);
+  }
+  if ((un === "*" || un === GERAL) && CFG.chefiaGeral && cabe("geral"))
+    out.push(CFG.chefiaGeral);
+  return [...new Set(out)];
+}
+
+function montarDiasHorario() {
+  $("diasHor").innerHTML = DIAS_SEMANA.map(d => `
+    <label style="display:flex;gap:5px;align-items:center;font-size:12.5px;font-weight:500">
+      <input type="checkbox" class="dia-hor" value="${d.n}" style="width:auto"
+             ${d.n >= 1 && d.n <= 5 ? "checked" : ""}
+             aria-label="${escapar(d.rotulo)}">${d.curto}</label>`).join("");
+  for (const c of document.querySelectorAll(".dia-hor"))
+    c.addEventListener("change", atualizarTotalHorario);
+}
+const diasMarcados = () => [...document.querySelectorAll(".dia-hor:checked")]
+  .map(c => Number(c.value));
+
+/* O total aparece enquanto se digita, e não depois de gravar: é a única
+   forma de a pessoa perceber que errou a hora antes de o erro virar
+   arquivo. Quando ele não fecha com a jornada declarada, a tela diz —
+   e não corrige: quem sabe qual dos dois números está certo é ela. */
+function atualizarTotalHorario() {
+  const h = { inicio: $("inpHorInicio").value, fim: $("inpHorFim").value, dias: diasMarcados() };
+  const dia = horasDe(h);
+  if (!Number.isFinite(dia) || dia <= 0 || !h.dias.length)
+    return void ($("totalHor").textContent = "");
+  const txt = `${fmtHoras(dia)}h por dia · ${fmtHoras(dia * h.dias.length)}h por semana, em ${h.dias.length} dia(s).`;
+  const carga = ident && ident.carga;
+  $("totalHor").textContent = carga && Math.abs(dia - carga) > 0.01
+    ? `${txt} A sua jornada registrada é de ${carga}h por dia — confira se é mesmo isto que você quer declarar.`
+    : txt;
+}
+for (const id of ["inpHorInicio", "inpHorFim"])
+  $(id).addEventListener("change", atualizarTotalHorario);
+
+$("btnRegistrarHor").addEventListener("click", async () => {
+  if (!dirRaiz) return avisar($("avisoHor"), "Conecte a pasta da rede antes de declarar.", true);
+  const de = $("inpHorDe").value, ate = $("inpHorAte").value;
+  const inicio = $("inpHorInicio").value, fim = $("inpHorFim").value;
+  const dias = diasMarcados();
+  if (!de || !ate) return avisar($("avisoHor"), "Informe o primeiro e o último dia do período.", true);
+  if (ate < de) return avisar($("avisoHor"), "O último dia não pode ser anterior ao primeiro.", true);
+  if (!dias.length) return avisar($("avisoHor"), "Marque ao menos um dia da semana.", true);
+  if (!inicio || !fim) return avisar($("avisoHor"), "Informe a hora de entrada e a de saída.", true);
+  /* Virada de meia-noite não é aceita, e a recusa explica o porquê: o
+     modelo é de uma faixa dentro de UM dia, e fingir que aceita daria um
+     total negativo em silêncio. */
+  if (emMinutos(fim) <= emMinutos(inicio))
+    return avisar($("avisoHor"),
+      "A saída precisa ser depois da entrada, no mesmo dia. Turno que atravessa a meia-noite deve ser declarado como dois horários.", true);
+
+  const nova = {
+    id: "hor-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+    unidade: ident.unidade, servidor: ident.nome, papel: ident.perfil,
+    /* A jornada vai gravada junto, como retrato do momento: é com ela
+       que a divergência é lida depois, e buscá-la no cadastro atual faria
+       um horário de março ser conferido pela jornada de outubro. */
+    carga: ident.carga || null,
+    de, ate, dias: dias.slice().sort((a, b) => a - b), inicio, fim,
+    obs: $("inpHorObs").value.trim()
+  };
+  const choque = meusHorarios().find(h => colidem(h, nova));
+  if (choque) return avisar($("avisoHor"),
+    `Este horário colide com outro já declarado: ${diasTxt(choque)}, ${faixaTxt(choque)}, ${periodoTxt(choque)}.`, true);
+
+  try {
+    await atualizarArquivoPessoa(ident.unidade, ident.nome, (e) => {
+      e.horarios.push(nova);
+      e.carga = ident.carga;
+    });
+    $("inpHorObs").value = "";
+    await recarregar();
+    avisar($("avisoHor"),
+      `Horário declarado: ${diasTxt(nova)}, ${faixaTxt(nova)} — ${fmtHoras(horasSemana(nova))}h por semana.`);
+  } catch (e) {
+    avisar($("avisoHor"), msgErro(e, "Não foi possível gravar na rede: "), true);
+  }
+});
+
+/* Exclusão pela mesma regra das ausências: a pessoa apaga os seus, o
+   administrador apaga os de qualquer um (papel de correção). */
+async function excluirHorario(id) {
+  const h = dados.horarios.find(x => x.id === id);
+  if (!h) return;
+  const meu = h.servidor === ident.nome;
+  if (!meu && !ehAdm()) return;
+  if (!confirm(meu
+    ? `Excluir o horário ${diasTxt(h)}, ${faixaTxt(h)}, ${periodoTxt(h)}?`
+    : `Excluir o horário de ${h.servidor} (${diasTxt(h)}, ${faixaTxt(h)}, ${periodoTxt(h)})?`)) return;
+  try {
+    await atualizarArquivoPessoa(h.unidade, h.servidor, (e) => {
+      e.horarios = e.horarios.filter(x => x.id !== id);
+    });
+    await recarregar();
+  } catch (e) {
+    avisar($(meu ? "avisoHor" : "avisoPainel"),
+      msgErro(e, "Não foi possível excluir na rede: "), true);
+  }
+}
+for (const alvo of ["vHor", "painelHor"]) {
+  $(alvo).addEventListener("click", (e) => {
+    const id = e.target.dataset.delhor;
+    if (id) excluirHorario(id);
+  });
+}
+
+function renderHorarios() {
+  /* ---- lista pessoal ---- */
+  if (!ehAdm()) {
+    const meus = meusHorarios();
+    $("tbodyMeusHor").innerHTML = meus.map(h => `
+      <tr>
+        <td>${periodoTxt(h)}</td>
+        <td>${escapar(diasTxt(h))}</td>
+        <td>${escapar(faixaTxt(h))}</td>
+        <td class="num">${fmtHoras(horasDe(h))}</td>
+        <td class="num">${fmtHoras(horasSemana(h))}</td>
+        <td>${escapar(h.obs || "—")}</td>
+        <td><button type="button" class="excluir" data-delhor="${escapar(h.id)}" aria-label="Excluir horário">excluir</button></td>
+      </tr>`).join("");
+    $("vazioMeusHor").hidden = meus.length > 0;
+    $("contMeusHor").textContent = meus.length;
+  }
+
+  /* ---- painel: horários das pessoas sob a alçada de quem olha ---- */
+  const lista = horariosFiltrados();
+  $("contHor").textContent = lista.length;
+  $("tbodyHor").innerHTML = lista.map(h => {
+    const dia = horasDe(h);
+    const bate = !h.carga || Math.abs(dia - h.carga) <= 0.01;
+    return `
+      <tr>
+        <td>${escapar(h.servidor)}</td>
+        <td>${h.unidade === GERAL ? "GERAL" : escapar(h.unidade)}</td>
+        <td>${periodoTxt(h)}</td>
+        <td>${escapar(diasTxt(h))}</td>
+        <td>${escapar(faixaTxt(h))}</td>
+        <td class="num">${fmtHoras(dia)}</td>
+        <td class="num">${fmtHoras(horasSemana(h))}</td>
+        <td class="num">${h.carga ? h.carga + "h" : "—"}${bate ? "" :
+          ` <span title="A faixa declarada não fecha com a jornada registrada" aria-label="diverge da jornada">≠</span>`}</td>
+        <td>${escapar(h.obs || "—")}</td>
+        <td>${(h.servidor === ident.nome || ehAdm())
+          ? `<button type="button" class="excluir" data-delhor="${escapar(h.id)}" aria-label="Excluir horário">excluir</button>` : ""}</td>
+      </tr>`;
+  }).join("");
+  $("vazioHor").hidden = lista.length > 0;
+
+  /* ---- indicadores ---- */
+  const comHorario = new Set(lista.map(h => h.servidor));
+  const totalSemana = lista.reduce((s, h) => s + horasSemana(h), 0);
+  const semHorario = pessoasDoEscopo().filter(n => !comHorario.has(n));
+  $("kpiHorTotal").textContent = fmtHoras(totalSemana);
+  $("kpiHorPessoas").textContent = comHorario.size;
+  $("kpiHorMedia").innerHTML =
+    (comHorario.size ? fmtHoras(totalSemana / comHorario.size) : "0") + `<span class="un">h</span>`;
+  $("kpiHorSem").textContent = semHorario.length;
+  $("resumoHor").innerHTML = semHorario.length
+    ? `<b>${semHorario.length}</b> pessoa(s) do recorte sem horário declarado: ${escapar(semHorario.join(", "))}.
+       <br><small>Vêm do cadastro, e não dos horários: quem não declarou não apareceria numa lista feita só de declarações.</small>`
+    : (lista.length ? "Todas as pessoas do recorte declararam horário." : "");
+  $("resumoHor").hidden = !$("resumoHor").innerHTML;
+
+  /* O gráfico só mede o contêiner quando ele está à vista; fora dela o
+     desenho fica na fila, como já faz o da visão do mês. */
+  if (vistaAtual === "painel" && abaAtual === "hor") desenharHorarios(lista);
+  else horPendente = lista;
+}
+
 /* ============================ META ALCANÇADA ============================
    Meta = pontos por DIA TRABALHADO (15 para 8h, 11 para 6h, no
    catalogo.js). O denominador NÃO é o mês inteiro: são só os dias em
@@ -2752,20 +3194,22 @@ $("btnRegistrar").addEventListener("click", async () => {
    A aba escolhida fica guardada neste navegador, como estava o estado
    das seções: quem vive aprovando volta direto para "Aprovações". */
 const CHAVE_ABA = "ra.aba.v1";
-const ABAS = { aprov: "painelAprov", visao: "painelVisao", aus: "painelAus" };
+const ABAS = { aprov: "painelAprov", visao: "painelVisao", aus: "painelAus", hor: "painelHor" };
 let abaAtual = "aprov";
 
 function irAba(k) {
   /* Com a seção em avaliação desligada, a aba guardada em ra.aba.v1 pode
      apontar para "aus": cair na aba escondida deixaria o painel em
      branco, sem nenhuma aba marcada. */
-  if (!ABAS[k] || (k === "aus" && !mostraAusencias())) k = "aprov";
+  if (!ABAS[k] || (k === "aus" && !mostraAusencias()) ||
+      (k === "hor" && !mostraHorarios())) k = "aprov";
   abaAtual = k;
   for (const [nome, id] of Object.entries(ABAS)) $(id).hidden = nome !== k;
   for (const b of document.querySelectorAll(".aba"))
     b.setAttribute("aria-selected", String(b.dataset.aba === k));
   localStorage.setItem(CHAVE_ABA, k);
   if (k === "visao") desenhoPendente();
+  if (k === "hor") desenhoPendenteHor();
 }
 /* ECharts não mede um contêiner que o navegador não está exibindo: o
    gráfico sairia com altura zero. Por isso o desenho fica na fila e é
@@ -2891,7 +3335,7 @@ function render() {
        escolhido já descarta só entregaria uma tela vazia. Quem estava
        selecionado e não sobrevive ao novo papel volta a "Todas as pessoas",
        porque o valor deixa de existir entre as opções. */
-    const nomes = [...new Set([...dados.registros, ...dados.ausencias]
+    const nomes = [...new Set([...dados.registros, ...dados.ausencias, ...dados.horarios]
       .filter(casaPapel).map(r => r.servidor))].sort();
     const sel = $("selServidorVer"); const antes = sel.value;
     sel.innerHTML = `<option value="*">Todas as pessoas</option>` +
@@ -3077,6 +3521,7 @@ function render() {
 
   renderVis(regs);
   renderAusencias();
+  renderHorarios();
 
   /* Contadores nas abas e no rail: dizem se vale a pena entrar. */
   $("contLanc").textContent = pend || "";
@@ -3371,6 +3816,153 @@ function desenharGraficos(regs) {
   });
 }
 
+/* ------------------- gráficos dos horários (v1.14) -------------------
+   Duas leituras, uma pergunta cada:
+   - mapa de calor hora × dia da semana: ONDE a semana fica descoberta;
+   - barra por pessoa: QUANTAS horas cada um declarou.
+
+   Uma assimetria que precisa ser dita, porque parece divergência: o mapa
+   DESCONTA ausência e a barra NÃO. O mapa responde por dias reais do mês
+   filtrado, e quem está de férias na terça não cobre o balcão da terça.
+   A barra responde pelo PADRÃO semanal declarado, que é o mesmo com ou
+   sem férias no meio — descontar ali daria uma "semana média" que não
+   corresponde a semana nenhuma. As duas notas dizem isso na tela. */
+let gCobertura = null, gHorasPessoa = null;
+let horPendente = null;
+function desenhoPendenteHor() {
+  if (vistaAtual !== "painel" || abaAtual !== "hor" || !horPendente) return;
+  const lista = horPendente; horPendente = null;
+  desenharHorarios(lista);
+}
+
+function desenharHorarios(lista) {
+  const mes = $("inpMes").value;
+
+  /* ---------- mapa de calor: hora × dia da semana ---------- */
+  /* Conta PESSOAS, não registros: quem declarou dois horários que
+     encostam na mesma hora continua sendo uma pessoa disponível. */
+  const cel = new Map();          // "dia|hora" -> Set(nomes)
+  let maxCel = 0;
+  if (mes) {
+    const datas = diasDoMes(mes);
+    for (const h of lista) {
+      const horas = horasDaFaixa(h);
+      for (const data of datas) {
+        if (data < h.de || data > h.ate) continue;
+        const dow = diaDaSemanaDe(data);
+        if (!(h.dias || []).includes(dow)) continue;
+        if (temAusenciaEm(h.servidor, data)) continue;
+        for (const hora of horas) {
+          const k = dow + "|" + hora;
+          if (!cel.has(k)) cel.set(k, new Set());
+          cel.get(k).add(h.servidor);
+        }
+      }
+    }
+  }
+  for (const v of cel.values()) maxCel = Math.max(maxCel, v.size);
+
+  /* Só as horas que alguém usa, e contíguas entre a primeira e a última:
+     um eixo das 0h às 23h seria feito quase inteiro de células vazias. */
+  const horasUsadas = [...cel.keys()].map(k => Number(k.split("|")[1]));
+  const temDado = horasUsadas.length > 0;
+  $("figCobertura").hidden = !temDado;
+  if (!temDado) { gCobertura?.dispose(); gCobertura = null; }
+  else {
+    const h0 = Math.min(...horasUsadas), h1 = Math.max(...horasUsadas);
+    const linhas = [];               // de baixo para cima: manhã no alto
+    for (let x = h1; x >= h0; x--) linhas.push(x);
+    /* Sábado e domingo só entram se alguém trabalhar neles. */
+    const colunas = DIAS_SEMANA
+      .filter(d => [...cel.keys()].some(k => Number(k.split("|")[0]) === d.n));
+    const celulas = [];
+    linhas.forEach((hora, y) => colunas.forEach((d, x) => {
+      const n = (cel.get(d.n + "|" + hora) || new Set()).size;
+      celulas.push([x, y, n]);
+    }));
+
+    gCobertura = desenhar("chartCobertura", gCobertura,
+      Math.max(200, linhas.length * 26 + 108), {
+      grid: { left: 8, right: 16, top: 16, bottom: 62, containLabel: true },
+      tooltip: {
+        backgroundColor: "#fff", borderColor: VIS_LINHA, borderWidth: 1,
+        textStyle: { color: VIS_INK, fontSize: 12 },
+        formatter: (p) => `<b>${escapar(colunas[p.value[0]].rotulo)}, ` +
+          `${String(linhas[p.value[1]]).padStart(2, "0")}h</b><br>` +
+          `${p.value[2]} pessoa(s) disponível(is)`
+      },
+      xAxis: { type: "category", data: colunas.map(d => d.curto), position: "top",
+               axisLabel: { color: VIS_MUDO, fontSize: 12 },
+               axisLine: { show: false }, axisTick: { show: false },
+               splitArea: { show: false } },
+      yAxis: { type: "category", data: linhas.map(x => String(x).padStart(2, "0") + "h"),
+               axisLabel: { color: VIS_INK, fontSize: 11 },
+               axisLine: { show: false }, axisTick: { show: false },
+               splitArea: { show: false } },
+      visualMap: {
+        min: 0, max: Math.max(1, maxCel), calculable: false,
+        orient: "horizontal", left: "center", bottom: 4, itemWidth: 12, itemHeight: 90,
+        text: ["mais", "menos"], textStyle: { color: VIS_MUDO, fontSize: 11 },
+        inRange: { color: ["#eaf2fd", "#9ec5f4", "#3987e5", "#184f95", "#0d366b"] }
+      },
+      series: [{
+        type: "heatmap",
+        data: celulas.map(([x, y, n]) => ({
+          value: [x, y, n],
+          label: { color: n > maxCel * 0.55 ? "#fff" : VIS_INK }
+        })),
+        itemStyle: { borderColor: VIS_PAPEL, borderWidth: 1 },
+        /* O zero é escrito, como no outro mapa: célula clara e vazia
+           parece dado faltando, e aqui ela significa hora descoberta —
+           que é justamente o que se foi procurar. */
+        label: { show: true, fontSize: 11, formatter: (p) => String(p.value[2]) },
+        emphasis: { itemStyle: { borderColor: VIS_INK, borderWidth: 2 } }
+      }]
+    });
+  }
+
+  /* ---------- barra: horas por semana, por pessoa ---------- */
+  const porPessoa = new Map();
+  for (const h of lista)
+    porPessoa.set(h.servidor, (porPessoa.get(h.servidor) || 0) + horasSemana(h));
+  /* Mesma convenção do gráfico de atividades: alfabética por padrão, e
+     o eixo Y invertido no fim porque o ECharts o desenha de baixo para
+     cima. O botão "ordenar por volume" vale para os dois. */
+  const nomes = [...porPessoa.keys()].sort(visOrdem === "volume"
+    ? (x, y) => porPessoa.get(y) - porPessoa.get(x) || x.localeCompare(y)
+    : (x, y) => x.localeCompare(y));
+  const pessoas = nomes.slice().reverse();
+  $("figHorasPessoa").hidden = pessoas.length === 0;
+  if (!pessoas.length) { gHorasPessoa?.dispose(); gHorasPessoa = null; }
+  else {
+    gHorasPessoa = desenhar("chartHorasPessoa", gHorasPessoa,
+      Math.max(180, pessoas.length * 30 + 70), {
+      grid: { left: 8, right: 28, top: 10, bottom: 28, containLabel: true },
+      tooltip: {
+        backgroundColor: "#fff", borderColor: VIS_LINHA, borderWidth: 1,
+        textStyle: { color: VIS_INK, fontSize: 12 },
+        formatter: (p) => `<b>${escapar(p.name)}</b><br>${fmtHoras(p.value)}h por semana`
+      },
+      xAxis: { type: "value", axisLabel: { color: VIS_MUDO, fontSize: 11 },
+               splitLine: { lineStyle: { color: VIS_LINHA } } },
+      yAxis: { type: "category", data: pessoas,
+               axisLabel: { color: VIS_INK, fontSize: 12 },
+               axisLine: { show: false }, axisTick: { show: false } },
+      series: [{
+        type: "bar", barMaxWidth: 18,
+        itemStyle: { color: "#2a78d6" },
+        label: { show: true, position: "right", fontSize: 11, color: VIS_MUDO,
+                 formatter: (p) => fmtHoras(p.value) + "h" },
+        data: pessoas.map(n => porPessoa.get(n))
+      }]
+    });
+  }
+  $("notaHorasPessoa").textContent =
+    "Total do padrão declarado por semana. Ausências NÃO são descontadas aqui: " +
+    "o padrão é o mesmo com ou sem afastamento no meio do período. O mapa de calor, " +
+    "que fala de dias reais, desconta.";
+}
+
 /* Cria ou reaproveita a instância do ECharts de um contêiner. */
 function desenhar(id, instancia, altura, opcao) {
   const el = $(id);
@@ -3550,6 +4142,7 @@ function renderAdm() {
     : "Pasta ainda não oficializada — confirme sua identidade nesta pasta para oficializá-la.";
   $("chkExigirSenha").checked = CFG.exigirSenha;
   $("chkMostrarAusencias").checked = mostraAusencias();
+  $("chkMostrarHorarios").checked = mostraHorarios();
   $("tbodySenhas").innerHTML = pessoasAdministraveis().map(p => {
     const tem = Boolean(CFG.senhas[p.nome]);
     const st = (p.nome === ADM_NOME && !tem)
@@ -3606,6 +4199,11 @@ $("chkMostrarAusencias").addEventListener("change", async (e) => {
   CFG.mostrarAusencias = e.target.checked;
   aplicarAusencias();
   await salvarCFG(`Seção "Ausências" ${CFG.mostrarAusencias ? "ligada" : "desligada"} para todos.`);
+});
+$("chkMostrarHorarios").addEventListener("change", async (e) => {
+  CFG.mostrarHorarios = e.target.checked;
+  aplicarHorarios();
+  await salvarCFG(`Seção "Horários" ${CFG.mostrarHorarios ? "ligada" : "desligada"} para todos.`);
 });
 $("btnSalvarCatalogo").addEventListener("click", async () => {
   let novo;
@@ -3752,9 +4350,11 @@ $("dlgSobre").addEventListener("close", () => $("btnSobre").focus());
 montarSobre();
 /* Antes de qualquer configuração ser lida vale o padrão: seção oculta. */
 aplicarAusencias();
+aplicarHorarios();
 montarPessoas();
 montarProcessos();
 montarTiposAusencia();
+montarDiasHorario();
 $("inpSenha").addEventListener("keydown", (e) => {
   if (e.key === "Enter") $("btnIniciar").click();
 });

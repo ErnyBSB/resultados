@@ -83,16 +83,25 @@ async function lerMeuArquivo(raiz, unidade, servidor) {
    ela já é a única escritora deste arquivo, então o dado entra sem
    quebrar o padrão "um arquivo, um único escritor" nem exigir escrita
    no config.json (que é do administrador). */
-async function gravarMeuArquivo(raiz, unidade, servidor, registros, cargaHoraria, ausencias) {
+async function gravarMeuArquivo(raiz, unidade, servidor, registros, cargaHoraria, ausencias, horarios) {
   const dir = await pastaLancamentos(raiz, unidade, true);
   await gravarJSONEm(dir, slug(servidor) + ".json", {
-    versao: 3, unidade, servidor,
+    /* versao: 4 desde a v1.14, quando entraram os horários. O número é
+       rótulo, e não formato: nenhuma chave anterior mudou de nome nem de
+       significado, e uma versão antiga do programa lendo este arquivo
+       continua achando registros, ausencias e cargaHoraria onde sempre
+       estiveram — ela só não enxerga os horários. */
+    versao: 4, unidade, servidor,
     cargaHoraria: cargaHoraria ?? null,
     atualizadoEm: new Date().toISOString(),
     registros,
     /* Ausências ficam no MESMO arquivo pelo mesmo motivo da carga
        horária: a pessoa já é a única escritora dele. */
-    ausencias: ausencias || []
+    ausencias: ausencias || [],
+    /* Horários, idem. Um horarios.json por unidade teria duas ou mais
+       pessoas escrevendo nele, e é exatamente o que este projeto não
+       faz — ver "um arquivo, um escritor" no LEIA-ME. */
+    horarios: horarios || []
   });
 }
 /* Leitura ESTRITA, obrigatória antes de qualquer gravação.
@@ -161,6 +170,23 @@ async function lerAusenciasDaUnidade(raiz, unidade) {
     }
   } catch { /* unidade ainda sem pasta */ }
   return ausencias;
+}
+/* Horários de trabalho de uma unidade, pelo molde das ausências: cada
+   arquivo é lido inteiro e o que interessa é concatenado. Arquivo de
+   pessoa que ainda não declarou horário simplesmente não tem a chave. */
+async function lerHorariosDaUnidade(raiz, unidade) {
+  const horarios = [];
+  try {
+    const dir = await pastaLancamentos(raiz, unidade);
+    for await (const [nome, handle] of dir.entries()) {
+      if (handle.kind !== "file" || !nome.endsWith(".json")) continue;
+      try {
+        const dado = JSON.parse(await (await handle.getFile()).text());
+        if (dado && Array.isArray(dado.horarios)) horarios.push(...dado.horarios);
+      } catch { /* arquivo malformado: ignora e segue */ }
+    }
+  } catch { /* unidade ainda sem pasta */ }
+  return horarios;
 }
 /* Todos os lançamentos de uma unidade (lista concatenada) */
 async function lerLancamentosDaUnidade(raiz, unidade) {
